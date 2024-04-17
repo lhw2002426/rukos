@@ -11,12 +11,12 @@ use crate::ctypes;
 
 #[cfg(feature = "fs")]
 use {
-    crate::imp::fs::{sys_open, sys_pread64, sys_pwrite64},
+    crate::imp::fs::{File, sys_open, sys_pread64, sys_pwrite64},
     core::ffi::{c_char, c_void},
     page_table::PagingError,
 };
 
-use alloc::{collections::BTreeMap, vec::Vec};
+use alloc::{collections::BTreeMap, sync::Arc, vec::Vec};
 use axsync::Mutex;
 use core::{
     cmp::{max, min},
@@ -57,17 +57,15 @@ used_fs! {
 pub(crate) static VMA_MAP: Mutex<BTreeMap<usize, Vma>> = Mutex::new(BTreeMap::new()); // start_addr
 pub(crate) static MEM_MAP: Mutex<BTreeMap<usize, PageInfo>> = Mutex::new(BTreeMap::new()); // Vaddr => (fid, offset, page_size)
 
-type PageInfo = Option<(Fid, Offset, Len)>; // (fid, offset, page_size)
+type PageInfo = Option<(Arc<File>, Offset, Len)>; // (fid, offset, page_size)
 type Offset = usize;
-type Fid = i32;
 type Len = usize;
 
 /// Data structure for mapping [start_addr, end_addr) with meta data.
-#[derive(Debug)]
 pub(crate) struct Vma {
     pub start_addr: usize,
     pub end_addr: usize,
-    pub fid: i32,
+    pub file: Option<Arc<File>>,
     pub offset: usize,
     pub prot: u32,
     pub flags: u32,
@@ -75,26 +73,49 @@ pub(crate) struct Vma {
 
 /// Impl for Vma.
 impl Vma {
-    pub fn new(fid: i32, offset: usize, prot: u32, flags: u32) -> Self {
+    pub(crate) fn new(fid: i32, offset: usize, prot: u32, flags: u32) -> Self {
+        let file = if fid < 0{
+            None
+        }else{
+            Some(File::from_fd(fid).expect("should be effective fid"))
+        };
         Vma {
             start_addr: 0,
             end_addr: 0,
-            fid,
+            file,
             offset,
             flags,
             prot,
         }
     }
 
-    pub fn clone_from(vma: &Vma, start_addr: usize, end_addr: usize) -> Self {
+    pub(crate) fn clone_from(vma: &Vma, start_addr: usize, end_addr: usize) -> Self {
         Vma {
             start_addr,
             end_addr,
-            fid: vma.fid,
+            file: vma.file.clone(),
             offset: vma.offset,
             prot: vma.prot,
             flags: vma.prot,
         }
+    }
+}
+
+/// read from target file
+pub(crate) fn read_from(file:&Arc<File>, buf: *mut u8, offset: u64, len: usize){
+    let src = unsafe { core::slice::from_raw_parts_mut(buf, len) };
+    let actual_len = file.inner.lock().read_at(offset, src).expect("read_from failed");
+    if len != actual_len {
+        warn!("read_from len=0x{len:x} but actual_len=0x{actual_len:x}");
+    }
+}
+
+/// write into target file
+pub(crate) fn write_into(file:&Arc<File>, buf: *mut u8, offset: u64, len: usize){
+    let src = unsafe { core::slice::from_raw_parts_mut(buf, len) };
+    let actual_len = file.inner.lock().write_at(offset, src).expect("write_into failed");
+    if len != actual_len {
+        warn!("write_into len=0x{len:x} but actual_len=0x{actual_len:x}");
     }
 }
 
@@ -112,6 +133,8 @@ pub(crate) fn get_mflags_from_usize(prot: u32) -> MappingFlags {
     // always readable at least
     mmap_prot | MappingFlags::READ
 }
+
+/// 
 
 /// lock overlap region between two intervals [start1, end1) and [start2,end2)。
 pub(crate) fn get_overlap(
@@ -178,17 +201,71 @@ pub(crate) fn find_free_region(
     None
 }
 
+/// Clear the memory of the specified area. return Some(start) if successful.
+/// take care of AA-deadlock, this function should not be used after `MEM_MAP` is used.
+pub(crate) fn snatch_fixed_region(
+    vma_map: &mut BTreeMap<usize, Vma>,
+    start: usize,
+    len: usize,
+) -> Option<usize> {
+    let end = start + len;
+
+    // Return None if the specified address can't be used
+    if start < VMA_START || end > VMA_END {
+        return None;
+    }
+
+    let mut post_append: Vec<(usize, Vma)> = Vec::new(); // vma should be insert.
+    let mut post_remove: Vec<usize> = Vec::new(); // vma should be removed.
+
+    let mut node = vma_map.upper_bound_mut(Bound::Included(&start));
+    while let Some(vma) = node.value_mut() {
+        if vma.start_addr >= end {
+            break;
+        }
+        if let Some((overlapped_start, overlapped_end)) =
+            get_overlap((start, end), (vma.start_addr, vma.end_addr))
+        {
+            // add node for overlapped vma_ptr
+            if vma.end_addr > overlapped_end {
+                let right_vma = Vma::clone_from(vma, overlapped_end, vma.end_addr);
+                post_append.push((overlapped_end, right_vma));
+            }
+            if overlapped_start > vma.start_addr {
+                vma.end_addr = overlapped_start
+            } else {
+                post_remove.push(vma.start_addr);
+            }
+        }
+        node.move_next();
+    }
+
+    // do action after success.
+    for key in post_remove {
+        vma_map.remove(&key).expect("there should be no empty");
+    }
+    for (key, value) in post_append {
+        vma_map.insert(key, value);
+    }
+
+    // delete the mapped and swapped page.
+    release_pages_mapped(start, end);
+    #[cfg(feature = "fs")]
+    release_pages_swaped(start, end);
+
+    Some(start)
+}
+
 /// release the range of [start, end) in mem_map
 /// take care of AA-deadlock, this function should not be used after `MEM_MAP` is used.
 pub(crate) fn release_pages_mapped(start: usize, end: usize) {
     let mut memory_map = MEM_MAP.lock();
     let mut removing_vaddr = Vec::new();
-    for (&vaddr, &_page_info) in memory_map.range(start..end) {
+    for (&vaddr, _page_info) in memory_map.range(start..end) {
         #[cfg(feature = "fs")]
-        if let Some((fid, offset, size)) = _page_info {
-            let src = vaddr as *mut c_void;
-            let offset = offset as i64;
-            sys_pwrite64(fid, src, size, offset);
+        if let Some((file, offset, size)) = _page_info {
+            let src = vaddr as *mut u8;
+            write_into(file, src, *offset as u64, *size);
         }
         if pte_unmap_page(VirtAddr::from(vaddr)).is_err() {
             panic!("Release page failed when munmapping!");
@@ -227,8 +304,8 @@ pub(crate) fn shift_mapped_page(start: usize, end: usize, vma_offset: usize, cop
     }
 
     let mut opt_buffer = Vec::new();
-    for (&start, &page_info) in memory_map.range(start..end) {
-        opt_buffer.push((start, page_info));
+    for (&start, page_info) in memory_map.range(start..end) {
+        opt_buffer.push((start, page_info.clone()));
     }
     for (start, page_info) in opt_buffer {
         // opt for the PTE.
@@ -271,7 +348,7 @@ pub(crate) fn shift_mapped_page(start: usize, end: usize, vma_offset: usize, cop
             (fake_vaddr, flags)
         };
         do_pte_map(VirtAddr::from(start + vma_offset), fake_vaddr, flags).unwrap();
-        memory_map.insert(start + vma_offset, page_info);
+        memory_map.insert(start + vma_offset, page_info.clone());
     }
 
     used_fs! {
@@ -321,9 +398,9 @@ pub(crate) fn preload_page_with_swap(
         #[cfg(feature = "fs")]
         Err(PagingError::NoMemory) => match memory_map.pop_first() {
             // For file mapping, the mapped content will be written directly to the original file.
-            Some((vaddr_swapped, Some((fid, offset, size)))) => {
+            Some((vaddr_swapped, Some((file, offset, size)))) => {
                 let offset = offset.try_into().unwrap();
-                sys_pwrite64(fid, vaddr_swapped as *mut c_void, size, offset);
+                write_into(&file, vaddr_swapped as *mut u8, offset, size);
                 pte_swap_preload(VirtAddr::from(vaddr_swapped)).unwrap()
             }
             // For anonymous mapping, you need to save the mapped memory to the prepared swap file,
@@ -352,7 +429,7 @@ pub(crate) fn preload_page_with_swap(
         },
 
         Err(ecode) => panic!(
-            "Unexpected error {:x?} happening when page fault occurs!",
+            "Unexpected error 0x{:x?} happening when page fault occurs!",
             ecode
         ),
     }

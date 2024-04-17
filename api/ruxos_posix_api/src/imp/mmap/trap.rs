@@ -14,7 +14,7 @@ use ruxhal::paging::alloc_page_preload;
 #[cfg(feature = "fs")]
 use {
     crate::imp::fs::sys_pread64,
-    crate::imp::mmap::utils::{preload_page_with_swap, BITMAP_FREE, SWAPED_MAP, SWAP_FID},
+    crate::imp::mmap::utils::{preload_page_with_swap, BITMAP_FREE, SWAPED_MAP, SWAP_FID, read_from},
 };
 
 use crate::imp::mmap::utils::{get_mflags_from_usize, MEM_MAP, VMA_MAP};
@@ -44,7 +44,7 @@ impl ruxhal::trap::TrapHandler for TrapHandlerImpl {
             let map_flag = get_mflags_from_usize(vma.prot);
 
             trace!(
-                "Page Fault Happening, vaddr:{:x?}, casue:{:?}, map_flags:{:x?}",
+                "Page Fault Happening, vaddr:0x{:x?}, casue:{:?}, map_flags:0x{:x?}",
                 vaddr,
                 cause,
                 map_flag
@@ -91,15 +91,15 @@ impl ruxhal::trap::TrapHandler for TrapHandlerImpl {
                 preload_page_with_swap(&mut memory_map, &mut swaped_map, &mut off_pool);
 
             // Fill target data to assigned physical addresses, from file or zero according to mapping type
-            let dst = fake_vaddr.as_mut_ptr() as *mut c_void;
+            let dst = fake_vaddr.as_mut_ptr();
             #[cfg(feature = "fs")]
             {
                 if let Some(off) = swaped_map.remove(&vaddr) {
                     off_pool.push(off);
-                    sys_pread64(*SWAP_FID, dst, size, off as i64);
-                } else if vma.fid > 0 && !map_flag.is_empty() {
-                    let off = (vma.offset + (vaddr - vma.start_addr)) as i64;
-                    sys_pread64(vma.fid, dst, size, off);
+                    sys_pread64(*SWAP_FID, dst as *mut c_void, size, off as i64);
+                } else if let Some(file) = &vma.file {
+                    let off = (vma.offset + (vaddr - vma.start_addr)) as u64;
+                    read_from(file, dst, off, size);                        
                 } else {
                     // Set page to 0 for anonymous mapping
                     //
@@ -123,11 +123,11 @@ impl ruxhal::trap::TrapHandler for TrapHandlerImpl {
             // Insert the record into `MEM_MAP` with write-back information(`None` if no need to write-back).
             if (vma.prot & ctypes::PROT_WRITE != 0)
                 && (vma.flags & ctypes::MAP_PRIVATE == 0)
-                && (vma.fid > 0)
+                && (vma.file.is_some())
             {
                 let map_length = min(PAGE_SIZE_4K, vma.end_addr - vaddr);
                 let offset = vma.offset + (vaddr - vma.start_addr);
-                memory_map.insert(vaddr, Some((vma.fid, offset, map_length)));
+                memory_map.insert(vaddr, Some((vma.file.as_ref().unwrap().clone(), offset, map_length)));
             } else {
                 memory_map.insert(vaddr, None);
             }
@@ -140,10 +140,7 @@ impl ruxhal::trap::TrapHandler for TrapHandlerImpl {
                 Err(_) => false,
             }
         } else {
-            for mapped in vma_map.iter() {
-                warn!("{:x?}", mapped);
-            }
-            warn!("vaddr={:x?},cause={:x?}", vaddr, cause);
+            warn!("vaddr=0x{:x?},cause=0x{:x?}", vaddr, cause);
             false
         }
     }

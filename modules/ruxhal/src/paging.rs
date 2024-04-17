@@ -135,7 +135,7 @@ pub fn alloc_page_preload() -> Result<VirtAddr, PagingError> {
 /// address is still on linear mapping region.
 /// use `do_pte_map` to do actually page mapping after call this function.
 pub fn pte_swap_preload(swaped_vaddr: VirtAddr) -> PagingResult<VirtAddr> {
-    trace!("swapping swaped_vaddr: {:x?}", swaped_vaddr,);
+    error!("swapping swaped_vaddr: {:x?}", swaped_vaddr,);
     let mut kernel_page_table = KERNEL_PAGE_TABLE.lock();
     let (paddr, _) = kernel_page_table.unmap(swaped_vaddr)?;
     flush_tlb(Some(swaped_vaddr));

@@ -48,6 +48,8 @@ fn invalid_exception(tf: &TrapFrame, kind: TrapKind, source: TrapSource) {
     );
 }
 
+use crate::arch::disable_irqs;
+
 #[no_mangle]
 fn handle_sync_exception(tf: &mut TrapFrame) {
     let esr = ESR_EL1.extract();
@@ -74,6 +76,7 @@ fn handle_sync_exception(tf: &mut TrapFrame) {
                 ],
             );
             tf.r[0] = result as u64;
+            disable_irqs();
         }
         Some(ESR_EL1::EC::Value::DataAbortLowerEL)
         | Some(ESR_EL1::EC::Value::InstrAbortLowerEL) => {

@@ -1632,6 +1632,7 @@ dependencies = [
  "axlog",
  "cfg-if",
  "crate_interface",
+ "elf",
  "kernel_guard",
  "num_enum",
  "ruxfeat",

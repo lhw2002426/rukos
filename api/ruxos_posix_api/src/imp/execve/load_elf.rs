@@ -57,8 +57,9 @@ impl ElfProg {
             }
         }
 
+        msize *= 16;
         // copy LOAD segments
-        let base = crate::sys_mmap(null_mut(), msize as usize, 0, 0, 0, 0) as usize;
+        let base = crate::sys_mmap(null_mut(), msize as usize, 7, 0x21, -1, 0) as usize;
         for seg in segs {
             if seg.p_type == elf::abi::PT_LOAD {
                 let data = file.segment_data(&seg).unwrap();

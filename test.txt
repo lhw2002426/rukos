@@ -1,0 +1,45 @@
+    [92;1mBuilding[0m App: dl, Arch: aarch64, Platform: aarch64-qemu-virt, App type: c
+[37mcargo build[0m [90m--target aarch64-unknown-none-softfloat --target-dir /media/robert/data/rukos-0411/rukos/target --release  -p ruxmusl --features "ruxfeat/log-level-error ruxfeat/virtio-9p ruxfeat/rtc ruxfeat/tls ruxmusl/alloc ruxmusl/paging ruxmusl/fs ruxmusl/musl ruxmusl/poll ruxmusl/multitask ruxmusl/fp_simd ruxmusl/pipe ruxmusl/epoll ruxmusl/irq ruxmusl/select ruxmusl/signal ruxmusl/net ruxmusl/fd ruxmusl/musl ruxmusl/fp_simd ruxmusl/fd"[0m
+echo --------------build_dl---------------------
+--------------build_dl---------------------
+mkdir apps/c/dl/root -p
+mkdir apps/c/dl/root/lib -p
+cp apps/c/dl/../../../ulib/ruxmusl/install/lib/libc.so apps/c/dl/root/lib/ld-musl-aarch64.so.1
+# aarch64-linux-musl-gcc -mgeneral-regs-only  -ggdb  -static -fPIE -pie  apps/c/dl/root/hello.c -o apps/c/dl/root/statichello 
+# aarch64-linux-musl-gcc -mgeneral-regs-only  -ggdb apps/c/dl/root/hello.c -o apps/c/dl/root/dynamichello 
+echo --------------build_dl---------------------
+--------------build_dl---------------------
+[37maarch64-linux-musl-gcc[0m [90m-nostdinc -fno-builtin -ffreestanding -Wall -isystem/media/robert/data/rukos-0411/rukos/ulib/ruxmusl/install/include -O3   -c -o apps/c/dl/dl.o apps/c/dl/dl.c[0m
+    [96;1mLinking[0m apps/c/dl/dl_aarch64-qemu-virt.elf
+[37mrust-lld -flavor gnu[0m [90m-nostdlib -static -no-pie --gc-sections -T/media/robert/data/rukos-0411/rukos/modules/ruxhal/linker_aarch64-qemu-virt.lds ulib/ruxmusl/install/lib/libc.a target/aarch64-unknown-none-softfloat/release/libruxmusl.a  apps/c/dl/dl.o -o apps/c/dl/dl_aarch64-qemu-virt.elf[0m
+[37mrust-objcopy --binary-architecture=aarch64[0m [90mapps/c/dl/dl_aarch64-qemu-virt.elf --strip-all -O binary apps/c/dl/dl_aarch64-qemu-virt.bin[0m
+    [96;1mRunning[0m on qemu...
+[37mqemu-system-aarch64[0m [90m-m 2G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/c/dl/dl_aarch64-qemu-virt.bin -append ";/python3.11/bin/python3.11,;" -device virtio-net-device,netdev=net0 -fsdev local,id=myid,path=apps/c/dl/root,security_model=none -device virtio-9p-device,fsdev=myid,mount_tag=rootfs -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555,hostfwd=tcp::5556-:5556,hostfwd=udp::5556-:5556,hostfwd=tcp::5557-:5557,hostfwd=udp::5557-:5557,hostfwd=tcp::5558-:5558,hostfwd=udp::5558-:5558,hostfwd=tcp::5559-:5559,hostfwd=udp::5559-:5559, -nographic -D qemu.log -d in_asm,int,mmu,pcall,cpu_reset,guest_errors[0m
+
+8888888b.                     .d88888b.   .d8888b.  
+888   Y88b                   d88P" "Y88b d88P  Y88b 
+888    888                   888     888 Y88b.      
+888   d88P 888  888 888  888 888     888  "Y888b.   
+8888888P"  888  888 `Y8bd8P' 888     888     "Y88b. 
+888 T88b   888  888   X88K   888     888       "888 
+888  T88b  Y88b 888 .d8""8b. Y88b. .d88P Y88b  d88P 
+888   T88b  "Y88888 888  888  "Y88888P"   "Y8888P" 
+
+arch = aarch64
+platform = aarch64-qemu-virt
+target = aarch64-unknown-none-softfloat
+smp = 1
+build_mode = release
+log_level = error
+
+[37m[1713196702.055075 0 axfs_ramfs::dir:55] [31mAlreadyExists sys[m
+[mHello, Ruxos dl!
+argc 1, argv 0xffff000041062f00
+arg 0: /python3.11/bin/python3.11
+arg 1: (null)
+[37m[1713196702.264425 0:2 ruxos_posix_api::imp::execve::stack:32] [31msp_addr : ffff000040109778-ffff000040119778[m
+[m[37m[1713196702.688820 0:2 ruxos_posix_api::imp::mmap::api:48] [31mmmap failed because start:0x0 is not aligned or len:0x0 == 0[m
+[mPython 3.11.8 (main, Mar 28 2024, 17:31:55) [GCC 11.2.1 20211120] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> QEMU: Terminated
+

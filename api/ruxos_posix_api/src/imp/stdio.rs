@@ -10,21 +10,15 @@
 use axerrno::AxResult;
 use axio::{prelude::*, BufReader};
 use axsync::Mutex;
+
 #[cfg(feature = "fd")]
-use {
-    alloc::sync::Arc,
-    axerrno::AxError,
-    axerrno::LinuxError,
-    axerrno::LinuxResult,
-    axio::PollState,
-    core::sync::atomic::{AtomicBool, Ordering},
-};
+use {alloc::sync::Arc, axerrno::LinuxError, axerrno::LinuxResult, axio::PollState};
 
 fn console_read_bytes() -> Option<u8> {
     let ret = ruxhal::console::getchar().map(|c| if c == b'\r' { b'\n' } else { c });
-    if let Some(c) = ret {
-        let _ = console_write_bytes(&[c]);
-    }
+    // if let Some(c) = ret {
+    //     let _ = console_write_bytes(&[c]);
+    // }
     ret
 }
 
@@ -36,18 +30,68 @@ fn console_write_bytes(buf: &[u8]) -> AxResult<usize> {
 struct StdinRaw;
 struct StdoutRaw;
 
-impl Read for StdinRaw {
-    // Non-blocking read, returns number of bytes read.
-    fn read(&mut self, buf: &mut [u8]) -> AxResult<usize> {
-        let mut read_len = 0;
-        while read_len < buf.len() {
+const INPUT_SIZE: usize = 4096;
+static mut INPUT_BUFFER: [u8; INPUT_SIZE] = [0; INPUT_SIZE];
+static mut INPUT_LEN: usize = 0;
+
+const LFNL: u8 = 10;
+const DEL: u8 = 127;
+const BS: u8 = 8;
+const SPACE: u8 = 32;
+
+fn buffer_can_read() -> bool {
+    unsafe { INPUT_LEN != 0 && INPUT_BUFFER[INPUT_LEN - 1] == LFNL }
+}
+
+fn buffer_receive_from_hw() {
+    unsafe {
+        while INPUT_LEN < INPUT_SIZE {
             if let Some(c) = console_read_bytes() {
-                buf[read_len] = c;
-                read_len += 1;
+                match c {
+                    DEL | BS => {
+                        if INPUT_LEN != 0 {
+                            INPUT_LEN -= 1;
+                            console_write_bytes(&[BS]);
+                            console_write_bytes(&[SPACE]);
+                            console_write_bytes(&[BS]);
+                        }
+                    }
+                    _ => {
+                        INPUT_BUFFER[INPUT_LEN] = c;
+                        INPUT_LEN += 1;
+                        console_write_bytes(&[c]);
+                    }
+                }
             } else {
                 break;
             }
         }
+    }
+}
+
+fn read_from_buffer(buf: &mut [u8]) -> usize {
+    unsafe {
+        let len = INPUT_LEN;
+        // warn!("10");
+        let mut i = 0;
+        while i < INPUT_LEN {
+            buf[i] = INPUT_BUFFER[i];
+            i += 1;
+        }
+        INPUT_LEN = 0;
+        len
+    }
+}
+
+impl Read for StdinRaw {
+    // Non-blocking read, returns number of bytes read.
+    fn read(&mut self, buf: &mut [u8]) -> AxResult<usize> {
+        let mut read_len = 0;
+        buffer_receive_from_hw();
+        if buffer_can_read() {
+            read_len = read_from_buffer(buf);
+        }
+
         Ok(read_len)
     }
 }
@@ -64,8 +108,6 @@ impl Write for StdoutRaw {
 
 pub struct Stdin {
     inner: &'static Mutex<BufReader<StdinRaw>>,
-    #[cfg(feature = "fd")]
-    nonblocking: AtomicBool,
 }
 
 impl Stdin {
@@ -82,17 +124,6 @@ impl Stdin {
                 return Ok(read_len);
             }
             crate::sys_sched_yield();
-        }
-    }
-
-    // Attempt a non-blocking read operation.
-    #[cfg(feature = "fd")]
-    fn read_nonblocked(&self, buf: &mut [u8]) -> AxResult<usize> {
-        if let Some(mut inner) = self.inner.try_lock() {
-            let read_len = inner.read(buf)?;
-            Ok(read_len)
-        } else {
-            Err(AxError::WouldBlock)
         }
     }
 }
@@ -120,11 +151,7 @@ impl Write for Stdout {
 /// Constructs a new handle to the standard input of the current process.
 pub fn stdin() -> Stdin {
     static INSTANCE: Mutex<BufReader<StdinRaw>> = Mutex::new(BufReader::new(StdinRaw));
-    Stdin {
-        inner: &INSTANCE,
-        #[cfg(feature = "fd")]
-        nonblocking: AtomicBool::from(false),
-    }
+    Stdin { inner: &INSTANCE }
 }
 
 /// Constructs a new handle to the standard output of the current process.
@@ -136,10 +163,7 @@ pub fn stdout() -> Stdout {
 #[cfg(feature = "fd")]
 impl super::fd_ops::FileLike for Stdin {
     fn read(&self, buf: &mut [u8]) -> LinuxResult<usize> {
-        match self.nonblocking.load(Ordering::Relaxed) {
-            true => Ok(self.read_nonblocked(buf)?),
-            false => Ok(self.read_blocked(buf)?),
-        }
+        Ok(self.read_blocked(buf)?)
     }
 
     fn write(&self, _buf: &[u8]) -> LinuxResult<usize> {
@@ -167,8 +191,7 @@ impl super::fd_ops::FileLike for Stdin {
         })
     }
 
-    fn set_nonblocking(&self, nonblocking: bool) -> LinuxResult {
-        self.nonblocking.store(nonblocking, Ordering::Relaxed);
+    fn set_nonblocking(&self, _nonblocking: bool) -> LinuxResult {
         Ok(())
     }
 }
