@@ -61,7 +61,7 @@ impl DnsSocket {
                 }
             })?;
         loop {
-            SOCKET_SET.poll_interfaces();
+            SOCKET_SET.poll_interfaces(false);
             match SOCKET_SET.with_socket_mut::<dns::Socket, _, _>(handle, |socket| {
                 socket.get_query_result(query_handle).map_err(|e| match e {
                     GetQueryResultError::Pending => AxError::WouldBlock,

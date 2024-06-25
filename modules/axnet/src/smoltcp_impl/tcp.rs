@@ -8,7 +8,7 @@
  */
 
 use core::cell::UnsafeCell;
-use core::net::SocketAddr;
+use core::net::{IpAddr, SocketAddr};
 use core::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
 use axerrno::{ax_err, ax_err_type, AxError, AxResult};
@@ -17,10 +17,10 @@ use axsync::Mutex;
 
 use smoltcp::iface::SocketHandle;
 use smoltcp::socket::tcp::{self, ConnectError, State};
-use smoltcp::wire::{IpEndpoint, IpListenEndpoint};
+use smoltcp::wire::{IpEndpoint, IpListenEndpoint, IpAddress};
 
 use super::addr::{from_core_sockaddr, into_core_sockaddr, is_unspecified, UNSPECIFIED_ENDPOINT};
-use super::{SocketSetWrapper, ETH0, LISTEN_TABLE, SOCKET_SET};
+use super::{SocketSetWrapper, ETH0, LO, LISTEN_TABLE, SOCKET_SET};
 
 // State transitions:
 // CLOSED -(connect)-> BUSY -> CONNECTING -> CONNECTED -(shutdown)-> BUSY -> CLOSED
@@ -53,6 +53,7 @@ pub struct TcpSocket {
     local_addr: UnsafeCell<IpEndpoint>,
     peer_addr: UnsafeCell<IpEndpoint>,
     nonblock: AtomicBool,
+    islocal: AtomicBool,
 }
 
 unsafe impl Sync for TcpSocket {}
@@ -66,6 +67,7 @@ impl TcpSocket {
             local_addr: UnsafeCell::new(UNSPECIFIED_ENDPOINT),
             peer_addr: UnsafeCell::new(UNSPECIFIED_ENDPOINT),
             nonblock: AtomicBool::new(false),
+            islocal: AtomicBool::new(false),
         }
     }
 
@@ -74,6 +76,7 @@ impl TcpSocket {
         handle: SocketHandle,
         local_addr: IpEndpoint,
         peer_addr: IpEndpoint,
+        is_local: bool
     ) -> Self {
         Self {
             state: AtomicU8::new(STATE_CONNECTED),
@@ -81,6 +84,7 @@ impl TcpSocket {
             local_addr: UnsafeCell::new(local_addr),
             peer_addr: UnsafeCell::new(peer_addr),
             nonblock: AtomicBool::new(false),
+            islocal: AtomicBool::new(is_local),
         }
     }
 
@@ -114,6 +118,12 @@ impl TcpSocket {
         self.nonblock.load(Ordering::Acquire)
     }
 
+    ///Returns whether this socket is in localhost mode.
+    #[inline]
+    pub fn is_local(&self) -> bool {
+        self.islocal.load(Ordering::Acquire)
+    }
+
     /// Moves this TCP stream into or out of nonblocking mode.
     ///
     /// This will result in `read`, `write`, `recv` and `send` operations
@@ -125,6 +135,13 @@ impl TcpSocket {
     #[inline]
     pub fn set_nonblocking(&self, nonblocking: bool) {
         self.nonblock.store(nonblocking, Ordering::Release);
+    }
+
+    //Moves this TCP stream into or out of localhost mode.
+    #[inline]
+    pub fn set_is_local(&self, is_local: bool) {
+        unsafe {debug!("set is local addr: {} res {}", self.local_addr.get().read(), is_local);}
+        self.islocal.store(is_local, Ordering::Release);
     }
 
     /// Connects to the given address and port.
@@ -139,7 +156,26 @@ impl TcpSocket {
             // TODO: check remote addr unreachable
             let remote_endpoint = from_core_sockaddr(remote_addr);
             let bound_endpoint = self.bound_endpoint()?;
-            let iface = &ETH0.iface;
+            let iface = match remote_addr {
+                SocketAddr::V4(addr) => {
+                    if addr.ip().octets()[0] == 127 {
+                        self.set_is_local(true);
+                        &LO.iface
+                    } else {
+                        self.set_is_local(false);
+                        &ETH0.iface
+                    }
+                }
+                SocketAddr::V6(addr) => {
+                    if addr.ip().segments() == [0, 0, 0, 0, 0, 0, 0, 1] {
+                        self.set_is_local(true);
+                        &LO.iface
+                    } else {
+                        self.set_is_local(false);
+                        &ETH0.iface
+                    }
+                }
+            };
             let (local_endpoint, remote_endpoint) = SOCKET_SET
                 .with_socket_mut::<tcp::Socket, _, _>(handle, |socket| {
                     socket
@@ -149,6 +185,7 @@ impl TcpSocket {
                                 ax_err!(BadState, "socket connect() failed")
                             }
                             ConnectError::Unaddressable => {
+                                info!("socket connect() failed refused");
                                 ax_err!(ConnectionRefused, "socket connect() failed")
                             }
                         })?;
@@ -167,7 +204,6 @@ impl TcpSocket {
             Ok(())
         })
         .unwrap_or_else(|_| ax_err!(AlreadyExists, "socket connect() failed: already connected"))?; // EISCONN
-
         self.block_on(|| {
             let PollState { writable, .. } = self.poll_connect()?;
             if !writable {
@@ -183,6 +219,7 @@ impl TcpSocket {
                 if self.is_nonblocking() {
                     return Err(AxError::InProgress);
                 }
+                info!("socket connect() failed refused state {}", self.get_state());
                 ax_err!(ConnectionRefused, "socket connect() failed")
             }
         })
@@ -208,6 +245,16 @@ impl TcpSocket {
                     return ax_err!(InvalidInput, "socket bind() failed: already bound");
                 }
                 self.local_addr.get().write(from_core_sockaddr(local_addr));
+                match local_addr {
+                    SocketAddr::V4(addr) => {
+                        if addr.ip().octets()[0] == 127 {
+                            self.set_is_local(true);
+                        } else {
+                            self.set_is_local(false);
+                        }
+                    }
+                    _ => panic!("IPv6 not supported"),
+                }
             }
             Ok(())
         })
@@ -247,7 +294,17 @@ impl TcpSocket {
         self.block_on(|| {
             let (handle, (local_addr, peer_addr)) = LISTEN_TABLE.accept(local_port)?;
             debug!("TCP socket accepted a new connection {}", peer_addr);
-            Ok(TcpSocket::new_connected(handle, local_addr, peer_addr))
+            let is_loacl_connect = match peer_addr.addr {
+                IpAddress::Ipv4(addr) => {
+                    if addr.0[0] == 127 {
+                        true
+                    } else {
+                        false
+                    }
+                }
+                _ => panic!("IPv6 not supported"),
+            };
+            Ok(TcpSocket::new_connected(handle, local_addr, peer_addr, is_loacl_connect))
         })
     }
 
@@ -263,7 +320,7 @@ impl TcpSocket {
                 socket.close();
             });
             unsafe { self.local_addr.get().write(UNSPECIFIED_ENDPOINT) }; // clear bound address
-            SOCKET_SET.poll_interfaces();
+            SOCKET_SET.poll_interfaces(self.is_local());
             Ok(())
         })
         .unwrap_or(Ok(()))?;
@@ -275,7 +332,7 @@ impl TcpSocket {
             let local_port = unsafe { self.local_addr.get().read().port };
             unsafe { self.local_addr.get().write(UNSPECIFIED_ENDPOINT) }; // clear bound address
             LISTEN_TABLE.unlisten(local_port);
-            SOCKET_SET.poll_interfaces();
+            SOCKET_SET.poll_interfaces(self.is_local());
             Ok(())
         })
         .unwrap_or(Ok(()))?;
@@ -297,6 +354,7 @@ impl TcpSocket {
         self.block_on(|| {
             SOCKET_SET.with_socket_mut::<tcp::Socket, _, _>(handle, |socket| {
                 if !socket.is_active() {
+                    info!("socket {} state: {}",handle, socket.state());
                     // not open
                     ax_err!(ConnectionRefused, "socket recv() failed")
                 } else if !socket.may_recv() {
@@ -450,7 +508,10 @@ impl TcpSocket {
         let handle = unsafe { self.handle.get().read().unwrap() };
         let writable =
             SOCKET_SET.with_socket::<tcp::Socket, _, _>(handle, |socket| match socket.state() {
-                State::SynSent => false, // wait for connection
+                State::SynSent => {
+                    debug!("soket state SynSent");
+                    false
+                }, // wait for connection
                 State::Established => {
                     self.set_state(STATE_CONNECTED); // connected
                     debug!(
@@ -461,6 +522,7 @@ impl TcpSocket {
                     true
                 }
                 _ => {
+                    debug!("soket state err {}", socket.state());
                     unsafe {
                         self.local_addr.get().write(UNSPECIFIED_ENDPOINT);
                         self.peer_addr.get().write(UNSPECIFIED_ENDPOINT);
@@ -508,7 +570,7 @@ impl TcpSocket {
             f()
         } else {
             loop {
-                SOCKET_SET.poll_interfaces();
+                SOCKET_SET.poll_interfaces(self.is_local());
                 match f() {
                     Ok(t) => return Ok(t),
                     Err(AxError::WouldBlock) => ruxtask::yield_now(),

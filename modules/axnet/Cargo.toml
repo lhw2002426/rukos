@@ -27,8 +27,10 @@ ruxdriver = { path = "../ruxdriver", features = ["net"] }
 axio = { path = "../../crates/axio" }
 
 [dependencies.smoltcp]
-git = "https://github.com/rcore-os/smoltcp.git"
-rev = "2ade274"
+#git = "https://github.com/rcore-os/smoltcp.git"
+#rev = "2ade274"
+git = "https://github.com/lhw2002426/smoltcp.git"
+rev = "e0b4765"
 default-features = false
 features = [
   "alloc", "log",   # no std

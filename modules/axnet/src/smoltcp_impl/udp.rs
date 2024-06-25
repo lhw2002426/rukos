@@ -28,6 +28,7 @@ pub struct UdpSocket {
     local_addr: RwLock<Option<IpEndpoint>>,
     peer_addr: RwLock<Option<IpEndpoint>>,
     nonblock: AtomicBool,
+    islocal: AtomicBool,
 }
 
 impl UdpSocket {
@@ -41,6 +42,7 @@ impl UdpSocket {
             local_addr: RwLock::new(None),
             peer_addr: RwLock::new(None),
             nonblock: AtomicBool::new(false),
+            islocal: AtomicBool::new(false),
         }
     }
 
@@ -65,6 +67,12 @@ impl UdpSocket {
         self.nonblock.load(Ordering::Acquire)
     }
 
+    ///Returns whether this socket is in localhost mode.
+    #[inline]
+    pub fn is_local(&self) -> bool {
+        self.islocal.load(Ordering::Acquire)
+    }
+
     /// Moves this UDP socket into or out of nonblocking mode.
     ///
     /// This will result in `recv`, `recv_from`, `send`, and `send_to`
@@ -76,6 +84,12 @@ impl UdpSocket {
     #[inline]
     pub fn set_nonblocking(&self, nonblocking: bool) {
         self.nonblock.store(nonblocking, Ordering::Release);
+    }
+
+    //Moves this UDP socket into or out of localhost mode.
+    #[inline]
+    pub fn set_is_local(&self, is_local: bool) {
+        self.islocal.store(is_local, Ordering::Release);
     }
 
     /// Binds an unbound socket to the given address and port.
@@ -105,6 +119,22 @@ impl UdpSocket {
         })?;
 
         *self_local_addr = Some(local_endpoint);
+        match local_addr {
+            SocketAddr::V4(addr) => {
+                if addr.ip().octets()[0] == 127 {
+                    self.set_is_local(true);
+                } else {
+                    self.set_is_local(false);
+                }
+            }
+            SocketAddr::V6(addr) => {
+                if addr.ip().segments() == [0, 0, 0, 0, 0, 0, 0, 1] {
+                    self.set_is_local(true);
+                } else {
+                    self.set_is_local(false);
+                }
+            }
+        }
         debug!("UDP socket {}: bound on {}", self.handle, endpoint);
         Ok(())
     }
@@ -185,7 +215,7 @@ impl UdpSocket {
             debug!("UDP socket {}: shutting down", self.handle);
             socket.close();
         });
-        SOCKET_SET.poll_interfaces();
+        SOCKET_SET.poll_interfaces(self.is_local());
         Ok(())
     }
 
@@ -270,7 +300,7 @@ impl UdpSocket {
             f()
         } else {
             loop {
-                SOCKET_SET.poll_interfaces();
+                SOCKET_SET.poll_interfaces(self.is_local());
                 match f() {
                     Ok(t) => return Ok(t),
                     Err(AxError::WouldBlock) => ruxtask::yield_now(),

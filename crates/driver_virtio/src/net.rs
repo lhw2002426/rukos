@@ -12,6 +12,7 @@ use alloc::{sync::Arc, vec::Vec};
 use driver_common::{BaseDriverOps, DevError, DevResult, DeviceType};
 use driver_net::{EthernetAddress, NetBuf, NetBufBox, NetBufPool, NetBufPtr, NetDriverOps};
 use virtio_drivers::{device::net::VirtIONetRaw as InnerDev, transport::Transport, Hal};
+use log::info;
 
 extern crate alloc;
 
@@ -154,6 +155,10 @@ impl<H: Hal, T: Transport, const QS: usize> NetDriverOps for VirtIoNetDev<H, T, 
     fn transmit(&mut self, tx_buf: NetBufPtr) -> DevResult {
         // 0. prepare tx buffer.
         let tx_buf = unsafe { NetBuf::from_buf_ptr(tx_buf) };
+
+        let packet = tx_buf.packet();
+        info!("Transmitting packet: {:?}", packet);
+
         // 1. transmit packet.
         let token = unsafe {
             self.inner
@@ -177,6 +182,9 @@ impl<H: Hal, T: Transport, const QS: usize> NetDriverOps for VirtIoNetDev<H, T, 
             };
             rx_buf.set_header_len(hdr_len);
             rx_buf.set_packet_len(pkt_len);
+
+            let packet = rx_buf.packet();
+            info!("Received packet: {:?}", packet);
 
             Ok(rx_buf.into_buf_ptr())
         } else {
