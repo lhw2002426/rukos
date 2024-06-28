@@ -18,6 +18,7 @@
 /// ixgbe NIC device driver.
 pub mod ixgbe;
 mod net_buf;
+pub mod loopback;
 
 use core::ptr::NonNull;
 

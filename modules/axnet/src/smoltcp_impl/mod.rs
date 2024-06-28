@@ -13,9 +13,9 @@ mod dns;
 mod listen_table;
 mod tcp;
 mod udp;
-mod loopback;
 
 use alloc::vec;
+use alloc::boxed::Box;
 use core::cell::RefCell;
 use core::ops::DerefMut;
 
@@ -35,7 +35,8 @@ use self::listen_table::ListenTable;
 pub use self::dns::dns_query;
 pub use self::tcp::TcpSocket;
 pub use self::udp::UdpSocket;
-pub use self::loopback::Loopback;
+//pub use self::loopback::Loopback;
+pub use driver_net::loopback::LoopbackDevice;
 
 macro_rules! env_or_default {
     ($key:literal) => {
@@ -64,7 +65,7 @@ const LISTEN_QUEUE_SIZE: usize = 512;
 static LISTEN_TABLE: LazyInit<ListenTable> = LazyInit::new();
 static SOCKET_SET: LazyInit<SocketSetWrapper> = LazyInit::new();
 static ETH0: LazyInit<InterfaceWrapper<DeviceWrapper>> = LazyInit::new();
-static LO: LazyInit<InterfaceWrapper<Loopback>> = LazyInit::new();//loopback net device
+static LO: LazyInit<InterfaceWrapper<DeviceWrapper>> = LazyInit::new();//loopback net device
 
 struct SocketSetWrapper<'a>(Mutex<SocketSet<'a>>);
 
@@ -162,7 +163,7 @@ impl InterfaceWrapper<DeviceWrapper> {
     }
 }
 
-impl InterfaceWrapper<Loopback> {
+/*impl InterfaceWrapper<Loopback> {
     fn new_loopback(name: &'static str, mut dev: Loopback, ether_addr: EthernetAddress) -> Self {
         let mut config = Config::new(HardwareAddress::Ethernet(ether_addr));
         config.random_seed = RANDOM_SEED;
@@ -175,7 +176,7 @@ impl InterfaceWrapper<Loopback> {
             iface,
         }
     }
-}
+}*/
 
 impl<D: Device> InterfaceWrapper<D> {
     /*fn new(name: &'static str, dev: AxNetDevice, ether_addr: EthernetAddress) -> Self {
@@ -368,7 +369,9 @@ pub(crate) fn init(net_dev: AxNetDevice) {
     let ether_addr = EthernetAddress(net_dev.mac_address().0);
     let eth0 = InterfaceWrapper::new("eth0", net_dev, ether_addr);
     let lo_addr = EthernetAddress::default();
-    let lo = InterfaceWrapper::new_loopback("lo", Loopback::new(Medium::Ethernet), lo_addr);
+    //let lo = InterfaceWrapper::new_loopback("lo", Loopback::new(Medium::Ethernet), lo_addr);
+    let lo_device = LoopbackDevice::new(lo_addr.0);
+    let lo = InterfaceWrapper::new("lo", Box::new(lo_device), lo_addr);
 
     let ip = IP.parse().expect("invalid IP address");
     let gateway = GATEWAY.parse().expect("invalid gateway IP address");

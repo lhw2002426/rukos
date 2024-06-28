@@ -34,7 +34,7 @@ bcm2835-sdhci = ["block", "driver_block/bcm2835-sdhci"]
 ixgbe = ["net", "driver_net/ixgbe", "dep:axalloc", "dep:ruxhal"]
 # more devices example: e1000 = ["net", "driver_net/e1000"]
 
-default = ["bus-mmio"]
+default = ["bus-mmio", "dyn"]
 
 [dependencies]
 log = "0.4"
