@@ -157,7 +157,7 @@ impl<H: Hal, T: Transport, const QS: usize> NetDriverOps for VirtIoNetDev<H, T, 
         let tx_buf = unsafe { NetBuf::from_buf_ptr(tx_buf) };
 
         let packet = tx_buf.packet();
-        info!("Transmitting packet: {:?}", packet);
+        //info!("Transmitting packet: {:?}", packet);
 
         // 1. transmit packet.
         let token = unsafe {
@@ -184,7 +184,7 @@ impl<H: Hal, T: Transport, const QS: usize> NetDriverOps for VirtIoNetDev<H, T, 
             rx_buf.set_packet_len(pkt_len);
 
             let packet = rx_buf.packet();
-            info!("Received packet: {:?}", packet);
+            //info!("Received packet: {:?}", packet);
 
             Ok(rx_buf.into_buf_ptr())
         } else {

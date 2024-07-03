@@ -88,10 +88,13 @@ use alloc::collections::VecDeque;
      fn recycle_tx_buffers(&mut self) -> DevResult {
          Ok(())
      }
- 
+     
      fn transmit(&mut self, tx_buf: NetBufPtr) -> DevResult {
         unsafe {
-            self.queue.push_back(NetBuf:: from_buf_ptr(tx_buf))
+            //lhw TODO it seems have better resolution
+            let mut tx_buf_trans = NetBuf:: from_buf_ptr(tx_buf);
+            tx_buf_trans.as_mut().packet_mut()[0..12].copy_from_slice(&[0x52, 0x54, 0x0, 0x12, 0x34, 0x56, 0x52, 0x54, 0x0, 0x12, 0x34, 0x56]);
+            self.queue.push_back(tx_buf_trans)
         }
         Ok(())
      }

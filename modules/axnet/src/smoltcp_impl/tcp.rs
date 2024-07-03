@@ -20,7 +20,7 @@ use smoltcp::socket::tcp::{self, ConnectError, State};
 use smoltcp::wire::{IpEndpoint, IpListenEndpoint, IpAddress};
 
 use super::addr::{from_core_sockaddr, into_core_sockaddr, is_unspecified, UNSPECIFIED_ENDPOINT};
-use super::{SocketSetWrapper, ETH0, LO, LISTEN_TABLE, SOCKET_SET};
+use super::{SocketSetWrapper, LISTEN_TABLE, RUX_IFACE, SOCKET_SET};
 
 // State transitions:
 // CLOSED -(connect)-> BUSY -> CONNECTING -> CONNECTED -(shutdown)-> BUSY -> CLOSED
@@ -156,26 +156,7 @@ impl TcpSocket {
             // TODO: check remote addr unreachable
             let remote_endpoint = from_core_sockaddr(remote_addr);
             let bound_endpoint = self.bound_endpoint()?;
-            let iface = match remote_addr {
-                SocketAddr::V4(addr) => {
-                    if addr.ip().octets()[0] == 127 {
-                        self.set_is_local(true);
-                        &LO.iface
-                    } else {
-                        self.set_is_local(false);
-                        &ETH0.iface
-                    }
-                }
-                SocketAddr::V6(addr) => {
-                    if addr.ip().segments() == [0, 0, 0, 0, 0, 0, 0, 1] {
-                        self.set_is_local(true);
-                        &LO.iface
-                    } else {
-                        self.set_is_local(false);
-                        &ETH0.iface
-                    }
-                }
-            };
+            let iface = &RUX_IFACE.iface;
             let (local_endpoint, remote_endpoint) = SOCKET_SET
                 .with_socket_mut::<tcp::Socket, _, _>(handle, |socket| {
                     socket
@@ -509,7 +490,7 @@ impl TcpSocket {
         let writable =
             SOCKET_SET.with_socket::<tcp::Socket, _, _>(handle, |socket| match socket.state() {
                 State::SynSent => {
-                    debug!("soket state SynSent");
+                    //debug!("soket state SynSent");
                     false
                 }, // wait for connection
                 State::Established => {

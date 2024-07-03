@@ -12,67 +12,65 @@ use ruxdriver::prelude::*;
 
 use super::{snoop_tcp_packet, DeviceWrapper};
 
-struct Rule {
+pub struct Rule {
 
 }
 
-struct RouteTable {
+pub struct RouteTable {
     rules: Vec<Rule>,
 }
 
 impl RouteTable {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             rules: Vec::new(),
         }
     }
 }
 
-
-enum NetDeviceListEntry {
-    Loopback(super::loopback::Loopback),
-    DeviceWrapper(super::DeviceWrapper),
-}
-
-struct NetDeviceList {
-    inner: Vec<Box<AxNetDevice>>
+pub struct NetDeviceList {
+    inner: Vec<RefCell<AxNetDevice>>
 }
 
 impl NetDeviceList {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             inner: Vec::new(),
         }
     }
 
+    pub fn debug_out(&mut self) {
+        info!("net device debug_out {} ", self.inner.len());
+    }
+
     pub fn add_device(&mut self, dev: AxNetDevice) {
-        self.inner.push(Box::new(dev))
+        self.inner.push(RefCell::new(dev))
     }
 
-    pub fn get(&self, device_name: &str) -> Option<&AxNetDevice> {
+    pub fn get(&self, device_name: &str) -> Option<&RefCell<AxNetDevice>> {
         self.inner
             .iter()
-            .find(|dev| dev.device_name() == device_name)
-            .map(|device| device.as_ref())
+            .find(|dev| dev.borrow().device_name() == device_name)
+            .map(|device| device)
     }
 
-    pub fn get_mut(&mut self, device_name: &str) -> Option<&mut AxNetDevice> {
+    pub fn get_mut(&mut self, device_name: &str) -> Option<&mut RefCell<AxNetDevice>> {
         self.inner
             .iter_mut()
-            .find(|dev| dev.device_name() == device_name)
-            .map(|device| device.as_mut())
+            .find(|dev| dev.borrow().device_name() == device_name)
+            .map(|device| device)
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &AxNetDevice> {
+    pub fn iter(&self) -> impl Iterator<Item = &RefCell<AxNetDevice>> {
         self.inner
             .iter()
-            .map(|b| b.as_ref())
+            .map(|b| b)
     }
 
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut AxNetDevice> {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut RefCell<AxNetDevice>> {
         self.inner
             .iter_mut()
-            .map(|b| b.as_mut())
+            .map(|b| b)
     }
 }
 
@@ -115,21 +113,4 @@ impl NetDeviceList {
     }
 }
 */
-
-struct NetDeviceWrapper {
-    inner: RefCell<NetDeviceList>,
-    route_table: RefCell<RouteTable>,
-}
-
-impl NetDeviceWrapper {
-    fn new() -> Self {
-        Self {
-            inner: RefCell::new(NetDeviceList::new()),
-            route_table: RefCell::new(RouteTable::new()),
-        }
-    }
-}
-
-struct AxNetRxToken<'a>(&'a RefCell<AxNetDevice>, NetBufPtr);
-struct AxNetTxToken<'a>(&'a RefCell<AxNetDevice>);
 
