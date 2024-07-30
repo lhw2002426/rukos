@@ -17,7 +17,7 @@ use smoltcp::iface::{SocketHandle, SocketSet};
 use smoltcp::socket::tcp::{self, State};
 use smoltcp::wire::{IpAddress, IpEndpoint, IpListenEndpoint};
 
-use super::{route_dev, to_static_str, SocketSetWrapper, ETH0, LISTEN_QUEUE_SIZE, LO, SOCKET_SET};
+use super::{route_dev, to_static_str, SocketSetWrapper, LISTEN_QUEUE_SIZE, SOCKET_SET};
 
 const PORT_NUM: usize = 65536;
 
@@ -46,7 +46,7 @@ impl ListenTableEntry {
 impl Drop for ListenTableEntry {
     fn drop(&mut self) {
         for handle in &self.syn_queue {
-            SOCKET_SET.remove(handle.0, handle.1.clone());
+            SOCKET_SET.lock().remove(handle.0, handle.1.clone());
         }
     }
 }
@@ -158,13 +158,13 @@ impl ListenTable {
 }
 
 fn is_connected(handle: SocketHandle, iface_name: String) -> bool {
-    SOCKET_SET.with_socket::<tcp::Socket, _, _>(handle, iface_name, |socket| {
+    SOCKET_SET.lock().with_socket::<tcp::Socket, _, _>(handle, iface_name, |socket| {
         !matches!(socket.state(), State::Listen | State::SynReceived)
     })
 }
 
 fn get_addr_tuple(handle: SocketHandle, iface_name: String) -> (IpEndpoint, IpEndpoint) {
-    SOCKET_SET.with_socket::<tcp::Socket, _, _>(handle, iface_name, |socket| {
+    SOCKET_SET.lock().with_socket::<tcp::Socket, _, _>(handle, iface_name, |socket| {
         (
             socket.local_endpoint().unwrap(),
             socket.remote_endpoint().unwrap(),

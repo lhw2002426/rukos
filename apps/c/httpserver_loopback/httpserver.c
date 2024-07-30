@@ -59,7 +59,7 @@ void *server_thread(void *arg) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Server listening on 127.0.0.1:%d\n", PORT);
+    printf("Server listening on 0.0.0.0:%d\n", PORT);
 
     while (1) {
         new_socket = malloc(sizeof(int));
@@ -115,6 +115,31 @@ void *client_thread(void *arg) {
     printf("Client received: %s\n", buffer);
 
     close(sock);
+
+    /*if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("Socket creation error");
+        return NULL;
+    }
+
+    if (inet_pton(AF_INET, "10.0.2.15", &serv_addr.sin_addr) <= 0) {
+        perror("Invalid address / Address not supported");
+        close(sock);
+        return NULL;
+    }
+
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        perror("Connection failed");
+        close(sock);
+        return NULL;
+    }
+
+    send(sock, message, strlen(message), 0);
+    printf("Client sent: %s\n", message);
+    read(sock, buffer, BUFFER_SIZE);
+    printf("Client received: %s\n", buffer);
+
+    close(sock);*/
+
 
     return NULL;
 }

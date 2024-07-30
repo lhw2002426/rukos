@@ -17,6 +17,7 @@ mod udp;
 use alloc::boxed::Box;
 use alloc::string::{String, ToString};
 use alloc::vec;
+use core::borrow::Borrow;
 use core::cell::RefCell;
 use core::ops::DerefMut;
 
@@ -64,10 +65,16 @@ const UDP_TX_BUF_LEN: usize = 64 * 1024;
 const LISTEN_QUEUE_SIZE: usize = 512;
 
 static LISTEN_TABLE: LazyInit<ListenTable> = LazyInit::new();
-static SOCKET_SET: LazyInit<SocketSetWrapper> = LazyInit::new();
-static ETH0: LazyInit<InterfaceWrapper> = LazyInit::new();
-static LO: LazyInit<InterfaceWrapper> = LazyInit::new(); //loopback net device
+static ROUTE_TABLE: LazyInit<Mutex<vec::Vec<InterfaceWrapper>>> = LazyInit::new();
+static SOCKET_SET: LazyInit<Mutex<SocketSetWrapper>> = LazyInit::new();
+static IFACE_LIST: LazyInit<Mutex<vec::Vec<InterfaceWrapper>>> = LazyInit::new();
+//static ETH0: LazyInit<InterfaceWrapper> = LazyInit::new();
+//static LO: LazyInit<InterfaceWrapper> = LazyInit::new(); //loopback net device
 static STRING_POOL: LazyInit<Mutex<vec::Vec<String>>> = LazyInit::new();
+
+/*pub fn get_iface<'a>(name: &'a str) -> Option<&InterfaceWrapper> {
+    IFACE_LIST.lock().iter().find(|iface| iface.name() == name)
+}*/
 
 fn to_static_str(s: String) -> &'static str {
     let mut pool = STRING_POOL.lock();
@@ -77,10 +84,10 @@ fn to_static_str(s: String) -> &'static str {
 }
 
 fn route_dev(addr: [u8; 4]) -> String {
-    if addr[0] == 127 {
-        LO.name().to_string()
+    if addr[0] == 127 || addr == [10,0,2,15] {
+        "loopback".to_string()
     } else {
-        ETH0.name().to_string()
+        "eth0".to_string()
     }
 }
 
@@ -130,6 +137,7 @@ impl<'a> SocketSetWrapper<'a> {
     }
 
     pub fn add<T: AnySocket<'a>>(&self, socket: T, name: String) -> SocketHandle {
+        info!("lhw debug socketset add name {}",name);
         let handle = self
             .0
             .iter()
@@ -178,22 +186,16 @@ impl<'a> SocketSetWrapper<'a> {
     }
 
     pub fn poll_interfaces(&self) {
-        LO.poll(
-            &self
-                .0
-                .iter()
-                .find(|socketset| socketset.1 == LO.name())
-                .unwrap()
-                .0,
-        );
-        ETH0.poll(
-            &self
-                .0
-                .iter()
-                .find(|socketset| socketset.1 == ETH0.name())
-                .unwrap()
-                .0,
-        );
+        for iface in IFACE_LIST.lock().iter() {
+            iface.poll(
+                &self
+                    .0
+                    .iter()
+                    .find(|socketset| socketset.1 == iface.name())
+                    .unwrap()
+                    .0,
+            );
+        }
     }
 
     pub fn remove(&self, handle: SocketHandle, name: String) {
@@ -353,7 +355,7 @@ impl<'a> TxToken for AxNetTxToken<'a> {
 }
 
 fn snoop_tcp_packet(buf: &[u8], sockets: &mut SocketSet<'_>) -> Result<(), smoltcp::wire::Error> {
-    use smoltcp::wire::{EthernetFrame, IpProtocol, Ipv4Packet, TcpPacket};
+    use smoltcp::wire::{EthernetFrame, IpProtocol, Ipv4Packet, TcpPacket, UdpPacket};
 
     let ether_frame = EthernetFrame::new_checked(buf)?;
     let ipv4_packet = Ipv4Packet::new_checked(ether_frame.payload())?;
@@ -376,21 +378,31 @@ fn snoop_tcp_packet(buf: &[u8], sockets: &mut SocketSet<'_>) -> Result<(), smolt
 /// It may receive packets from the NIC and process them, and transmit queued
 /// packets to the NIC.
 pub fn poll_interfaces() {
-    SOCKET_SET.poll_interfaces();
+    SOCKET_SET.lock().poll_interfaces();
 }
 
 /// Benchmark raw socket transmit bandwidth.
 pub fn bench_transmit() {
-    ETH0.dev.lock().bench_transmit_bandwidth();
+    IFACE_LIST.lock().iter().find(|iface| iface.name() == "eth0").unwrap().dev.lock().bench_transmit_bandwidth();
 }
 
 /// Benchmark raw socket receive bandwidth.
 pub fn bench_receive() {
-    ETH0.dev.lock().bench_receive_bandwidth();
+    IFACE_LIST.lock().iter().find(|iface| iface.name() == "eth0").unwrap().dev.lock().bench_receive_bandwidth();
 }
 
-pub(crate) fn init(net_dev: AxNetDevice) {
-    let ether_addr = EthernetAddress(net_dev.mac_address().0);
+fn get_net_config(net_dev: String) -> (String, Option<String>, Option<String>) {
+    if net_dev == "loopback" {
+        return ("loopback".to_string(), Some("127.0.0.1".to_string()), None);
+    } else if net_dev == "virtio-net" {
+        return ("eth0".to_string(), Some(IP.to_string()), Some(GATEWAY.to_string()));
+    } else {
+        panic!("no net config");
+    }
+}
+
+pub(crate) fn init() {
+    /*let ether_addr = EthernetAddress(net_dev.mac_address().0);
     let eth0 = InterfaceWrapper::new("eth0", net_dev, ether_addr);
 
     let ip = IP.parse().expect("invalid IP address");
@@ -402,24 +414,44 @@ pub(crate) fn init(net_dev: AxNetDevice) {
     let lo_device = LoopbackDevice::new(lo_addr.0);
     let lo = InterfaceWrapper::new("lo", Box::new(lo_device), lo_addr);
     let local_ip = "127.0.0.1".parse().expect("invalid IP address");
-    lo.setup_ip_addr(local_ip, 8);
+    lo.setup_ip_addr(local_ip, 8);*/
 
     let mut socketset = SocketSetWrapper::new();
-    socketset.add_iface("lo");
-    socketset.add_iface("eth0");
 
-    ETH0.init_by(eth0);
-    LO.init_by(lo);
-    SOCKET_SET.init_by(socketset);
+    IFACE_LIST.init_by(Mutex::new(vec::Vec::new()));
+    SOCKET_SET.init_by(Mutex::new(socketset));
     STRING_POOL.init_by(Mutex::new(vec::Vec::new()));
     LISTEN_TABLE.init_by(ListenTable::new());
+}
 
-    info!("created net interface {:?}:", ETH0.name());
-    info!("  ether:    {}", ETH0.ethernet_address());
+pub(crate) fn init_netdev(net_dev: AxNetDevice) {
+    let ether_addr = EthernetAddress(net_dev.mac_address().0);
+    let dev_name = net_dev.device_name().to_string();
+    let net_config = get_net_config(dev_name.clone());
+    let dev_iface = InterfaceWrapper::new(to_static_str(net_config.0), net_dev, ether_addr);
+    info!("created net interface {:?}:", dev_iface.name());
+    info!("  ether:    {}", dev_iface.ethernet_address());
+
+    let mut ip = match net_config.1 {
+        Some(s) => s.parse().expect("invalid IP address"),
+        None => IP.parse().expect("invalid IP address")
+    };
     info!("  ip:       {}/{}", ip, IP_PREFIX);
-    info!("  gateway:  {}", gateway);
 
-    info!("created net interface {:?}:", LO.name());
-    info!("  ether:    {}", LO.ethernet_address());
-    info!("  ip:       {}/{}", local_ip, 8);
+    match net_config.2 {
+        Some(s) => {
+            let gateway = s.parse().expect("invalid gateway IP address");
+            dev_iface.setup_gateway(gateway);
+            info!("  gateway:  {:?}", gateway);
+        },
+        None => {}
+    };
+    dev_iface.setup_ip_addr(ip, IP_PREFIX);
+    if(dev_name == "loopback")
+    {
+        dev_iface.setup_ip_addr(IP.parse().expect("invalid IP address"), IP_PREFIX);
+    }
+    SOCKET_SET.lock().add_iface(to_static_str(dev_iface.name().to_string()));
+
+    IFACE_LIST.lock().push(dev_iface);
 }

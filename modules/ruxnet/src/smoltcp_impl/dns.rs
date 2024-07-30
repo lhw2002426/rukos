@@ -17,7 +17,7 @@ use smoltcp::socket::dns::{self, GetQueryResultError, StartQueryError};
 use smoltcp::wire::DnsQueryType;
 
 use super::addr::into_core_ipaddr;
-use super::{SocketSetWrapper, ETH0, SOCKET_SET};
+use super::{SocketSetWrapper, SOCKET_SET, IFACE_LIST};
 
 /// A DNS socket.
 struct DnsSocket {
@@ -29,16 +29,16 @@ impl DnsSocket {
     /// Creates a new DNS socket.
     pub fn new() -> Self {
         let socket = SocketSetWrapper::new_dns_socket();
-        let handle = Some(SOCKET_SET.add(socket, ETH0.name().to_string()));
+        let handle = Some(SOCKET_SET.lock().add(socket, "eth0".to_string()));
         Self { handle }
     }
 
     #[allow(dead_code)]
     /// Update the list of DNS servers, will replace all existing servers.
     pub fn update_servers(self, servers: &[smoltcp::wire::IpAddress]) {
-        SOCKET_SET.with_socket_mut::<dns::Socket, _, _>(
+        SOCKET_SET.lock().with_socket_mut::<dns::Socket, _, _>(
             self.handle.unwrap(),
-            ETH0.name().to_string(),
+            "eth0".to_string(),
             |socket| socket.update_servers(servers),
         );
     }
@@ -47,9 +47,10 @@ impl DnsSocket {
     pub fn query(&self, name: &str, query_type: DnsQueryType) -> AxResult<Vec<IpAddr>> {
         // let local_addr = self.local_addr.unwrap_or_else(f);
         let handle = self.handle.ok_or_else(|| ax_err_type!(InvalidInput))?;
-        let iface = &ETH0.iface;
-        let query_handle = SOCKET_SET
-            .with_socket_mut::<dns::Socket, _, _>(handle, ETH0.name().to_string(), |socket| {
+        let binding = IFACE_LIST.lock();
+        let iface = &binding.iter().find(|iface| iface.name() == "eth0").unwrap().iface;
+        let query_handle = SOCKET_SET.lock()
+            .with_socket_mut::<dns::Socket, _, _>(handle, "eth0".to_string(), |socket| {
                 socket.start_query(iface.lock().context(), name, query_type)
             })
             .map_err(|e| match e {
@@ -64,10 +65,10 @@ impl DnsSocket {
                 }
             })?;
         loop {
-            SOCKET_SET.poll_interfaces();
-            match SOCKET_SET.with_socket_mut::<dns::Socket, _, _>(
+            SOCKET_SET.lock().poll_interfaces();
+            match SOCKET_SET.lock().with_socket_mut::<dns::Socket, _, _>(
                 handle,
-                ETH0.name().to_string(),
+                "eth0".to_string(),
                 |socket| {
                     socket.get_query_result(query_handle).map_err(|e| match e {
                         GetQueryResultError::Pending => AxError::WouldBlock,
@@ -94,7 +95,7 @@ impl DnsSocket {
 impl Drop for DnsSocket {
     fn drop(&mut self) {
         if let Some(handle) = self.handle {
-            SOCKET_SET.remove(handle, ETH0.name().to_string());
+            SOCKET_SET.lock().remove(handle, "eth0".to_string());
         }
     }
 }

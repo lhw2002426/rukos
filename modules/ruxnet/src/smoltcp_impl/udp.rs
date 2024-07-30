@@ -103,11 +103,11 @@ impl UdpSocket {
         };
         let handle = unsafe { self.handle.get().read() }.unwrap_or_else(|| {
             (
-                SOCKET_SET.add(SocketSetWrapper::new_tcp_socket(), iface_name.clone()),
+                SOCKET_SET.lock().add(SocketSetWrapper::new_udp_socket(), iface_name.clone()),
                 to_static_str(iface_name),
             )
         });
-        SOCKET_SET.with_socket_mut::<udp::Socket, _, _>(
+        SOCKET_SET.lock().with_socket_mut::<udp::Socket, _, _>(
             handle.0,
             handle.1.to_string(),
             |socket| {
@@ -202,11 +202,11 @@ impl UdpSocket {
     /// Close the socket.
     pub fn shutdown(&self) -> AxResult {
         let handle = unsafe { self.handle.get().read().unwrap() };
-        SOCKET_SET.with_socket_mut::<udp::Socket, _, _>(handle.0, handle.1.to_string(), |socket| {
+        SOCKET_SET.lock().with_socket_mut::<udp::Socket, _, _>(handle.0, handle.1.to_string(), |socket| {
             debug!("UDP socket {}: shutting down", handle.0);
             socket.close();
         });
-        SOCKET_SET.poll_interfaces();
+        SOCKET_SET.lock().poll_interfaces();
         Ok(())
     }
 
@@ -219,7 +219,7 @@ impl UdpSocket {
             });
         }
         let handle = unsafe { self.handle.get().read().unwrap() };
-        SOCKET_SET.with_socket_mut::<udp::Socket, _, _>(handle.0, handle.1.to_string(), |socket| {
+        SOCKET_SET.lock().with_socket_mut::<udp::Socket, _, _>(handle.0, handle.1.to_string(), |socket| {
             Ok(PollState {
                 readable: socket.can_recv(),
                 writable: socket.can_send(),
@@ -245,7 +245,7 @@ impl UdpSocket {
 
         self.block_on(|| {
             let handle = unsafe { self.handle.get().read().unwrap() };
-            SOCKET_SET.with_socket_mut::<udp::Socket, _, _>(
+            SOCKET_SET.lock().with_socket_mut::<udp::Socket, _, _>(
                 handle.0,
                 handle.1.to_string(),
                 |socket| {
@@ -278,7 +278,7 @@ impl UdpSocket {
 
         self.block_on(|| {
             let handle = unsafe { self.handle.get().read().unwrap() };
-            SOCKET_SET.with_socket_mut::<udp::Socket, _, _>(
+            SOCKET_SET.lock().with_socket_mut::<udp::Socket, _, _>(
                 handle.0,
                 handle.1.to_string(),
                 |socket| {
@@ -302,7 +302,7 @@ impl UdpSocket {
             f()
         } else {
             loop {
-                SOCKET_SET.poll_interfaces();
+                SOCKET_SET.lock().poll_interfaces();
                 match f() {
                     Ok(t) => return Ok(t),
                     Err(AxError::WouldBlock) => ruxtask::yield_now(),
@@ -317,7 +317,7 @@ impl Drop for UdpSocket {
     fn drop(&mut self) {
         self.shutdown().ok();
         let handle = unsafe { self.handle.get().read().unwrap() };
-        SOCKET_SET.remove(handle.0, handle.1.to_string());
+        SOCKET_SET.lock().remove(handle.0, handle.1.to_string());
     }
 }
 

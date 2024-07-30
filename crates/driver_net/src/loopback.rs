@@ -29,7 +29,7 @@ unsafe impl Sync for LoopbackDevice {}
 
 impl LoopbackDevice {
     /// Creates a new driver instance and initializes the device
-    pub fn new(mac_address: [u8; 6]) -> Self {
+    pub fn new(mac_address: Option<[u8; 6]>) -> Self {
         let buf_pool = match NetBufPool::new(1024, NET_BUF_LEN) {
             Ok(pool) => pool,
             Err(_) => {
@@ -37,7 +37,10 @@ impl LoopbackDevice {
             }
         };
         Self {
-            mac_address: EthernetAddress(mac_address),
+            mac_address: match mac_address {
+                Some(address) => EthernetAddress(address),
+                None => EthernetAddress([0; 6])
+            },
             queue: VecDeque::new(),
             buf_pool: buf_pool,
         }

@@ -51,6 +51,11 @@ macro_rules! for_each_drivers {
         #[allow(unused_imports)]
         use crate::virtio::{self, VirtIoDevMeta};
 
+        {
+            type $drv_type = crate::drivers::LoopbackDriver;
+            $code
+        }
+
         #[cfg(net_dev = "virtio-net")]
         {
             type $drv_type = <virtio::VirtIoNet as VirtIoDevMeta>::Driver;
