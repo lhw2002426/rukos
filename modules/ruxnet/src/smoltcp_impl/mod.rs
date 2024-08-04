@@ -84,7 +84,7 @@ fn to_static_str(s: String) -> &'static str {
 }
 
 fn route_dev(addr: [u8; 4]) -> String {
-    if addr[0] == 127 || addr == [10,0,2,15] {
+    if addr[0] == 127 {
         "loopback".to_string()
     } else {
         "eth0".to_string()
@@ -146,7 +146,7 @@ impl<'a> SocketSetWrapper<'a> {
             .0
             .lock()
             .add(socket);
-        debug!("socket {}: created", handle);
+        debug!("socket {}: created in {}", handle, name);
         handle
     }
 

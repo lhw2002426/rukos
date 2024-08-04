@@ -106,6 +106,7 @@ impl ListenTable {
                 .iter()
                 .enumerate()
                 .find_map(|(idx, handle)| {
+                    info!("lhw debug in listen table accept {} {}",handle.0, handle.1);
                     is_connected(handle.0, handle.1.clone())
                         .then(|| (idx, get_addr_tuple(handle.0, handle.1.clone())))
                 })

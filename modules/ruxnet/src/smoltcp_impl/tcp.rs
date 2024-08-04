@@ -140,6 +140,7 @@ impl TcpSocket {
                 SocketAddr::V4(addr) => route_dev(addr.ip().octets()),
                 _ => panic!("IPv6 not supported"),
             };
+            info!("lhw debug in tcp connect {:?} {}",remote_addr.ip(), iface_name);
             let binding = IFACE_LIST.lock();
             let iface = &binding.iter().find(|iface| iface.name() == iface_name).unwrap().iface;
             let handle = unsafe { self.handle.get().read() }.unwrap_or_else(|| {
@@ -181,6 +182,7 @@ impl TcpSocket {
         .unwrap_or_else(|_| ax_err!(AlreadyExists, "socket connect() failed: already connected"))?; // EISCONN
 
         self.block_on(|| {
+            info!("lhw debug in tcp connect after block on");
             let PollState { writable, .. } = self.poll_connect()?;
             if !writable {
                 // When set to non_blocking, directly return inporgress
@@ -224,6 +226,7 @@ impl TcpSocket {
                     SocketAddr::V4(addr) => route_dev(addr.ip().octets()),
                     _ => panic!("IPv6 not supported"),
                 };
+                info!("lhw debug in tcp bind {:?} {}",local_addr.ip(), iface_name);
                 let handle = self.handle.get().read().unwrap_or_else(|| {
                     (
                         SOCKET_SET.lock().add(
@@ -270,7 +273,9 @@ impl TcpSocket {
 
         // SAFETY: `self.local_addr` should be initialized after `bind()`.
         let local_port = unsafe { self.local_addr.get().read().port };
+        info!("lhw debug in tcp accept");
         self.block_on(|| {
+            info!("lhw debug in tcp accept after block on");
             let (handle, (local_addr, peer_addr)) = LISTEN_TABLE.accept(local_port)?;
             debug!("TCP socket accepted a new connection {}", peer_addr);
             let iface_name = match peer_addr.addr {
@@ -331,6 +336,7 @@ impl TcpSocket {
         // SAFETY: `self.handle` should be initialized in a connected socket.
         let handle = unsafe { self.handle.get().read().unwrap() };
         self.block_on(|| {
+            info!("lhw debug in tcp recv after block on");
             SOCKET_SET.lock().with_socket_mut::<tcp::Socket, _, _>(
                 handle.0,
                 handle.1.to_string(),
@@ -379,6 +385,7 @@ impl TcpSocket {
         // SAFETY: `self.handle` should be initialized in a connected socket.
         let handle = unsafe { self.handle.get().read().unwrap() };
         self.block_on(|| {
+            info!("lhw debug in tcp send after block on");
             SOCKET_SET.lock().with_socket_mut::<tcp::Socket, _, _>(
                 handle.0,
                 handle.1.to_string(),

@@ -107,6 +107,7 @@ impl UdpSocket {
                 to_static_str(iface_name),
             )
         });
+        info!("lhw debug udp bind {:?}", handle);
         SOCKET_SET.lock().with_socket_mut::<udp::Socket, _, _>(
             handle.0,
             handle.1.to_string(),
@@ -119,6 +120,9 @@ impl UdpSocket {
         )?;
 
         *self_local_addr = Some(local_endpoint);
+        unsafe {
+            self.handle.get().write(Some(handle));
+        }
         debug!("UDP socket {}: bound on {}", handle.0, endpoint);
         Ok(())
     }
@@ -243,6 +247,7 @@ impl UdpSocket {
             self.bind(res)?;
         }
 
+        unsafe { info!("lhw debug udp send impl {:?}", self.handle.get().read().unwrap()); }
         self.block_on(|| {
             let handle = unsafe { self.handle.get().read().unwrap() };
             SOCKET_SET.lock().with_socket_mut::<udp::Socket, _, _>(
@@ -276,6 +281,7 @@ impl UdpSocket {
             return ax_err!(NotConnected, "socket send() failed");
         }
 
+        unsafe { info!("lhw debug udp recv impl {:?}", self.handle.get().read().unwrap()); }
         self.block_on(|| {
             let handle = unsafe { self.handle.get().read().unwrap() };
             SOCKET_SET.lock().with_socket_mut::<udp::Socket, _, _>(
