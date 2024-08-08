@@ -51,7 +51,7 @@ const MSG_DONTWAIT: i32 = 4;
 /// [`accept`]: TcpSocket::accept
 pub struct TcpSocket {
     state: AtomicU8,
-    handle: UnsafeCell<Option<(SocketHandle, &'static str)>>,
+    handle: UnsafeCell<Option<SocketHandle>>,
     local_addr: UnsafeCell<IpEndpoint>,
     peer_addr: UnsafeCell<IpEndpoint>,
     nonblock: AtomicBool,
@@ -80,7 +80,7 @@ impl TcpSocket {
     ) -> Self {
         Self {
             state: AtomicU8::new(STATE_CONNECTED),
-            handle: UnsafeCell::new(Some((handle, name))),
+            handle: UnsafeCell::new(Some(handle)),
             local_addr: UnsafeCell::new(local_addr),
             peer_addr: UnsafeCell::new(peer_addr),
             nonblock: AtomicBool::new(false),
@@ -144,17 +144,14 @@ impl TcpSocket {
             let binding = IFACE_LIST.lock();
             let iface = &binding.iter().find(|iface| iface.name() == iface_name).unwrap().iface;
             let handle = unsafe { self.handle.get().read() }.unwrap_or_else(|| {
-                (
-                    SOCKET_SET.lock().add(SocketSetWrapper::new_tcp_socket(), iface_name.clone()),
-                    to_static_str(iface_name),
-                )
+                    SOCKET_SET.lock().add(SocketSetWrapper::new_tcp_socket())
             });
 
             // TODO: check remote addr unreachable
             let remote_endpoint = from_core_sockaddr(remote_addr);
             let bound_endpoint = self.bound_endpoint()?;
             let (local_endpoint, remote_endpoint) = SOCKET_SET.lock()
-                .with_socket_mut::<tcp::Socket, _, _>(handle.0, handle.1.to_string(), |socket| {
+                .with_socket_mut::<tcp::Socket, _, _>(handle, |socket| {
                     socket
                         .connect(iface.lock().context(), remote_endpoint, bound_endpoint)
                         .or_else(|e| match e {
@@ -182,7 +179,7 @@ impl TcpSocket {
         .unwrap_or_else(|_| ax_err!(AlreadyExists, "socket connect() failed: already connected"))?; // EISCONN
 
         self.block_on(|| {
-            info!("lhw debug in tcp connect after block on");
+            //info!("lhw debug in tcp connect after block on");
             let PollState { writable, .. } = self.poll_connect()?;
             if !writable {
                 // When set to non_blocking, directly return inporgress
@@ -228,13 +225,7 @@ impl TcpSocket {
                 };
                 info!("lhw debug in tcp bind {:?} {}",local_addr.ip(), iface_name);
                 let handle = self.handle.get().read().unwrap_or_else(|| {
-                    (
-                        SOCKET_SET.lock().add(
-                            SocketSetWrapper::new_tcp_socket(),
-                            iface_name.clone(),
-                        ),
-                        to_static_str(iface_name),
-                    )
+                        SOCKET_SET.lock().add(SocketSetWrapper::new_tcp_socket())
                 });
                 self.handle.get().write(Some(handle));
             }
@@ -275,7 +266,7 @@ impl TcpSocket {
         let local_port = unsafe { self.local_addr.get().read().port };
         info!("lhw debug in tcp accept");
         self.block_on(|| {
-            info!("lhw debug in tcp accept after block on");
+            //info!("lhw debug in tcp accept after block on");
             let (handle, (local_addr, peer_addr)) = LISTEN_TABLE.accept(local_port)?;
             debug!("TCP socket accepted a new connection {}", peer_addr);
             let iface_name = match peer_addr.addr {
@@ -296,10 +287,9 @@ impl TcpSocket {
             // no other threads can read or write it.
             let handle = unsafe { self.handle.get().read().unwrap() };
             SOCKET_SET.lock().with_socket_mut::<tcp::Socket, _, _>(
-                handle.0,
-                handle.1.to_string(),
+                handle,
                 |socket| {
-                    debug!("TCP socket {}: shutting down", handle.0);
+                    debug!("TCP socket {}: shutting down", handle);
                     socket.close();
                 },
             );
@@ -336,10 +326,9 @@ impl TcpSocket {
         // SAFETY: `self.handle` should be initialized in a connected socket.
         let handle = unsafe { self.handle.get().read().unwrap() };
         self.block_on(|| {
-            info!("lhw debug in tcp recv after block on");
+            //info!("lhw debug in tcp recv after block on");
             SOCKET_SET.lock().with_socket_mut::<tcp::Socket, _, _>(
-                handle.0,
-                handle.1.to_string(),
+                handle,
                 |socket| {
                     if !socket.is_active() {
                         // not open
@@ -385,10 +374,9 @@ impl TcpSocket {
         // SAFETY: `self.handle` should be initialized in a connected socket.
         let handle = unsafe { self.handle.get().read().unwrap() };
         self.block_on(|| {
-            info!("lhw debug in tcp send after block on");
+            //info!("lhw debug in tcp send after block on");
             SOCKET_SET.lock().with_socket_mut::<tcp::Socket, _, _>(
-                handle.0,
-                handle.1.to_string(),
+                handle,
                 |socket| {
                     if !socket.is_active() || !socket.may_send() {
                         // closed by remote
@@ -500,14 +488,14 @@ impl TcpSocket {
         // SAFETY: `self.handle` should be initialized above.
         let handle = unsafe { self.handle.get().read().unwrap() };
         let writable =
-            SOCKET_SET.lock().with_socket::<tcp::Socket, _, _>(handle.0, handle.1.to_string(), |socket| {
+            SOCKET_SET.lock().with_socket::<tcp::Socket, _, _>(handle, |socket| {
                 match socket.state() {
                     State::SynSent => false, // wait for connection
                     State::Established => {
                         self.set_state(STATE_CONNECTED); // connected
                         debug!(
                             "TCP socket {}: connected to {}",
-                            handle.0,
+                            handle,
                             socket.remote_endpoint().unwrap(),
                         );
                         true
@@ -531,7 +519,7 @@ impl TcpSocket {
     fn poll_stream(&self) -> AxResult<PollState> {
         // SAFETY: `self.handle` should be initialized in a connected socket.
         let handle = unsafe { self.handle.get().read().unwrap() };
-        SOCKET_SET.lock().with_socket::<tcp::Socket, _, _>(handle.0, handle.1.to_string(), |socket| {
+        SOCKET_SET.lock().with_socket::<tcp::Socket, _, _>(handle, |socket| {
             Ok(PollState {
                 readable: !socket.may_recv() || socket.can_recv(),
                 writable: !socket.may_send() || socket.can_send(),
@@ -577,7 +565,7 @@ impl Drop for TcpSocket {
         self.shutdown().ok();
         // Safe because we have mut reference to `self`.
         if let Some(handle) = unsafe { self.handle.get().read() } {
-            SOCKET_SET.lock().remove(handle.0, handle.1.to_string());
+            SOCKET_SET.lock().remove(handle);
         }
     }
 }

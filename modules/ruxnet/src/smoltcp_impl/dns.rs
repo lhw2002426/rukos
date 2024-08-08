@@ -29,7 +29,7 @@ impl DnsSocket {
     /// Creates a new DNS socket.
     pub fn new() -> Self {
         let socket = SocketSetWrapper::new_dns_socket();
-        let handle = Some(SOCKET_SET.lock().add(socket, "eth0".to_string()));
+        let handle = Some(SOCKET_SET.lock().add(socket));
         Self { handle }
     }
 
@@ -38,7 +38,6 @@ impl DnsSocket {
     pub fn update_servers(self, servers: &[smoltcp::wire::IpAddress]) {
         SOCKET_SET.lock().with_socket_mut::<dns::Socket, _, _>(
             self.handle.unwrap(),
-            "eth0".to_string(),
             |socket| socket.update_servers(servers),
         );
     }
@@ -50,7 +49,7 @@ impl DnsSocket {
         let binding = IFACE_LIST.lock();
         let iface = &binding.iter().find(|iface| iface.name() == "eth0").unwrap().iface;
         let query_handle = SOCKET_SET.lock()
-            .with_socket_mut::<dns::Socket, _, _>(handle, "eth0".to_string(), |socket| {
+            .with_socket_mut::<dns::Socket, _, _>(handle, |socket| {
                 socket.start_query(iface.lock().context(), name, query_type)
             })
             .map_err(|e| match e {
@@ -68,7 +67,6 @@ impl DnsSocket {
             SOCKET_SET.lock().poll_interfaces();
             match SOCKET_SET.lock().with_socket_mut::<dns::Socket, _, _>(
                 handle,
-                "eth0".to_string(),
                 |socket| {
                     socket.get_query_result(query_handle).map_err(|e| match e {
                         GetQueryResultError::Pending => AxError::WouldBlock,
@@ -95,7 +93,7 @@ impl DnsSocket {
 impl Drop for DnsSocket {
     fn drop(&mut self) {
         if let Some(handle) = self.handle {
-            SOCKET_SET.lock().remove(handle, "eth0".to_string());
+            SOCKET_SET.lock().remove(handle);
         }
     }
 }

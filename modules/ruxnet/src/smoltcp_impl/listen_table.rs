@@ -23,7 +23,7 @@ const PORT_NUM: usize = 65536;
 
 struct ListenTableEntry {
     listen_endpoint: IpListenEndpoint,
-    syn_queue: VecDeque<(SocketHandle, String)>,
+    syn_queue: VecDeque<SocketHandle>,
 }
 
 impl ListenTableEntry {
@@ -45,8 +45,8 @@ impl ListenTableEntry {
 
 impl Drop for ListenTableEntry {
     fn drop(&mut self) {
-        for handle in &self.syn_queue {
-            SOCKET_SET.lock().remove(handle.0, handle.1.clone());
+        for &handle in &self.syn_queue {
+            SOCKET_SET.lock().remove(handle);
         }
     }
 }
@@ -93,7 +93,7 @@ impl ListenTable {
             Ok(entry
                 .syn_queue
                 .iter()
-                .any(|handle| is_connected(handle.0, handle.1.clone())))
+                .any(|&handle| is_connected(handle)))
         } else {
             ax_err!(InvalidInput, "socket accept() failed: not listen")
         }
@@ -105,10 +105,10 @@ impl ListenTable {
             let (idx, addr_tuple) = syn_queue
                 .iter()
                 .enumerate()
-                .find_map(|(idx, handle)| {
-                    info!("lhw debug in listen table accept {} {}",handle.0, handle.1);
-                    is_connected(handle.0, handle.1.clone())
-                        .then(|| (idx, get_addr_tuple(handle.0, handle.1.clone())))
+                .find_map(|(idx, &handle)| {
+                    info!("lhw debug in listen table accept {}",handle);
+                    is_connected(handle)
+                        .then(|| (idx, get_addr_tuple(handle)))
                 })
                 .ok_or(AxError::WouldBlock)?; // wait for connection
             if idx > 0 {
@@ -119,7 +119,7 @@ impl ListenTable {
                 );
             }
             let handle = syn_queue.swap_remove_front(idx).unwrap();
-            Ok((handle.0, addr_tuple))
+            Ok((handle, addr_tuple))
         } else {
             ax_err!(InvalidInput, "socket accept() failed: not listen")
         }
@@ -152,20 +152,20 @@ impl ListenTable {
                     IpAddress::Ipv4(addr) => route_dev(addr.0),
                     _ => panic!("IPv6 not supported"),
                 };
-                entry.syn_queue.push_back((handle, iface_name));
+                entry.syn_queue.push_back(handle);
             }
         }
     }
 }
 
-fn is_connected(handle: SocketHandle, iface_name: String) -> bool {
-    SOCKET_SET.lock().with_socket::<tcp::Socket, _, _>(handle, iface_name, |socket| {
+fn is_connected(handle: SocketHandle) -> bool {
+    SOCKET_SET.lock().with_socket::<tcp::Socket, _, _>(handle, |socket| {
         !matches!(socket.state(), State::Listen | State::SynReceived)
     })
 }
 
-fn get_addr_tuple(handle: SocketHandle, iface_name: String) -> (IpEndpoint, IpEndpoint) {
-    SOCKET_SET.lock().with_socket::<tcp::Socket, _, _>(handle, iface_name, |socket| {
+fn get_addr_tuple(handle: SocketHandle) -> (IpEndpoint, IpEndpoint) {
+    SOCKET_SET.lock().with_socket::<tcp::Socket, _, _>(handle, |socket| {
         (
             socket.local_endpoint().unwrap(),
             socket.remote_endpoint().unwrap(),

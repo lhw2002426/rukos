@@ -91,7 +91,8 @@ fn route_dev(addr: [u8; 4]) -> String {
     }
 }
 
-struct SocketSetWrapper<'a>(vec::Vec<(Mutex<SocketSet<'a>>, &'a str)>);
+//struct SocketSetWrapper<'a>(vec::Vec<(Mutex<SocketSet<'a>>, &'a str)>);
+struct SocketSetWrapper<'a>(Mutex<SocketSet<'a>>);
 
 struct DeviceWrapper {
     inner: RefCell<AxNetDevice>, // use `RefCell` is enough since it's wrapped in `Mutex` in `InterfaceWrapper`.
@@ -106,11 +107,7 @@ struct InterfaceWrapper {
 
 impl<'a> SocketSetWrapper<'a> {
     fn new() -> Self {
-        Self(vec::Vec::new())
-    }
-
-    fn add_iface(&mut self, name: &'a str) {
-        self.0.push((Mutex::new(SocketSet::new(vec![])), name))
+        Self(Mutex::new(SocketSet::new(vec![])))
     }
 
     pub fn new_tcp_socket() -> socket::tcp::Socket<'a> {
@@ -136,76 +133,38 @@ impl<'a> SocketSetWrapper<'a> {
         socket::dns::Socket::new(&[server_addr], vec![])
     }
 
-    pub fn add<T: AnySocket<'a>>(&self, socket: T, name: String) -> SocketHandle {
-        info!("lhw debug socketset add name {}",name);
-        let handle = self
-            .0
-            .iter()
-            .find(|socketset| socketset.1 == name)
-            .unwrap()
-            .0
-            .lock()
-            .add(socket);
-        debug!("socket {}: created in {}", handle, name);
+    pub fn add<T: AnySocket<'a>>(&self, socket: T) -> SocketHandle {
+        let handle = self.0.lock().add(socket);
+        debug!("socket {}: created", handle);
         handle
     }
 
-    pub fn with_socket<T: AnySocket<'a>, R, F>(&self, handle: SocketHandle, name: String, f: F) -> R
+    pub fn with_socket<T: AnySocket<'a>, R, F>(&self, handle: SocketHandle, f: F) -> R
     where
         F: FnOnce(&T) -> R,
     {
-        let set = self
-            .0
-            .iter()
-            .find(|socketset| socketset.1 == name)
-            .unwrap()
-            .0
-            .lock();
+        let set = self.0.lock();
         let socket = set.get(handle);
         f(socket)
     }
 
-    pub fn with_socket_mut<T: AnySocket<'a>, R, F>(
-        &self,
-        handle: SocketHandle,
-        name: String,
-        f: F,
-    ) -> R
+    pub fn with_socket_mut<T: AnySocket<'a>, R, F>(&self, handle: SocketHandle, f: F) -> R
     where
         F: FnOnce(&mut T) -> R,
     {
-        let mut set = self
-            .0
-            .iter()
-            .find(|socketset| socketset.1 == name)
-            .unwrap()
-            .0
-            .lock();
+        let mut set = self.0.lock();
         let socket = set.get_mut(handle);
         f(socket)
     }
 
     pub fn poll_interfaces(&self) {
         for iface in IFACE_LIST.lock().iter() {
-            iface.poll(
-                &self
-                    .0
-                    .iter()
-                    .find(|socketset| socketset.1 == iface.name())
-                    .unwrap()
-                    .0,
-            );
+            iface.poll(&self.0);
         }
     }
 
-    pub fn remove(&self, handle: SocketHandle, name: String) {
-        self.0
-            .iter()
-            .find(|socketset| socketset.1 == name)
-            .unwrap()
-            .0
-            .lock()
-            .remove(handle);
+    pub fn remove(&self, handle: SocketHandle) {
+        self.0.lock().remove(handle);
         debug!("socket {}: destroyed", handle);
     }
 }
@@ -451,7 +410,6 @@ pub(crate) fn init_netdev(net_dev: AxNetDevice) {
     {
         dev_iface.setup_ip_addr(IP.parse().expect("invalid IP address"), IP_PREFIX);
     }
-    SOCKET_SET.lock().add_iface(to_static_str(dev_iface.name().to_string()));
 
     IFACE_LIST.lock().push(dev_iface);
 }

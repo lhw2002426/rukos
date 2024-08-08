@@ -1,0 +1,742 @@
+[37mmkdir[0m [90m-p apps/c/httpserver_loopback[0m
+    [92;1mBuilding[0m App: httpserver_loopback, Arch: aarch64, Platform: aarch64-qemu-virt, App type: c
+[37mcargo build[0m [90m--target aarch64-unknown-none-softfloat --target-dir /root/rux/loop/rukos/target --release  -p ruxmusl --features "ruxfeat/log-level-debug ruxfeat/tls ruxmusl/alloc ruxmusl/paging ruxmusl/net ruxmusl/multitask ruxmusl/fd ruxmusl/musl ruxmusl/fp_simd ruxmusl/fd ruxmusl/sched_rr"[0m
+[37maarch64-linux-musl-gcc[0m [90m-nostdinc -fno-builtin -ffreestanding -Wall -isystem/root/rux/loop/rukos/ulib/ruxmusl/install_aarch64_release/include -O3   -c -o apps/c/httpserver_loopback/httpserver.o apps/c/httpserver_loopback/httpserver.c[0m
+    [96;1mLinking[0m apps/c/httpserver_loopback/httpserver_loopback_aarch64-qemu-virt.elf
+[37mrust-lld -flavor gnu[0m [90m-nostdlib -static -no-pie --gc-sections -T/root/rux/loop/rukos/modules/ruxhal/linker_aarch64-qemu-virt.lds ulib/ruxmusl/install_aarch64_release/lib/libc.a target/aarch64-unknown-none-softfloat/release/libruxmusl.a  apps/c/httpserver_loopback/httpserver.o -o apps/c/httpserver_loopback/httpserver_loopback_aarch64-qemu-virt.elf[0m
+[37mrust-objcopy --binary-architecture=aarch64[0m [90mapps/c/httpserver_loopback/httpserver_loopback_aarch64-qemu-virt.elf --strip-all -O binary apps/c/httpserver_loopback/httpserver_loopback_aarch64-qemu-virt.bin[0m
+    [96;1mRunning[0m on qemu...
+[37mqemu-system-aarch64[0m [90m-m 2G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/c/httpserver_loopback/httpserver_loopback_aarch64-qemu-virt.bin -append ";;" -device virtio-net-device,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555,hostfwd=tcp::5556-:5556,hostfwd=udp::5556-:5556,hostfwd=tcp::5557-:5557,hostfwd=udp::5557-:5557,hostfwd=tcp::5558-:5558,hostfwd=udp::5558-:5558,hostfwd=tcp::5559-:5559,hostfwd=udp::5559-:5559, -object filter-dump,id=dump0,netdev=net0,file=netdump.pcap -nographic[0m
+
+8888888b.                     .d88888b.   .d8888b.  
+888   Y88b                   d88P" "Y88b d88P  Y88b 
+888    888                   888     888 Y88b.      
+888   d88P 888  888 888  888 888     888  "Y888b.   
+8888888P"  888  888 `Y8bd8P' 888     888     "Y88b. 
+888 T88b   888  888   X88K   888     888       "888 
+888  T88b  Y88b 888 .d8""8b. Y88b. .d88P Y88b  d88P 
+888   T88b  "Y88888 888  888  "Y88888P"   "Y8888P" 
+
+arch = aarch64
+platform = aarch64-qemu-virt
+target = aarch64-unknown-none-softfloat
+smp = 1
+build_mode = release
+log_level = debug
+
+[37m[  0.004833 0 ruxruntime:175] [32mLogging is enabled.[m
+[m[37m[  0.006495 0 ruxruntime:176] [32mPrimary CPU 0 started, dtb = 0x48000000.[m
+[m[37m[  0.007041 0 ruxruntime:178] [32mFound physcial memory regions:[m
+[m[37m[  0.007587 0 ruxruntime:180] [32m  [PA:0x40080000, PA:0x400e2000) .text (READ | EXECUTE | RESERVED)[m
+[m[37m[  0.008441 0 ruxruntime:180] [32m  [PA:0x400e2000, PA:0x400f3000) .rodata (READ | RESERVED)[m
+[m[37m[  0.008841 0 ruxruntime:180] [32m  [PA:0x400f3000, PA:0x400f7000) .data .tdata .tbss .percpu (READ | WRITE | RESERVED)[m
+[m[37m[  0.009137 0 ruxruntime:180] [32m  [PA:0x400f7000, PA:0x40177000) boot stack (READ | WRITE | RESERVED)[m
+[m[37m[  0.009396 0 ruxruntime:180] [32m  [PA:0x40177000, PA:0x401a1000) .bss (READ | WRITE | RESERVED)[m
+[m[37m[  0.009705 0 ruxruntime:180] [32m  [PA:0x401a1000, PA:0xc0000000) free memory (READ | WRITE | EXECUTE | FREE)[m
+[m[37m[  0.010200 0 ruxruntime:180] [32m  [PA:0x9000000, PA:0x9001000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.010666 0 ruxruntime:180] [32m  [PA:0x8000000, PA:0x8020000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.010946 0 ruxruntime:180] [32m  [PA:0xa000000, PA:0xa004000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.011722 0 ruxruntime:180] [32m  [PA:0x10000000, PA:0x3eff0000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.013909 0 ruxruntime:180] [32m  [PA:0x4010000000, PA:0x4020000000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.014185 0 ruxruntime:180] [32m  [PA:0x9010000, PA:0x9011000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.015453 0 ruxruntime:371] [32mInitialize global memory allocator...[m
+[m[37m[  0.015860 0 ruxruntime:372] [32m  use slab allocator.[m
+[m[37m[  0.020111 0 axalloc:221] [36minitialize global allocator at: [0xffff0000401a1000, 0xffff0000c0000000)[m
+[m[37m[  0.023400 0 ruxruntime:194] [32mInitialize kernel page table...[m
+[m[37m[  0.028113 0 ruxruntime:201] [32mInitialize platform devices...[m
+[m[37m[  0.028642 0 ruxhal::platform::aarch64_common::gic:60] [32mInitialize GICv2...[m
+[m[37m[  0.030231 0 ruxtask::api:77] [32mInitialize scheduling...[m
+[m[37m[  0.035754 0 ruxtask::task:265] [36mnew task: Task(1, "idle")[m
+[m[37m[  0.036604 0 ruxtask::task:465] [36mtaskStack::layout = Layout { size: 4096, align: 8 (1 << 3) }[m
+[m[37m[  0.041198 0 axalloc:127] [36mexpand heap memory: [0xffff0000401b3000, 0xffff0000401c3000)[m
+[m[37m[  0.043773 0 axalloc:127] [36mexpand heap memory: [0xffff0000401c3000, 0xffff0000401e3000)[m
+[m[37m[  0.044354 0 axalloc:127] [36mexpand heap memory: [0xffff0000401e3000, 0xffff000040223000)[m
+[m[37m[  0.047600 0 axalloc:127] [36mexpand heap memory: [0xffff000040223000, 0xffff0000402a3000)[m
+[m[37m[  0.049449 0 ruxtask::task:265] [36mnew task: Task(3, "gc")[m
+[m[37m[  0.049747 0 ruxtask::task:465] [36mtaskStack::layout = Layout { size: 524288, align: 8 (1 << 3) }[m
+[m[37m[  0.050405 0 axalloc:127] [36mexpand heap memory: [0xffff0000402a3000, 0xffff0000404a3000)[m
+[m[37m[  0.053400 0 ruxtask::api:85] [32m  use Round-robin scheduler.[m
+[m[37m[  0.056387 0 ruxdriver:168] [32mInitialize device drivers...[m
+[m[37m[  0.059572 0 ruxdriver:169] [32m  device model: dyn[m
+[m[37m[  0.061051 0 ruxdriver::drivers:52] [36mmmc probe[m
+[m[37m[  0.061507 0 axalloc:127] [36mexpand heap memory: [0xffff0000404a3000, 0xffff0000408a3000)[m
+[m[37m[  0.067546 0 ruxdriver:138] [32mregistered a new Net device: "loopback"[m
+[m[37m[  0.068691 0 virtio_drivers::device::net::dev_raw:31] [32mDevice features CTRL_GUEST_OFFLOADS | MAC | GSO | MRG_RXBUF | STATUS | CTRL_VQ | CTRL_RX | CTRL_VLAN | CTRL_RX_EXTRA | GUEST_ANNOUNCE | CTL_MAC_ADDR | RING_INDIRECT_DESC | RING_EVENT_IDX[m
+[m[37m[  0.071043 0 virtio_drivers::device::net::dev_raw:41] [36mGot MAC=[52, 54, 00, 12, 34, 56], status=LINK_UP[m
+[m[37m[  0.081741 0 ruxdriver::bus::mmio:20] [32mregistered a new Net device at [PA:0xa003e00, PA:0xa004000): "virtio-net"[m
+[m[37m[  0.084060 0 ruxdriver:176] [36mnumber of NICs: 2[m
+[m[37m[  0.084494 0 ruxdriver:179] [36m  NIC 0: "loopback"[m
+[m[37m[  0.084739 0 ruxdriver:179] [36m  NIC 1: "virtio-net"[m
+[m[37m[  0.085003 0 ruxdriver:184] [36mnumber of block devices: 0[m
+[m[37m[  0.085369 0 ruxnet:64] [32mInitialize network subsystem...[m
+[m[37m[  0.085732 0 ruxnet:69] [32m  net stack: smoltcp[m
+[m[37m[  0.086819 0 axalloc:127] [36mexpand heap memory: [0xffff0000408a7000, 0xffff0000410a7000)[m
+[m[37m[  0.098648 0 ruxnet:77] [32m  use NIC: "loopback"[m
+[m[37m[  0.100243 0 ruxnet::smoltcp_impl:391] [32mcreated net interface "loopback":[m
+[m[37m[  0.100656 0 ruxnet::smoltcp_impl:392] [32m  ether:    00-00-00-00-00-00[m
+[m[37m[  0.102228 0 ruxnet::smoltcp_impl:398] [32m  ip:       127.0.0.1/24[m
+[m[37m[  0.104281 0 ruxnet:77] [32m  use NIC: "virtio-net"[m
+[m[37m[  0.104862 0 ruxnet::smoltcp_impl:391] [32mcreated net interface "eth0":[m
+[m[37m[  0.105167 0 ruxnet::smoltcp_impl:392] [32m  ether:    52-54-00-12-34-56[m
+[m[37m[  0.105573 0 ruxnet::smoltcp_impl:398] [32m  ip:       10.0.2.15/24[m
+[m[37m[  0.105968 0 ruxnet::smoltcp_impl:404] [32m  gateway:  Ipv4(Address([10, 0, 2, 2]))[m
+[m[37m[  0.107790 0 ruxruntime:265] [32mInitialize interrupt handlers...[m
+[m[37m[  0.109446 0 ruxruntime:275] [32mPrimary CPU 0 init OK.[m
+[m[37m[  0.112848 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 96[m
+[m[37m[  0.114136 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: SET_TID_ADDRESS[m
+[m[37m[  0.117970 0:2 ruxos_posix_api::imp::pthread:362] [36mset_tid_address <= addr: 0xffff000040177868[m
+[m[37m[  0.118630 0:2 ruxos_posix_api::imp::pthread:361] [36msys_set_tid_address => Ok(2)[m
+[m[37m[  0.123652 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[  0.124132 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  0.124643 0:2 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  0.125117 0:2 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.126117 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 222[m
+[m[37m[  0.126496 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MMAP[m
+[m[37m[  0.127134 0:2 ruxos_posix_api::imp::mmap::api:42] [36msys_mmap <= start: 0x0, len: 0x23000, prot:0x0, flags:0x22, fd: -1[m
+[m[37m[  0.129275 0:2 ruxos_posix_api::imp::mmap::api:46] [36msys_mmap => Ok(0xffff800000000000)[m
+[m[37m[  0.130183 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 226[m
+[m[37m[  0.130491 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MPROTECT[m
+[m[37m[  0.131120 0:2 ruxos_posix_api::imp::mmap::api:194] [36msys_mprotect <= addr: 0xffff800000002000, len: 0x21000, prot: 3[m
+[m[37m[  0.136692 0:2 ruxos_posix_api::imp::mmap::api:199] [36msys_mprotect => Ok(0)[m
+[m[37m[  0.142627 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[  0.143002 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  0.143291 0:2 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  0.143616 0:2 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.144083 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 220[m
+[m[37m[  0.144467 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: CLONE[m
+[m[37m[  0.145314 0:2 ruxos_posix_api::imp::pthread:260] [36msys_clone <= flags: 7d0f00, stack: 0xffff800000022ef0, ctid: ffff000040177868[m
+[m[37m[  0.146184 0:2 ruxtask::task:242] [36mnew task: Task(4, "")[m
+[m[37m[  0.146596 0:2 ruxtask::task:465] [36mtaskStack::layout = Layout { size: 524288, align: 8 (1 << 3) }[m
+[m[37m[  0.148070 0:2 ruxtask::run_queue:51] [36mtask spawn: Task(4, "")[m
+[m[37m[  0.148671 0:2 ruxos_posix_api::imp::pthread:265] [36msys_clone => Ok(4)[m
+[m[37m[  0.150140 0:2 ruxtask::run_queue:91] [36mcurrent task is to be preempted: Task(2, "main"), allow=true[m
+[m[37m[  0.161014 0:3 ruxtask::run_queue:126] [36mtask block: Task(3, "gc")[m
+[m[37m[  0.161907 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[  0.162206 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  0.162410 0:4 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  0.162661 0:4 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.163097 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 198[m
+[m[37m[  0.163438 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: SOCKET[m
+[m[37m[  0.163820 0:4 ruxos_posix_api::imp::net:247] [36msys_socket <= 2 1 0[m
+[m[37m[  0.165205 0:4 ruxos_posix_api::imp::net:250] [36msys_socket => Ok(3)[m
+[m[37m[  0.165934 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 200[m
+[m[37m[  0.166260 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: BIND[m
+[m[37m[  0.166722 0:4 ruxos_posix_api::imp::net:295] [36msys_bind <= 3 0xffff00004107ff60 16[m
+[m[37m[  0.167337 0:4 ruxos_posix_api::imp::net:239] [36m    load sockaddr:0xffff00004107ff60 => 0.0.0.0:5555[m
+[m[37m[  0.169614 0:4 ruxnet::smoltcp_impl::tcp:226] [32mlhw debug in tcp bind 0.0.0.0 eth0[m
+[m[37m[  0.172461 0:4 ruxnet::smoltcp_impl:138] [36msocket #0: created[m
+[m[37m[  0.173155 0:4 ruxos_posix_api::imp::net:299] [36msys_bind => Ok(0)[m
+[m[37m[  0.173548 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 201[m
+[m[37m[  0.173828 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: LISTEN[m
+[m[37m[  0.182116 0:4 ruxos_posix_api::imp::net:441] [36msys_listen <= 3 3[m
+[m[37m[  0.183630 0:4 ruxnet::smoltcp_impl::tcp:248] [36mTCP socket listening on *:5555[m
+[m[37m[  0.184391 0:4 ruxos_posix_api::imp::net:442] [36msys_listen => Ok(0)[m
+[m[37m[  0.186888 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 29[m
+[m[37m[  0.187220 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: IOCTL[m
+[m[37m[  0.187691 0:4 ruxos_posix_api::imp::ioctl:33] [36msys_ioctl <= fd: 1, request: 21523[m
+[m[37m[  0.188623 0:4 ruxos_posix_api::imp::ioctl:34] [36msys_ioctl => Ok(0)[m
+[m[37m[  0.189504 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[  0.189760 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[  0.190224 0:4 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[  0.190711 0:4 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff000040177008 32[m
+[mServer listening on 0.0.0.0:5555[37m[  0.192140 0:4 ruxos_posix_api::imp::io:47] [36msys_write => Ok(32)[m
+[m[37m[  0.192976 0:4 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff0000400e21d6 1[m
+[m
+[37m[  0.193426 0:4 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[  0.193811 0:4 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(33)[m
+[m[37m[  0.195022 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 214[m
+[m[37m[  0.195402 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  0.195632 0:4 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  0.197767 0:4 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.201670 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 214[m
+[m[37m[  0.203892 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  0.204585 0:4 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  0.205066 0:4 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.205603 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 222[m
+[m[37m[  0.205946 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MMAP[m
+[m[37m[  0.206264 0:4 ruxos_posix_api::imp::mmap::api:42] [36msys_mmap <= start: 0x0, len: 0x2000, prot:0x0, flags:0x22, fd: -1[m
+[m[37m[  0.206775 0:4 ruxos_posix_api::imp::mmap::api:46] [36msys_mmap => Ok(0xffff800000024000)[m
+[m[37m[  0.207250 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 226[m
+[m[37m[  0.207532 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MPROTECT[m
+[m[37m[  0.207779 0:4 ruxos_posix_api::imp::mmap::api:194] [36msys_mprotect <= addr: 0xffff800000025000, len: 0x1000, prot: 3[m
+[m[37m[  0.208363 0:4 ruxos_posix_api::imp::mmap::api:199] [36msys_mprotect => Ok(0)[m
+[m[37m[  0.208977 0:4 ruxtask::run_queue:91] [36mcurrent task is to be preempted: Task(4, ""), allow=true[m
+[m[37m[  0.209587 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[  0.209887 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  0.210103 0:2 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  0.210302 0:2 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.210674 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 222[m
+[m[37m[  0.210948 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MMAP[m
+[m[37m[  0.211173 0:2 ruxos_posix_api::imp::mmap::api:42] [36msys_mmap <= start: 0x0, len: 0x23000, prot:0x0, flags:0x22, fd: -1[m
+[m[37m[  0.211516 0:2 ruxos_posix_api::imp::mmap::api:46] [36msys_mmap => Ok(0xffff800000027000)[m
+[m[37m[  0.211775 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 226[m
+[m[37m[  0.212052 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MPROTECT[m
+[m[37m[  0.212283 0:2 ruxos_posix_api::imp::mmap::api:194] [36msys_mprotect <= addr: 0xffff800000029000, len: 0x21000, prot: 3[m
+[m[37m[  0.212699 0:2 ruxos_posix_api::imp::mmap::api:199] [36msys_mprotect => Ok(0)[m
+[m[37m[  0.213431 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[  0.213785 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  0.214058 0:2 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  0.214372 0:2 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.214693 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 220[m
+[m[37m[  0.214982 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: CLONE[m
+[m[37m[  0.215433 0:2 ruxos_posix_api::imp::pthread:260] [36msys_clone <= flags: 7d0f00, stack: 0xffff800000049ef0, ctid: ffff000040177868[m
+[m[37m[  0.216895 0:2 ruxtask::task:242] [36mnew task: Task(5, "")[m
+[m[37m[  0.217322 0:2 ruxtask::task:465] [36mtaskStack::layout = Layout { size: 524288, align: 8 (1 << 3) }[m
+[m[37m[  0.218019 0:2 ruxtask::run_queue:51] [36mtask spawn: Task(5, "")[m
+[m[37m[  0.218600 0:2 ruxos_posix_api::imp::pthread:265] [36msys_clone => Ok(5)[m
+[m[37m[  0.222201 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[  0.222642 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  0.222858 0:2 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  0.223158 0:2 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.223882 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 98[m
+[m[37m[  0.224370 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: FUTEX[m
+[m[37m[  0.225245 0:2 ruxos_posix_api::imp::pthread::futex:114] [36msys_futex <= addr: 0xffff800000022f48, op: FUTEX_WAIT, val: 2, to: None[m
+[m[37m[  0.226110 0:2 ruxfutex::api:105] [36mfutex_wait addr: 0xffff800000022f48, val: 2, timeout: None[m
+[m[37m[  0.226875 0:2 ruxtask::run_queue:126] [36mtask block: Task(2, "main")[m
+[m[37m[  0.228475 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 222[m
+[m[37m[  0.229042 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MMAP[m
+[m[37m[  0.229560 0:4 ruxos_posix_api::imp::mmap::api:42] [36msys_mmap <= start: 0x0, len: 0x1000, prot:0x3, flags:0x22, fd: -1[m
+[m[37m[  0.230012 0:4 ruxos_posix_api::imp::mmap::api:46] [36msys_mmap => Ok(0xffff80000004b000)[m
+[m[37m[  0.233086 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 202[m
+[m[37m[  0.233484 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: ACCEPT[m
+[m[37m[  0.234016 0:4 ruxos_posix_api::imp::net:456] [36msys_accept <= 3 0xffff00004107ff60 0xffff00004107ff54[m
+[m[37m[  0.234481 0:4 ruxnet::smoltcp_impl::tcp:267] [32mlhw debug in tcp accept[m
+[m[37m[  0.237933 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[  0.239364 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  0.240591 0:5 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  0.240992 0:5 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.243150 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 101[m
+[m[37m[  0.243463 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: NANO_SLEEP[m
+[m[37m[  0.244224 0:5 ruxos_posix_api::imp::time:89] [36msys_nanosleep <= 1.000000000s[m
+[m[37m[  0.245071 0:5 ruxtask::run_queue:154] [36mtask sleep: Task(5, ""), deadline=1.24475216s[m
+[m[37m[  1.249281 0:4 ruxtask::run_queue:140] [36mtask unblock: Task(5, "")[m
+[m[37m[  1.249724 0:4 ruxtask::run_queue:91] [36mcurrent task is to be preempted: Task(4, ""), allow=true[m
+[m[37m[  1.250192 0:5 ruxos_posix_api::imp::time:81] [36msys_nanosleep => Ok(0)[m
+[m[37m[  1.250780 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 198[m
+[m[37m[  1.250926 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: SOCKET[m
+[m[37m[  1.251075 0:5 ruxos_posix_api::imp::net:247] [36msys_socket <= 2 1 0[m
+[m[37m[  1.251313 0:5 ruxos_posix_api::imp::net:250] [36msys_socket => Ok(4)[m
+[m[37m[  1.251768 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 203[m
+[m[37m[  1.252006 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: CONNECT[m
+[m[37m[  1.252411 0:5 ruxos_posix_api::imp::net:314] [36msys_connect <= 4 0xffff00004087fb60 16[m
+[m[37m[  1.252724 0:5 ruxos_posix_api::imp::net:239] [36m    load sockaddr:0xffff00004087fb60 => 127.0.0.1:5555[m
+[m[37m[  1.253270 0:5 ruxnet::smoltcp_impl::tcp:143] [32mlhw debug in tcp connect 127.0.0.1 loopback[m
+[m[37m[  1.253875 0:5 ruxnet::smoltcp_impl:138] [36msocket #1: created[m
+[m[37m[  1.254561 0:5 smoltcp::iface::interface::ipv4:56] [36mlhw debug in get_source_address_ipv4 127.0.0.1, 127.0.0.1[m
+[m[37m[  1.255038 0:5 smoltcp::socket::tcp:928] [36mlhw debug in connect use loacl endpoint addr 127.0.0.1[m
+[m[37m[  1.255592 0:5 smoltcp::socket::tcp:939] [36mlhw debug in socket connet local addr 127.0.0.1, remote addr 127.0.0.1[m
+[m[37m[  1.256729 0:5 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.257180 0:5 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.258543 0:5 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 127.0.0.1[m
+[m[37m[  1.260779 0:5 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.261863 0:5 smoltcp::iface::interface:1022] [36maddress 127.0.0.1 not in neighbor cache, sending ARP request[m
+[m[37m[  1.262456 0:5 smoltcp::iface::interface:1036] [36mlhw debug in lookup hardware before dispatch ethernet[m
+[m[37m[  1.263024 0:5 smoltcp::iface::interface::ethernet:57] [36mlhw debug tx consume in dispatch ethernet[m
+[m[37m[  1.264926 0:5 smoltcp::iface::interface:1048] [36mlhw debug in lookup hardware after dispatch ethernet[m
+[m[37m[  1.265532 0:5 smoltcp::iface::interface:928] [32mlhw debug in has neighbor[m
+[m[37m[  1.265716 0:5 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 10.0.2.15[m
+[m[37m[  1.266074 0:5 smoltcp::iface::interface:920] [32mlhw debug in route use router[m
+[m[37m[  1.266586 0:5 smoltcp::iface::route:157] [36mlhw debug in lookup addr [0, 0, 0, 0]  prefix 0[m
+[m[37m[  1.267403 0:5 smoltcp::iface::socket_set:100] [36mlhw debug in socket get #1[m
+[m[37m[  1.268063 0:4 smoltcp::iface::interface:527] [36msocket ingress receive frame [FF, FF, FF, FF, FF, FF, 0, 0, 0, 0, 0, 0, 8, 6, 0, 1, 8, 0, 6, 4, 0, 1, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1, FF, FF, FF, FF, FF, FF, 7F, 0, 0, 1][m
+[m[37m[  1.269131 0:4 smoltcp::iface::interface::ipv4:241] [36mlhw debug in process_arp[m
+[m[37m[  1.269650 0:4 smoltcp::iface::interface::ipv4:277] [36mlhw debug before neighbor_cache fill 127.0.0.1, 00-00-00-00-00-00[m
+[m[37m[  1.270290 0:4 smoltcp::iface::interface:891] [36mlhw debug in dispatch packet Arp(EthernetIpv4 { operation: Reply, source_hardware_addr: Address([0, 0, 0, 0, 0, 0]), source_protocol_addr: Address([7F, 0, 0, 1]), target_hardware_addr: Address([0, 0, 0, 0, 0, 0]), target_protocol_addr: Address([7F, 0, 0, 1]) }) hardware addr 00-00-00-00-00-00[m
+[m[37m[  1.271779 0:4 smoltcp::iface::interface::ethernet:57] [36mlhw debug tx consume in dispatch ethernet[m
+[m[37m[  1.272170 0:4 smoltcp::iface::interface:527] [36msocket ingress receive frame [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 6, 0, 1, 8, 0, 6, 4, 0, 2, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1][m
+[m[37m[  1.272694 0:4 smoltcp::iface::interface::ipv4:241] [36mlhw debug in process_arp[m
+[m[37m[  1.272946 0:4 smoltcp::iface::interface::ipv4:277] [36mlhw debug before neighbor_cache fill 127.0.0.1, 00-00-00-00-00-00[m
+[m[37m[  1.273412 0:4 smoltcp::iface::interface::ipv4:299] [36mlhw debug process arp not request[m
+[m[37m[  1.273729 0:4 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[  1.273950 0:4 smoltcp::iface::interface:928] [32mlhw debug in has neighbor[m
+[m[37m[  1.274167 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.274555 0:4 smoltcp::iface::socket_meta:70] [36m#1: neighbor 127.0.0.1 discovered, unsilencing[m
+[m[37m[  1.274919 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.275171 0:4 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.275577 0:4 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 127.0.0.1[m
+[m[37m[  1.275843 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.276176 0:4 smoltcp::iface::neighbor:69] [36mKey: 127.0.0.1[m
+[m[37m[  1.276433 0:4 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.277479 0:4 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[  1.278398 0:4 ruxnet::smoltcp_impl::listen_table:147] [36mTCP socket #2: prepare for connection 127.0.0.1:5556 -> *:5555[m
+[m[37m[  1.278947 0:4 smoltcp::iface::interface:527] [36msocket ingress receive frame [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 34, 0, 0, 40, 0, 40, 6, 3C, C2, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E5, 0, 0, 0, 0, 80, 2, FF, FF, 77, E8, 0, 0, 2, 4, 5, B4, 3, 3, 1, 4, 2, 0, 0, 0][m
+[m[37m[  1.280270 0:4 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [15, B4, 15, B3, A8, E0, 27, E5, 0, 0, 0, 0, 80, 2, FF, FF, 77, E8, 0, 0, 2, 4, 5, B4, 3, 3, 1, 4, 2, 0, 0, 0][m
+[m[37m[  1.281515 0:4 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.281856 0:4 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.282320 0:4 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket LISTEN Syn None[m
+[m[37m[  1.282932 0:4 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[  1.283169 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.283409 0:4 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.283634 0:4 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 127.0.0.1[m
+[m[37m[  1.283794 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.283954 0:4 smoltcp::iface::neighbor:69] [36mKey: 127.0.0.1[m
+[m[37m[  1.284054 0:4 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.284238 0:4 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[  1.284401 0:4 smoltcp::iface::interface:527] [36msocket ingress receive frame [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 34, 0, 0, 40, 0, 40, 6, 3C, C2, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 77, A8, E0, 27, E6, 80, 12, FF, FF, F2, 79, 0, 0, 2, 4, 5, B4, 3, 3, 1, 4, 2, 0, 0, 0][m
+[m[37m[  1.284899 0:4 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [15, B3, 15, B4, 2B, E6, 59, 77, A8, E0, 27, E6, 80, 12, FF, FF, F2, 79, 0, 0, 2, 4, 5, B4, 3, 3, 1, 4, 2, 0, 0, 0][m
+[m[37m[  1.285382 0:4 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.285664 0:4 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket SYN-SENT Syn Some(SeqNumber(-1461704730))[m
+[m[37m[  1.286787 0:4 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[  1.287223 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.287491 0:4 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.287864 0:4 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 127.0.0.1[m
+[m[37m[  1.288122 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.288352 0:4 smoltcp::iface::neighbor:69] [36mKey: 127.0.0.1[m
+[m[37m[  1.288521 0:4 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.288979 0:4 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[  1.289427 0:4 smoltcp::iface::interface:527] [36msocket ingress receive frame [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E6, 2B, E6, 59, 78, 50, 10, 80, 0, B0, 45, 0, 0][m
+[m[37m[  1.290165 0:4 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [15, B4, 15, B3, A8, E0, 27, E6, 2B, E6, 59, 78, 50, 10, 80, 0, B0, 45, 0, 0][m
+[m[37m[  1.290667 0:4 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.290964 0:4 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.291211 0:4 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket SYN-RECEIVED None Some(SeqNumber(736516472))[m
+[m[37m[  1.291793 0:4 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[  1.292174 0:4 ruxnet::smoltcp_impl::listen_table:109] [32mlhw debug in listen table accept #2[m
+[m[37m[  1.292467 0:4 smoltcp::iface::socket_set:100] [36mlhw debug in socket get #2[m
+[m[37m[  1.292784 0:4 smoltcp::iface::socket_set:100] [36mlhw debug in socket get #2[m
+[m[37m[  1.293333 0:4 ruxnet::smoltcp_impl::tcp:271] [36mTCP socket accepted a new connection 127.0.0.1:5556[m
+[m[37m[  1.294223 0:4 ruxos_posix_api::imp::net:212] [36m    Sockaddr: 127.0.0.1:5556[m
+[m[37m[  1.294670 0:4 ruxos_posix_api::imp::net:460] [36msys_accept => Ok(5)[m
+[m[37m[  1.295026 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 222[m
+[m[37m[  1.295262 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MMAP[m
+[m[37m[  1.295447 0:4 ruxos_posix_api::imp::mmap::api:42] [36msys_mmap <= start: 0x0, len: 0x23000, prot:0x0, flags:0x22, fd: -1[m
+[m[37m[  1.295734 0:4 ruxos_posix_api::imp::mmap::api:46] [36msys_mmap => Ok(0xffff80000004d000)[m
+[m[37m[  1.296011 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 226[m
+[m[37m[  1.296207 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MPROTECT[m
+[m[37m[  1.296421 0:4 ruxos_posix_api::imp::mmap::api:194] [36msys_mprotect <= addr: 0xffff80000004f000, len: 0x21000, prot: 3[m
+[m[37m[  1.296772 0:4 ruxos_posix_api::imp::mmap::api:199] [36msys_mprotect => Ok(0)[m
+[m[37m[  1.297197 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[  1.297741 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  1.298231 0:4 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  1.299071 0:4 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  1.299784 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 220[m
+[m[37m[  1.300107 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: CLONE[m
+[m[37m[  1.300370 0:4 ruxos_posix_api::imp::pthread:260] [36msys_clone <= flags: 7d0f00, stack: 0xffff80000006fef0, ctid: ffff000040177868[m
+[m[37m[  1.301145 0:4 ruxtask::task:242] [36mnew task: Task(6, "")[m
+[m[37m[  1.301529 0:4 ruxtask::task:465] [36mtaskStack::layout = Layout { size: 524288, align: 8 (1 << 3) }[m
+[m[37m[  1.302075 0:4 ruxtask::run_queue:51] [36mtask spawn: Task(6, "")[m
+[m[37m[  1.302673 0:4 ruxos_posix_api::imp::pthread:265] [36msys_clone => Ok(6)[m
+[m[37m[  1.304777 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[  1.305125 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  1.305898 0:4 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  1.306150 0:4 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  1.306780 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 202[m
+[m[37m[  1.307117 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: ACCEPT[m
+[m[37m[  1.307336 0:4 ruxos_posix_api::imp::net:456] [36msys_accept <= 3 0xffff00004107ff60 0xffff00004107ff54[m
+[m[37m[  1.307621 0:4 ruxnet::smoltcp_impl::tcp:267] [32mlhw debug in tcp accept[m
+[m[37m[  1.307977 0:5 smoltcp::iface::socket_set:100] [36mlhw debug in socket get #1[m
+[m[37m[  1.308388 0:5 ruxnet::smoltcp_impl::tcp:496] [36mTCP socket #1: connected to 127.0.0.1:5555[m
+[m[37m[  1.308911 0:5 ruxos_posix_api::imp::net:318] [36msys_connect => Ok(0)[m
+[m[37m[  1.309538 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 206[m
+[m[37m[  1.309767 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: SENDTO[m
+[m[37m[  1.310193 0:5 ruxos_posix_api::imp::net:336] [36msys_sendto <= 4 0xffff0000400e20b0 17 0 0x0 0[m
+[m[37m[  1.310542 0:5 ruxos_posix_api::imp::net:363] [36msys_sendto <= 4 0xffff0000400e20b0 17 0[m
+[m[37m[  1.311621 0:5 ruxos_posix_api::imp::net:367] [36msys_send => Ok(17)[m
+[m[37m[  1.312606 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[  1.312886 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[  1.313090 0:5 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[  1.313327 0:5 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff000040177008 30[m
+[mClient sent: Hello from client[37m[  1.313690 0:5 ruxos_posix_api::imp::io:47] [36msys_write => Ok(30)[m
+[m[37m[  1.313898 0:5 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff0000400e21f7 1[m
+[m
+[37m[  1.314163 0:5 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[  1.314371 0:5 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(31)[m
+[m[37m[  1.314559 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 63[m
+[m[37m[  1.314727 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: READ[m
+[m[37m[  1.315063 0:5 ruxos_posix_api::imp::io:23] [36msys_read <= 4 0xffff00004087fb70 1024[m
+[m[37m[  1.315349 0:5 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.315759 0:5 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.316188 0:5 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 127.0.0.1[m
+[m[37m[  1.316445 0:5 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.317033 0:5 smoltcp::iface::neighbor:69] [36mKey: 127.0.0.1[m
+[m[37m[  1.317381 0:5 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.319636 0:5 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[  1.319950 0:5 smoltcp::iface::interface:527] [36msocket ingress receive frame [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 39, 0, 0, 40, 0, 40, 6, 3C, BD, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E6, 2B, E6, 59, 78, 50, 18, 80, 0, 50, 1F, 0, 0, 48, 65, 6C, 6C, 6F, 20, 66, 72, 6F, 6D, 20, 63, 6C, 69, 65, 6E, 74][m
+[m[37m[  1.321216 0:5 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [15, B4, 15, B3, A8, E0, 27, E6, 2B, E6, 59, 78, 50, 18, 80, 0, 50, 1F, 0, 0, 48, 65, 6C, 6C, 6F, 20, 66, 72, 6F, 6D, 20, 63, 6C, 69, 65, 6E, 74][m
+[m[37m[  1.322838 0:5 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.323644 0:5 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.323946 0:5 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket ESTABLISHED Psh Some(SeqNumber(736516472))[m
+[m[37m[  1.325287 0:5 smoltcp::socket::tcp:2048] [36mpreocess socket self assembler empty true true[m
+[m[37m[  1.325549 0:5 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[  1.325968 0:5 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 10.0.2.15[m
+[m[37m[  1.326267 0:5 smoltcp::iface::interface:920] [32mlhw debug in route use router[m
+[m[37m[  1.326528 0:5 smoltcp::iface::route:157] [36mlhw debug in lookup addr [0, 0, 0, 0]  prefix 0[m
+[m[37m[  1.326830 0:5 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([10, 0, 2, 2])))[m
+[m[37m[  1.327285 0:5 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 127.0.0.1[m
+[m[37m[  1.327577 0:5 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 10.0.2.15[m
+[m[37m[  1.328055 0:5 smoltcp::iface::interface:920] [32mlhw debug in route use router[m
+[m[37m[  1.328249 0:5 smoltcp::iface::route:157] [36mlhw debug in lookup addr [0, 0, 0, 0]  prefix 0[m
+[m[37m[  1.328521 0:5 smoltcp::iface::interface:1022] [36maddress 10.0.2.2 not in neighbor cache, sending ARP request[m
+[m[37m[  1.329109 0:5 smoltcp::iface::interface:1036] [36mlhw debug in lookup hardware before dispatch ethernet[m
+[m[37m[  1.329526 0:5 smoltcp::iface::interface::ethernet:57] [36mlhw debug tx consume in dispatch ethernet[m
+[m[37m[  1.330583 0:5 smoltcp::iface::interface:1048] [36mlhw debug in lookup hardware after dispatch ethernet[m
+[m[37m[  1.331341 0:6 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[  1.331681 0:6 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  1.331964 0:6 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  1.332445 0:6 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  1.333409 0:6 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 63[m
+[m[37m[  1.334334 0:6 ruxmusl::aarch64:8] [36msyscall <= syscall_name: READ[m
+[m[37m[  1.334663 0:6 ruxos_posix_api::imp::io:23] [36msys_read <= 5 0xffff00004097fb70 1024[m
+[m[37m[  1.335189 0:6 smoltcp::iface::interface:928] [32mlhw debug in has neighbor[m
+[m[37m[  1.336247 0:6 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.337046 0:6 smoltcp::iface::socket_meta:70] [36m#2: neighbor 127.0.0.1 discovered, unsilencing[m
+[m[37m[  1.337949 0:6 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.340385 0:6 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.341233 0:6 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 127.0.0.1[m
+[m[37m[  1.341543 0:6 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.341790 0:6 smoltcp::iface::neighbor:69] [36mKey: 127.0.0.1[m
+[m[37m[  1.341972 0:6 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.342232 0:6 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[  1.342536 0:6 smoltcp::iface::interface:527] [36msocket ingress receive frame [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 78, A8, E0, 27, F7, 50, 10, 7F, F7, B0, 3D, 0, 0][m
+[m[37m[  1.343282 0:6 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [15, B3, 15, B4, 2B, E6, 59, 78, A8, E0, 27, F7, 50, 10, 7F, F7, B0, 3D, 0, 0][m
+[m[37m[  1.343851 0:6 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.344136 0:6 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket ESTABLISHED None Some(SeqNumber(-1461704713))[m
+[m[37m[  1.344631 0:6 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[  1.345310 0:6 smoltcp::iface::interface:527] [36msocket ingress receive frame [52, 54, 0, 12, 34, 56, 52, 55, A, 0, 2, 2, 8, 6, 0, 1, 8, 0, 6, 4, 0, 2, 52, 55, A, 0, 2, 2, A, 0, 2, 2, 52, 54, 0, 12, 34, 56, 7F, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0][m
+[m[37m[  1.346104 0:6 smoltcp::iface::interface::ipv4:241] [36mlhw debug in process_arp[m
+[m[37m[  1.346469 0:6 smoltcp::iface::interface::ipv4:253] [32mlhw debug in process_arp not has ip addr tar: 127.0.0.1[m
+[m[37m[  1.346913 0:6 smoltcp::iface::interface::ipv4:255] [36mself ip addr Ipv4(Cidr { address: Address([10, 0, 2, 15]), prefix_len: 24 })[m
+[m[37m[  1.347796 0:6 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[  1.348622 0:6 ruxos_posix_api::imp::io:24] [36msys_read => Ok(17)[m
+[m[37m[  1.350193 0:6 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[  1.352848 0:6 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[  1.353661 0:6 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[  1.357900 0:6 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff000040177008 34[m
+[mServer received: Hello from client[37m[  1.358601 0:6 ruxos_posix_api::imp::io:47] [36msys_write => Ok(34)[m
+[m[37m[  1.359095 0:6 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff0000400e2213 1[m
+[m
+[37m[  1.359603 0:6 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[  1.359837 0:6 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(35)[m
+[m[37m[  1.360141 0:6 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 206[m
+[m[37m[  1.360434 0:6 ruxmusl::aarch64:8] [36msyscall <= syscall_name: SENDTO[m
+[m[37m[  1.360670 0:6 ruxos_posix_api::imp::net:336] [36msys_sendto <= 5 0xffff0000400e21a0 17 0 0x0 0[m
+[m[37m[  1.360916 0:6 ruxos_posix_api::imp::net:363] [36msys_sendto <= 5 0xffff0000400e21a0 17 0[m
+[m[37m[  1.361253 0:6 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.361541 0:6 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.361966 0:6 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 127.0.0.1[m
+[m[37m[  1.362273 0:6 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.362548 0:6 smoltcp::iface::neighbor:69] [36mKey: 127.0.0.1[m
+[m[37m[  1.362741 0:6 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.363018 0:6 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[  1.363297 0:6 smoltcp::iface::interface:527] [36msocket ingress receive frame [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 78, A8, E0, 27, F7, 50, 10, 80, 0, B0, 34, 0, 0][m
+[m[37m[  1.364027 0:6 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [15, B3, 15, B4, 2B, E6, 59, 78, A8, E0, 27, F7, 50, 10, 80, 0, B0, 34, 0, 0][m
+[m[37m[  1.364473 0:6 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.364771 0:6 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket ESTABLISHED None Some(SeqNumber(-1461704713))[m
+[m[37m[  1.365183 0:6 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[  1.365449 0:6 ruxos_posix_api::imp::net:367] [36msys_send => Ok(17)[m
+[m[37m[  1.365800 0:6 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[  1.366060 0:6 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[  1.366265 0:6 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[  1.366637 0:6 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff000040177008 30[m
+[mServer sent: Hello from server[37m[  1.366965 0:6 ruxos_posix_api::imp::io:47] [36msys_write => Ok(30)[m
+[m[37m[  1.367185 0:6 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff0000400e215f 1[m
+[m
+[37m[  1.367432 0:6 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[  1.367636 0:6 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(31)[m
+[m[37m[  1.369433 0:6 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 57[m
+[m[37m[  1.369936 0:6 ruxmusl::aarch64:8] [36msyscall <= syscall_name: CLOSE[m
+[m[37m[  1.371827 0:6 ruxos_posix_api::imp::fd_ops:162] [36msys_close <= 5[m
+[m[37m[  1.375146 0:6 ruxnet::smoltcp_impl::tcp:292] [36mTCP socket #2: shutting down[m
+[m[37m[  1.376082 0:6 smoltcp::socket::tcp:964] [36mlhw debug socket close[m
+[m[37m[  1.376656 0:6 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.377113 0:6 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.377962 0:6 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 127.0.0.1[m
+[m[37m[  1.378337 0:6 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.378641 0:6 smoltcp::iface::neighbor:69] [36mKey: 127.0.0.1[m
+[m[37m[  1.379117 0:6 ruxtask::run_queue:91] [36mcurrent task is to be preempted: Task(6, ""), allow=true[m
+[m[37m[  1.379832 0:4 ruxtask::run_queue:126] [36mtask block: Task(4, "")[m
+[m[37m[  1.380352 0:5 ruxtask::run_queue:126] [36mtask block: Task(5, "")[m
+[m[37m[  1.380682 0:6 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.380992 0:6 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[  1.381299 0:6 smoltcp::iface::interface:527] [36msocket ingress receive frame [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 39, 0, 0, 40, 0, 40, 6, 3C, BD, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 78, A8, E0, 27, F7, 50, 11, 80, 0, 48, 5, 0, 0, 48, 65, 6C, 6C, 6F, 20, 66, 72, 6F, 6D, 20, 73, 65, 72, 76, 65, 72][m
+[m[37m[  1.382360 0:6 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [15, B3, 15, B4, 2B, E6, 59, 78, A8, E0, 27, F7, 50, 11, 80, 0, 48, 5, 0, 0, 48, 65, 6C, 6C, 6F, 20, 66, 72, 6F, 6D, 20, 73, 65, 72, 76, 65, 72][m
+[m[37m[  1.383088 0:6 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.383391 0:6 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket ESTABLISHED Fin Some(SeqNumber(-1461704713))[m
+[m[37m[  1.383842 0:6 smoltcp::socket::tcp:2048] [36mpreocess socket self assembler empty true true[m
+[m[37m[  1.384258 0:6 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[  1.384615 0:6 ruxtask::run_queue:140] [36mtask unblock: Task(4, "")[m
+[m[37m[  1.384832 0:6 ruxtask::run_queue:91] [36mcurrent task is to be preempted: Task(6, ""), allow=true[m
+[m[37m[  1.386582 0:6 ruxnet::smoltcp_impl:168] [36msocket #2: destroyed[m
+[m[37m[  1.386961 0:6 ruxtask::run_queue:140] [36mtask unblock: Task(5, "")[m
+[m[37m[  1.387566 0:6 ruxtask::run_queue:91] [36mcurrent task is to be preempted: Task(6, ""), allow=true[m
+[m[37m[  1.388890 0:6 ruxos_posix_api::imp::fd_ops:166] [36msys_close => Ok(0)[m
+[m[37m[  1.390218 0:6 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[  1.392501 0:6 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  1.392979 0:6 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  1.393605 0:6 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  1.395785 0:6 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 98[m
+[m[37m[  1.396062 0:6 ruxmusl::aarch64:8] [36msyscall <= syscall_name: FUTEX[m
+[m[37m[  1.396264 0:6 ruxos_posix_api::imp::pthread::futex:114] [36msys_futex <= addr: 0xffff80000006ff48, op: FUTEX_WAKE, val: 1, to: None[m
+[m[37m[  1.396893 0:6 ruxfutex::api:180] [36mfutex_wake_bitset addr: 0xffff80000006ff48, max_count: 1, bitset: 0xffffffff[m
+[m[37m[  1.397970 0:6 ruxos_posix_api::imp::pthread::futex:103] [36msys_futex => Ok(0)[m
+[m[37m[  1.398458 0:6 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 93[m
+[m[37m[  1.398696 0:6 ruxmusl::aarch64:8] [36msyscall <= syscall_name: EXIT[m
+[m[37m[  1.399204 0:6 ruxos_posix_api::imp::pthread:210] [36msys_pthread_exit <= 0x0[m
+[m[37m[  1.399470 0:6 ruxfutex::api:180] [36mfutex_wake_bitset addr: 0xffff000040177868, max_count: 1, bitset: 0xffffffff[m
+[m[37m[  1.400416 0:6 ruxos_posix_api::imp::pthread:155] [36mExit_musl, tid: 6[m
+[m[37m[  1.401161 0:6 ruxtask::run_queue:105] [36mtask exit: Task(6, ""), exit_code=0[m
+[m[37m[  1.401797 0:6 ruxtask::run_queue:140] [36mtask unblock: Task(3, "gc")[m
+[m[37m[  1.402225 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.403451 0:4 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.405039 0:4 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 127.0.0.1[m
+[m[37m[  1.406833 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.407974 0:4 smoltcp::iface::neighbor:69] [36mKey: 127.0.0.1[m
+[m[37m[  1.412767 0:4 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.413183 0:4 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[  1.413479 0:4 smoltcp::iface::interface:527] [36msocket ingress receive frame [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, F7, 2B, E6, 59, 8A, 50, 10, 7F, F7, B0, 2B, 0, 0][m
+[m[37m[  1.414206 0:4 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [15, B4, 15, B3, A8, E0, 27, F7, 2B, E6, 59, 8A, 50, 10, 7F, F7, B0, 2B, 0, 0][m
+[m[37m[  1.414651 0:4 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.414925 0:4 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.415548 0:4 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 127.0.0.1[m
+[m[37m[  1.415882 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.416211 0:4 smoltcp::iface::neighbor:69] [36mKey: 127.0.0.1[m
+[m[37m[  1.416444 0:4 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.416763 0:4 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[  1.417107 0:4 smoltcp::iface::interface:527] [36msocket ingress receive frame [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 8A, 0, 0, 0, 0, 50, 4, 0, 0, 1, 7, 0, 0][m
+[m[37m[  1.417722 0:4 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [15, B3, 15, B4, 2B, E6, 59, 8A, 0, 0, 0, 0, 50, 4, 0, 0, 1, 7, 0, 0][m
+[m[37m[  1.418094 0:4 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[  1.418399 0:4 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket CLOSE-WAIT Rst None[m
+[m[37m[  1.418712 0:4 smoltcp::socket::tcp:1703] [36mlhw debug process RST close[m
+[m[37m[  1.419099 0:4 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[  1.419500 0:5 ruxnet::smoltcp_impl::tcp:335] [33m[AxError::ConnectionRefused] socket recv() failed[m
+[m[37m[  1.420004 0:5 ruxos_posix_api::imp::io:24] [32msys_read => Err(ECONNREFUSED)[m
+[m[37m[  1.420672 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[  1.420915 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[  1.421180 0:5 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[  1.421409 0:5 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff000040177008 17[m
+[mClient received: [37m[  1.421681 0:5 ruxos_posix_api::imp::io:47] [36msys_write => Ok(17)[m
+[m[37m[  1.421865 0:5 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff0000400e2073 1[m
+[m
+[37m[  1.422111 0:5 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[  1.422287 0:5 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(18)[m
+[m[37m[  1.422553 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 57[m
+[m[37m[  1.433223 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: CLOSE[m
+[m[37m[  1.433473 0:5 ruxos_posix_api::imp::fd_ops:162] [36msys_close <= 4[m
+[m[37m[  1.433671 0:5 ruxnet::smoltcp_impl::tcp:292] [36mTCP socket #1: shutting down[m
+[m[37m[  1.433902 0:5 smoltcp::socket::tcp:964] [36mlhw debug socket close[m
+[m[37m[  1.434237 0:5 ruxnet::smoltcp_impl:168] [36msocket #1: destroyed[m
+[m[37m[  1.434448 0:5 ruxos_posix_api::imp::fd_ops:166] [36msys_close => Ok(0)[m
+[m[37m[  1.434694 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[  1.434928 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[  1.435115 0:5 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[  1.435291 0:5 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  1.435494 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 98[m
+[m[37m[  1.435706 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: FUTEX[m
+[m[37m[  1.435950 0:5 ruxos_posix_api::imp::pthread::futex:114] [36msys_futex <= addr: 0xffff800000049f48, op: FUTEX_WAKE, val: 1, to: None[m
+[m[37m[  1.436270 0:5 ruxfutex::api:180] [36mfutex_wake_bitset addr: 0xffff800000049f48, max_count: 1, bitset: 0xffffffff[m
+[m[37m[  1.436589 0:5 ruxos_posix_api::imp::pthread::futex:103] [36msys_futex => Ok(0)[m
+[m[37m[  1.437015 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 93[m
+[m[37m[  1.437213 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: EXIT[m
+[m[37m[  1.437396 0:5 ruxos_posix_api::imp::pthread:210] [36msys_pthread_exit <= 0x0[m
+[m[37m[  1.437592 0:5 ruxfutex::api:180] [36mfutex_wake_bitset addr: 0xffff000040177868, max_count: 1, bitset: 0xffffffff[m
+[m[37m[  1.437914 0:5 ruxos_posix_api::imp::pthread:155] [36mExit_musl, tid: 5[m
+[m[37m[  1.438234 0:5 ruxtask::run_queue:105] [36mtask exit: Task(5, ""), exit_code=0[m
+[m[37m[  1.439089 0:3 ruxtask::task:453] [36mtask drop: Task(6, "")[m
+[m[37m[  1.440454 0:3 ruxtask::task:453] [36mtask drop: Task(5, "")[m
+[m[37m[  1.440826 0:3 ruxtask::run_queue:126] [36mtask block: Task(3, "gc")[m
+[m[37m[ 20.370196 0:4 smoltcp::iface::interface:527] [36msocket ingress receive frame [FF, FF, FF, FF, FF, FF, 52, 55, A, 0, 2, 2, 8, 6, 0, 1, 8, 0, 6, 4, 0, 1, 52, 55, A, 0, 2, 2, A, 0, 2, 2, 0, 0, 0, 0, 0, 0, A, 0, 2, F][m
+[m[37m[ 20.371199 0:4 smoltcp::iface::interface::ipv4:241] [36mlhw debug in process_arp[m
+[m[37m[ 20.371392 0:4 smoltcp::iface::interface::ipv4:277] [36mlhw debug before neighbor_cache fill 10.0.2.2, 52-55-0a-00-02-02[m
+[m[37m[ 20.371879 0:4 smoltcp::iface::interface:891] [36mlhw debug in dispatch packet Arp(EthernetIpv4 { operation: Reply, source_hardware_addr: Address([52, 54, 0, 12, 34, 56]), source_protocol_addr: Address([A, 0, 2, F]), target_hardware_addr: Address([52, 55, A, 0, 2, 2]), target_protocol_addr: Address([A, 0, 2, 2]) }) hardware addr 52-55-0a-00-02-02[m
+[m[37m[ 20.372481 0:4 smoltcp::iface::interface::ethernet:57] [36mlhw debug tx consume in dispatch ethernet[m
+[m[37m[ 20.373059 0:4 ruxnet::smoltcp_impl::listen_table:147] [36mTCP socket #1: prepare for connection 10.0.2.2:45578 -> *:5555[m
+[m[37m[ 20.373378 0:4 smoltcp::iface::interface:527] [36msocket ingress receive frame [52, 54, 0, 12, 34, 56, 52, 55, A, 0, 2, 2, 8, 0, 45, 0, 0, 2C, 0, 0, 0, 0, 40, 6, 62, BC, A, 0, 2, 2, A, 0, 2, F, B2, A, 15, B3, 0, 27, 10, 1, 0, 0, 0, 0, 60, 2, FF, FF, A8, 30, 0, 0, 2, 4, 5, B4][m
+[m[37m[ 20.373703 0:4 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [B2, A, 15, B3, 0, 27, 10, 1, 0, 0, 0, 0, 60, 2, FF, FF, A8, 30, 0, 0, 2, 4, 5, B4][m
+[m[37m[ 20.374155 0:4 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[ 20.374529 0:4 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket LISTEN Syn None[m
+[m[37m[ 20.374780 0:4 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[ 20.374997 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.375192 0:4 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 10.0.2.2 routed Some(Ipv4(Address([10, 0, 2, 2])))[m
+[m[37m[ 20.375506 0:4 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 10.0.2.2[m
+[m[37m[ 20.375720 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.375909 0:4 smoltcp::iface::neighbor:69] [36mKey: 10.0.2.2[m
+[m[37m[ 20.376063 0:4 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[ 20.376321 0:4 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[ 20.377200 0:4 smoltcp::iface::interface:527] [36msocket ingress receive frame [52, 54, 0, 12, 34, 56, 52, 55, A, 0, 2, 2, 8, 0, 45, 0, 0, 28, 0, 1, 0, 0, 40, 6, 62, BF, A, 0, 2, 2, A, 0, 2, F, B2, A, 15, B3, 0, 27, 10, 2, A8, E0, 27, E6, 50, 10, FF, FF, EF, 16, 0, 0][m
+[m[37m[ 20.377820 0:4 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [B2, A, 15, B3, 0, 27, 10, 2, A8, E0, 27, E6, 50, 10, FF, FF, EF, 16, 0, 0][m
+[m[37m[ 20.378206 0:4 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[ 20.378469 0:4 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket SYN-RECEIVED None Some(SeqNumber(-1461704730))[m
+[m[37m[ 20.378779 0:4 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[ 20.378982 0:4 smoltcp::iface::interface:527] [36msocket ingress receive frame [52, 54, 0, 12, 34, 56, 52, 55, A, 0, 2, 2, 8, 0, 45, 0, 0, B5, 0, 2, 0, 0, 40, 6, 62, 31, A, 0, 2, 2, A, 0, 2, F, B2, A, 15, B3, 0, 27, 10, 2, A8, E0, 27, E6, 50, 18, FF, FF, D3, FC, 0, 0, 47, 45, 54, 20, 2F, 20, 48, 54, 54, 50, 2F, 31, 2E, 31, D, A, 55, 73, 65, 72, 2D, 41, 67, 65, 6E, 74, 3A, 20, 57, 67, 65, 74, 2F, 31, 2E, 32, 30, 2E, 33, 20, 28, 6C, 69, 6E, 75, 78, 2D, 67, 6E, 75, 29, D, A, 41, 63, 63, 65, 70, 74, 3A, 20, 2A, 2F, 2A, D, A, 41, 63, 63, 65, 70, 74, 2D, 45, 6E, 63, 6F, 64, 69, 6E, 67, 3A, 20, 69, 64, 65, 6E, 74, 69, 74, 79, D, A, 48, 6F, 73, 74, 3A, 20, 6C, 6F, 63, 61, 6C, 68, 6F, 73, 74, 3A, 35, 35, 35, 35, D, A, 43, 6F, 6E, 6E, 65, 63, 74, 69, 6F, 6E, 3A, 20, 4B, 65, 65, 70, 2D, 41, 6C, 69, 76, 65, D, A, D, A][m
+[m[37m[ 20.380643 0:4 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [B2, A, 15, B3, 0, 27, 10, 2, A8, E0, 27, E6, 50, 18, FF, FF, D3, FC, 0, 0, 47, 45, 54, 20, 2F, 20, 48, 54, 54, 50, 2F, 31, 2E, 31, D, A, 55, 73, 65, 72, 2D, 41, 67, 65, 6E, 74, 3A, 20, 57, 67, 65, 74, 2F, 31, 2E, 32, 30, 2E, 33, 20, 28, 6C, 69, 6E, 75, 78, 2D, 67, 6E, 75, 29, D, A, 41, 63, 63, 65, 70, 74, 3A, 20, 2A, 2F, 2A, D, A, 41, 63, 63, 65, 70, 74, 2D, 45, 6E, 63, 6F, 64, 69, 6E, 67, 3A, 20, 69, 64, 65, 6E, 74, 69, 74, 79, D, A, 48, 6F, 73, 74, 3A, 20, 6C, 6F, 63, 61, 6C, 68, 6F, 73, 74, 3A, 35, 35, 35, 35, D, A, 43, 6F, 6E, 6E, 65, 63, 74, 69, 6F, 6E, 3A, 20, 4B, 65, 65, 70, 2D, 41, 6C, 69, 76, 65, D, A, D, A][m
+[m[37m[ 20.382484 0:4 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[ 20.382756 0:4 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket ESTABLISHED Psh Some(SeqNumber(-1461704730))[m
+[m[37m[ 20.383041 0:4 smoltcp::socket::tcp:2048] [36mpreocess socket self assembler empty true true[m
+[m[37m[ 20.383300 0:4 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[ 20.383545 0:4 ruxnet::smoltcp_impl::listen_table:109] [32mlhw debug in listen table accept #1[m
+[m[37m[ 20.383792 0:4 smoltcp::iface::socket_set:100] [36mlhw debug in socket get #1[m
+[m[37m[ 20.383977 0:4 smoltcp::iface::socket_set:100] [36mlhw debug in socket get #1[m
+[m[37m[ 20.384151 0:4 ruxnet::smoltcp_impl::tcp:271] [36mTCP socket accepted a new connection 10.0.2.2:45578[m
+[m[37m[ 20.384519 0:4 ruxos_posix_api::imp::net:212] [36m    Sockaddr: 10.0.2.2:45578[m
+[m[37m[ 20.384755 0:4 ruxos_posix_api::imp::net:460] [36msys_accept => Ok(4)[m
+[m[37m[ 20.384967 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 222[m
+[m[37m[ 20.385160 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MMAP[m
+[m[37m[ 20.385479 0:4 ruxos_posix_api::imp::mmap::api:42] [36msys_mmap <= start: 0x0, len: 0x23000, prot:0x0, flags:0x22, fd: -1[m
+[m[37m[ 20.385906 0:4 ruxos_posix_api::imp::mmap::api:46] [36msys_mmap => Ok(0xffff800000071000)[m
+[m[37m[ 20.386169 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 226[m
+[m[37m[ 20.386348 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MPROTECT[m
+[m[37m[ 20.386544 0:4 ruxos_posix_api::imp::mmap::api:194] [36msys_mprotect <= addr: 0xffff800000073000, len: 0x21000, prot: 3[m
+[m[37m[ 20.386991 0:4 ruxos_posix_api::imp::mmap::api:199] [36msys_mprotect => Ok(0)[m
+[m[37m[ 20.387552 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[ 20.387736 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[ 20.387908 0:4 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[ 20.388118 0:4 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[ 20.388311 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 220[m
+[m[37m[ 20.388493 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: CLONE[m
+[m[37m[ 20.388655 0:4 ruxos_posix_api::imp::pthread:260] [36msys_clone <= flags: 7d0f00, stack: 0xffff800000093ef0, ctid: ffff000040177868[m
+[m[37m[ 20.390090 0:4 ruxtask::task:242] [36mnew task: Task(7, "")[m
+[m[37m[ 20.390482 0:4 ruxtask::task:465] [36mtaskStack::layout = Layout { size: 524288, align: 8 (1 << 3) }[m
+[m[37m[ 20.390996 0:4 ruxtask::run_queue:51] [36mtask spawn: Task(7, "")[m
+[m[37m[ 20.391212 0:4 ruxos_posix_api::imp::pthread:265] [36msys_clone => Ok(7)[m
+[m[37m[ 20.391637 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[ 20.391877 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[ 20.392032 0:4 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[ 20.392177 0:4 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[ 20.392645 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 202[m
+[m[37m[ 20.392854 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: ACCEPT[m
+[m[37m[ 20.393235 0:4 ruxos_posix_api::imp::net:456] [36msys_accept <= 3 0xffff00004107ff60 0xffff00004107ff54[m
+[m[37m[ 20.393615 0:4 ruxnet::smoltcp_impl::tcp:267] [32mlhw debug in tcp accept[m
+[m[37m[ 20.393892 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 127.0.0.1[m
+[m[37m[ 20.396805 0:4 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 10.0.2.2 routed Some(Ipv4(Address([10, 0, 2, 2])))[m
+[m[37m[ 20.401689 0:4 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 10.0.2.2[m
+[m[37m[ 20.401983 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 127.0.0.1[m
+[m[37m[ 20.402548 0:4 smoltcp::iface::neighbor:69] [36mKey: 127.0.0.1[m
+[m[37m[ 20.402812 0:4 smoltcp::iface::interface:1022] [36maddress 10.0.2.2 not in neighbor cache, sending ARP request[m
+[m[37m[ 20.403251 0:4 smoltcp::iface::interface:1036] [36mlhw debug in lookup hardware before dispatch ethernet[m
+[m[37m[ 20.404817 0:4 smoltcp::iface::interface::ethernet:57] [36mlhw debug tx consume in dispatch ethernet[m
+[m[37m[ 20.405346 0:4 smoltcp::iface::interface:1048] [36mlhw debug in lookup hardware after dispatch ethernet[m
+[m[37m[ 20.405598 0:4 smoltcp::iface::interface:928] [32mlhw debug in has neighbor[m
+[m[37m[ 20.405846 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.406074 0:4 smoltcp::iface::socket_meta:70] [36m#1: neighbor 10.0.2.2 discovered, unsilencing[m
+[m[37m[ 20.406358 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.407175 0:4 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 10.0.2.2 routed Some(Ipv4(Address([10, 0, 2, 2])))[m
+[m[37m[ 20.407853 0:4 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 10.0.2.2[m
+[m[37m[ 20.408239 0:4 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.409144 0:4 smoltcp::iface::neighbor:69] [36mKey: 10.0.2.2[m
+[m[37m[ 20.409352 0:4 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[ 20.410025 0:4 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[ 20.410635 0:7 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[ 20.411071 0:7 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[ 20.411330 0:7 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[ 20.411577 0:7 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[ 20.411876 0:7 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 63[m
+[m[37m[ 20.412051 0:7 ruxmusl::aarch64:8] [36msyscall <= syscall_name: READ[m
+[m[37m[ 20.412349 0:7 ruxos_posix_api::imp::io:23] [36msys_read <= 4 0xffff00004087fb70 1024[m
+[m[37m[ 20.412599 0:7 smoltcp::iface::interface:527] [36msocket ingress receive frame [FF, FF, FF, FF, FF, FF, 0, 0, 0, 0, 0, 0, 8, 6, 0, 1, 8, 0, 6, 4, 0, 1, 0, 0, 0, 0, 0, 0, A, 0, 2, F, FF, FF, FF, FF, FF, FF, A, 0, 2, 2][m
+[m[37m[ 20.413374 0:7 smoltcp::iface::interface::ipv4:241] [36mlhw debug in process_arp[m
+[m[37m[ 20.413559 0:7 smoltcp::iface::interface::ipv4:253] [32mlhw debug in process_arp not has ip addr tar: 10.0.2.2[m
+[m[37m[ 20.413808 0:7 smoltcp::iface::interface::ipv4:255] [36mself ip addr Ipv4(Cidr { address: Address([127, 0, 0, 1]), prefix_len: 24 })[m
+[m[37m[ 20.414130 0:7 smoltcp::iface::interface::ipv4:255] [36mself ip addr Ipv4(Cidr { address: Address([10, 0, 2, 15]), prefix_len: 24 })[m
+[m[37m[ 20.414433 0:7 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[ 20.414676 0:7 ruxos_posix_api::imp::io:24] [36msys_read => Ok(141)[m
+[m[37m[ 20.415067 0:7 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[ 20.415194 0:7 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[ 20.415353 0:7 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[ 20.415553 0:7 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff000040177008 17[m
+[mServer received: [37m[ 20.415886 0:7 ruxos_posix_api::imp::io:47] [36msys_write => Ok(17)[m
+[m[37m[ 20.416069 0:7 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff00004087fb70 141[m
+[mGET / HTTP/1.1
+User-Agent: Wget/1.20.3 (linux-gnu)
+Accept: */*
+Accept-Encoding: identity
+Host: localhost:5555
+Connection: Keep-Alive
+
+[37m[ 20.416562 0:7 ruxos_posix_api::imp::io:47] [36msys_write => Ok(141)[m
+[m[37m[ 20.416687 0:7 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(158)[m
+[m[37m[ 20.416875 0:7 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[ 20.417281 0:7 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[ 20.417586 0:7 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[ 20.417774 0:7 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff000040177008 0[m
+[m[37m[ 20.418004 0:7 ruxos_posix_api::imp::io:47] [36msys_write => Ok(0)[m
+[m[37m[ 20.418210 0:7 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff0000400e2213 1[m
+[m
+[37m[ 20.418419 0:7 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[ 20.418590 0:7 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(1)[m
+[m[37m[ 20.418804 0:7 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 206[m
+[m[37m[ 20.419031 0:7 ruxmusl::aarch64:8] [36msyscall <= syscall_name: SENDTO[m
+[m[37m[ 20.419209 0:7 ruxos_posix_api::imp::net:336] [36msys_sendto <= 4 0xffff0000400e21a0 17 0 0x0 0[m
+[m[37m[ 20.419436 0:7 ruxos_posix_api::imp::net:363] [36msys_sendto <= 4 0xffff0000400e21a0 17 0[m
+[m[37m[ 20.419683 0:7 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 127.0.0.1[m
+[m[37m[ 20.419914 0:7 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 10.0.2.2 routed Some(Ipv4(Address([10, 0, 2, 2])))[m
+[m[37m[ 20.420234 0:7 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 10.0.2.2[m
+[m[37m[ 20.420484 0:7 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 127.0.0.1[m
+[m[37m[ 20.420693 0:7 smoltcp::iface::neighbor:69] [36mKey: 127.0.0.1[m
+[m[37m[ 20.420903 0:7 smoltcp::iface::interface:928] [32mlhw debug in has neighbor[m
+[m[37m[ 20.421122 0:7 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.421239 0:7 smoltcp::iface::socket_meta:70] [36m#1: neighbor 10.0.2.2 discovered, unsilencing[m
+[m[37m[ 20.421361 0:7 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.421492 0:7 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 10.0.2.2 routed Some(Ipv4(Address([10, 0, 2, 2])))[m
+[m[37m[ 20.421825 0:7 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 10.0.2.2[m
+[m[37m[ 20.422037 0:7 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.422289 0:7 smoltcp::iface::neighbor:69] [36mKey: 10.0.2.2[m
+[m[37m[ 20.422466 0:7 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[ 20.422774 0:7 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[ 20.423277 0:7 ruxos_posix_api::imp::net:367] [36msys_send => Ok(17)[m
+[m[37m[ 20.423480 0:7 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[ 20.423657 0:7 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[ 20.423823 0:7 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[ 20.424006 0:7 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff000040177008 30[m
+[mServer sent: Hello from server[37m[ 20.424296 0:7 ruxos_posix_api::imp::io:47] [36msys_write => Ok(30)[m
+[m[37m[ 20.424467 0:7 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff0000400e215f 1[m
+[m
+[37m[ 20.425186 0:7 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[ 20.425377 0:7 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(31)[m
+[m[37m[ 20.425561 0:7 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 57[m
+[m[37m[ 20.425888 0:7 ruxmusl::aarch64:8] [36msyscall <= syscall_name: CLOSE[m
+[m[37m[ 20.426125 0:7 ruxos_posix_api::imp::fd_ops:162] [36msys_close <= 4[m
+[m[37m[ 20.426521 0:7 ruxnet::smoltcp_impl::tcp:292] [36mTCP socket #1: shutting down[m
+[m[37m[ 20.426717 0:7 smoltcp::socket::tcp:964] [36mlhw debug socket close[m
+[m[37m[ 20.427126 0:7 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 127.0.0.1[m
+[m[37m[ 20.427426 0:7 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 10.0.2.2 routed Some(Ipv4(Address([10, 0, 2, 2])))[m
+[m[37m[ 20.429049 0:7 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 10.0.2.2[m
+[m[37m[ 20.429520 0:7 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 127.0.0.1[m
+[m[37m[ 20.430103 0:7 smoltcp::iface::neighbor:69] [36mKey: 127.0.0.1[m
+[m[37m[ 20.430451 0:7 smoltcp::iface::interface:928] [32mlhw debug in has neighbor[m
+[m[37m[ 20.430610 0:7 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.430944 0:7 smoltcp::iface::socket_meta:70] [36m#1: neighbor 10.0.2.2 discovered, unsilencing[m
+[m[37m[ 20.431525 0:7 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.431736 0:7 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 10.0.2.2 routed Some(Ipv4(Address([10, 0, 2, 2])))[m
+[m[37m[ 20.432066 0:7 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 10.0.2.2[m
+[m[37m[ 20.432343 0:7 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.432823 0:7 smoltcp::iface::neighbor:69] [36mKey: 10.0.2.2[m
+[m[37m[ 20.433043 0:7 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[ 20.433467 0:7 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[ 20.434405 0:7 smoltcp::iface::interface:527] [36msocket ingress receive frame [52, 54, 0, 12, 34, 56, 52, 55, A, 0, 2, 2, 8, 0, 45, 0, 0, 28, 0, 3, 0, 0, 40, 6, 62, BD, A, 0, 2, 2, A, 0, 2, F, B2, A, 15, B3, 0, 27, 10, 8F, A8, E0, 27, F8, 50, 10, FF, FF, EE, 77, 0, 0][m
+[m[37m[ 20.435311 0:7 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [B2, A, 15, B3, 0, 27, 10, 8F, A8, E0, 27, F8, 50, 10, FF, FF, EE, 77, 0, 0][m
+[m[37m[ 20.435708 0:7 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[ 20.435951 0:7 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket FIN-WAIT-1 None Some(SeqNumber(-1461704712))[m
+[m[37m[ 20.436556 0:7 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[ 20.436791 0:7 smoltcp::iface::interface:527] [36msocket ingress receive frame [52, 54, 0, 12, 34, 56, 52, 55, A, 0, 2, 2, 8, 0, 45, 0, 0, 28, 0, 4, 0, 0, 40, 6, 62, BC, A, 0, 2, 2, A, 0, 2, F, B2, A, 15, B3, 0, 27, 10, 8F, A8, E0, 27, F8, 50, 11, FF, FF, EE, 76, 0, 0][m
+[m[37m[ 20.437660 0:7 smoltcp::iface::interface::tcp:12] [36msmoltcp precoess tcp play load [B2, A, 15, B3, 0, 27, 10, 8F, A8, E0, 27, F8, 50, 11, FF, FF, EE, 76, 0, 0][m
+[m[37m[ 20.438195 0:7 smoltcp::iface::interface::tcp:32] [36msmoltcp precoess tcp tcp_socket.accepts failed[m
+[m[37m[ 20.438458 0:7 smoltcp::socket::tcp:1458] [36mlhw debug preocess socket FIN-WAIT-2 Fin Some(SeqNumber(-1461704712))[m
+[m[37m[ 20.438939 0:7 smoltcp::iface::interface:544] [36mprocess ethernet failed[m
+[m[37m[ 20.439223 0:7 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.439449 0:7 smoltcp::iface::interface:618] [36mlhw debug in socket_egress before transmit dst 10.0.2.2 routed Some(Ipv4(Address([10, 0, 2, 2])))[m
+[m[37m[ 20.439935 0:7 smoltcp::iface::interface:1004] [36mlhw debug in lookup hardware addr debugout 10.0.2.2[m
+[m[37m[ 20.440211 0:7 smoltcp::iface::interface:916] [32mlhw debug in route 10.0.2.2 10.0.2.15[m
+[m[37m[ 20.440452 0:7 smoltcp::iface::neighbor:69] [36mKey: 10.0.2.2[m
+[m[37m[ 20.440631 0:7 smoltcp::iface::interface:1269] [36mlhw debug tx consume in dispatch ip2[m
+[m[37m[ 20.440961 0:7 smoltcp::iface::interface:1281] [36mlhw debug after tx consume in dispatch ip2[m
+[m[37m[ 20.441584 0:7 ruxnet::smoltcp_impl:168] [36msocket #1: destroyed[m
+[m[37m[ 20.441809 0:7 ruxos_posix_api::imp::fd_ops:166] [36msys_close => Ok(0)[m
+[m[37m[ 20.442207 0:7 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[ 20.442420 0:7 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[ 20.442614 0:7 ruxos_posix_api::imp:46] [36msys_invalid <= id: 999[m
+[m[37m[ 20.442802 0:7 ruxos_posix_api::imp:47] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[ 20.443002 0:7 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 98[m
+[m[37m[ 20.443205 0:7 ruxmusl::aarch64:8] [36msyscall <= syscall_name: FUTEX[m
+[m[37m[ 20.443379 0:7 ruxos_posix_api::imp::pthread::futex:114] [36msys_futex <= addr: 0xffff800000093f48, op: FUTEX_WAKE, val: 1, to: None[m
+[m[37m[ 20.443682 0:7 ruxfutex::api:180] [36mfutex_wake_bitset addr: 0xffff800000093f48, max_count: 1, bitset: 0xffffffff[m
+[m[37m[ 20.444021 0:7 ruxos_posix_api::imp::pthread::futex:103] [36msys_futex => Ok(0)[m
+[m[37m[ 20.444269 0:7 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 93[m
+[m[37m[ 20.444458 0:7 ruxmusl::aarch64:8] [36msyscall <= syscall_name: EXIT[m
+[m[37m[ 20.444631 0:7 ruxos_posix_api::imp::pthread:210] [36msys_pthread_exit <= 0x0[m
+[m[37m[ 20.444881 0:7 ruxfutex::api:180] [36mfutex_wake_bitset addr: 0xffff000040177868, max_count: 1, bitset: 0xffffffff[m
+[m[37m[ 20.445177 0:7 ruxos_posix_api::imp::pthread:155] [36mExit_musl, tid: 7[m
+[m[37m[ 20.445401 0:7 ruxtask::run_queue:105] [36mtask exit: Task(7, ""), exit_code=0[m
+[m[37m[ 20.445657 0:7 ruxtask::run_queue:140] [36mtask unblock: Task(3, "gc")[m
+[m[37m[ 20.446055 0:3 ruxtask::task:453] [36mtask drop: Task(7, "")[m
+[m[37m[ 20.446284 0:3 ruxtask::run_queue:126] [36mtask block: Task(3, "gc")[m
+[mQEMU: Terminated
+
