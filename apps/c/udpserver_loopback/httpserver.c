@@ -66,13 +66,16 @@ void *server_thread(void *arg) {
         printf("server recvfrom\n");
         int n = recvfrom(sockfd, buffer, BUFFER_SIZE, MSG_WAITALL,
                          (struct sockaddr *)&cliaddr, &len);
-        buffer[n] = '\0';
-        printf("Server received: %s\n", buffer);
-        
+        //buffer[n] = '1';
+        //buffer[n+1] = '\0';
+        printf("Server received: %s  %d from %d\n", buffer, n, cliaddr.sin_addr);
+        cliaddr.sin_port = htons(PORT+5);
         // 回应消息给客户端
         sendto(sockfd, buffer, n, MSG_CONFIRM,
                (const struct sockaddr *)&cliaddr, len);
         printf("Server sent acknowledgment\n");
+        //break;
+        //while(1);
     }
 
     close(sockfd);
@@ -105,19 +108,21 @@ void *client_thread(void *arg) {
      }
 
    while(1){
-       printf("Enter message to send to server: ");
+       printf("Enter message to send to server: \n");
        //fgets(buffer,sizeof(buffer),stdin);
         char* buffer = "hello from client";
 
-       sendto(sockfd,(const char*)buffer,strnlen(buffer,sizeof(buffer)),MSG_CONFIRM,(const struct sockaddr*)&servaddr,sizeof(servaddr));
-       printf("Message sent.\n");
+       int send_res = sendto(sockfd,(const char*)buffer,strlen(buffer),MSG_CONFIRM,(const struct sockaddr*)&servaddr,sizeof(servaddr));
+       printf("Message sent. %d\n",send_res);
 
        int n,len;
 
+        servaddr.sin_port = htons(PORT+5);
        n=recvfrom(sockfd,(char*)buffer,sizeof(buffer),MSG_WAITALL,(struct sockaddr*)&servaddr,&len);
        buffer[n]='\0';
        printf("Server : %s\n",buffer);
        break;
+       //while(1);
    }
    close(sockfd);
 

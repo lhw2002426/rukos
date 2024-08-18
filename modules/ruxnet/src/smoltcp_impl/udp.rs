@@ -243,7 +243,7 @@ impl UdpSocket {
             self.bind(res)?;
         }
 
-        unsafe { info!("lhw debug udp send impl {:?}", self.handle.get().read().unwrap()); }
+        unsafe { info!("lhw debug udp send impl {:?} {}", self.handle.get().read().unwrap(), remote_endpoint.addr); }
         self.block_on(|| {
             let handle = unsafe { self.handle.get().read().unwrap() };
             SOCKET_SET.lock().with_socket_mut::<udp::Socket, _, _>(

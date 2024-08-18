@@ -50,7 +50,7 @@ macro_rules! for_each_drivers {
         #[cfg(feature = "virtio")]
         #[allow(unused_imports)]
         use crate::virtio::{self, VirtIoDevMeta};
-
+        //Loopback net device
         {
             type $drv_type = crate::drivers::LoopbackDriver;
             $code

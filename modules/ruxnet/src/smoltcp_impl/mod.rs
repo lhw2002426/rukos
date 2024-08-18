@@ -65,7 +65,6 @@ const UDP_TX_BUF_LEN: usize = 64 * 1024;
 const LISTEN_QUEUE_SIZE: usize = 512;
 
 static LISTEN_TABLE: LazyInit<ListenTable> = LazyInit::new();
-static ROUTE_TABLE: LazyInit<Mutex<vec::Vec<InterfaceWrapper>>> = LazyInit::new();
 static SOCKET_SET: LazyInit<Mutex<SocketSetWrapper>> = LazyInit::new();
 static IFACE_LIST: LazyInit<Mutex<vec::Vec<InterfaceWrapper>>> = LazyInit::new();
 //static ETH0: LazyInit<InterfaceWrapper> = LazyInit::new();
@@ -406,10 +405,10 @@ pub(crate) fn init_netdev(net_dev: AxNetDevice) {
         None => {}
     };
     dev_iface.setup_ip_addr(ip, IP_PREFIX);
-    if(dev_name == "loopback")
+    /*if(dev_name == "loopback")
     {
         dev_iface.setup_ip_addr(IP.parse().expect("invalid IP address"), IP_PREFIX);
-    }
+    }*/
 
     IFACE_LIST.lock().push(dev_iface);
 }

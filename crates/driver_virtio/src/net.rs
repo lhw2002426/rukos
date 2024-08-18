@@ -91,6 +91,7 @@ impl<H: Hal, T: Transport, const QS: usize> const BaseDriverOps for VirtIoNetDev
     }
 }
 
+use log::info;
 impl<H: Hal, T: Transport, const QS: usize> NetDriverOps for VirtIoNetDev<H, T, QS> {
     #[inline]
     fn mac_address(&self) -> EthernetAddress {
@@ -182,6 +183,7 @@ impl<H: Hal, T: Transport, const QS: usize> NetDriverOps for VirtIoNetDev<H, T, 
     fn transmit(&mut self, tx_buf: NetBufPtr) -> DevResult {
         // 0. prepare tx buffer.
         let tx_buf = unsafe { NetBuf::from_buf_ptr(tx_buf) };
+        info!("lhw debug vnet transmit");
         // 1. transmit packet.
         let token = unsafe {
             self.inner
@@ -194,6 +196,7 @@ impl<H: Hal, T: Transport, const QS: usize> NetDriverOps for VirtIoNetDev<H, T, 
 
     fn receive(&mut self) -> DevResult<NetBufPtr> {
         if let Some(token) = self.inner.poll_receive() {
+            info!("lhw debug vnet receive");
             let mut rx_buf = self.rx_buffers[token as usize]
                 .take()
                 .ok_or(DevError::BadState)?;

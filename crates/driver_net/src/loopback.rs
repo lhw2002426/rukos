@@ -57,6 +57,8 @@ impl BaseDriverOps for LoopbackDevice {
     }
 }
 
+use log::info;
+
 impl NetDriverOps for LoopbackDevice {
     #[inline]
     fn mac_address(&self) -> EthernetAddress {
@@ -100,12 +102,16 @@ impl NetDriverOps for LoopbackDevice {
     }
 
     fn transmit(&mut self, tx_buf: NetBufPtr) -> DevResult {
-        unsafe { self.queue.push_back(NetBuf::from_buf_ptr(tx_buf)) }
+        unsafe {
+            info!("lhw debug loopback transmit");
+            self.queue.push_back(NetBuf::from_buf_ptr(tx_buf)) 
+        }
         Ok(())
     }
 
     fn receive(&mut self) -> DevResult<NetBufPtr> {
         if let Some(token) = self.queue.pop_front() {
+            info!("lhw debug loopback receive");
             Ok(token.into_buf_ptr())
         } else {
             Err(DevError::Again)

@@ -3,7 +3,7 @@ use crate::{
     net_impl::addr::{mask_to_prefix, MacAddr},
     IpAddr,
 };
-use alloc::{boxed::Box, collections::VecDeque, sync::Arc};
+use alloc::{boxed::Box, collections::VecDeque, sync::Arc, vec};
 #[cfg(feature = "irq")]
 use axdriver::register_interrupt_handler;
 use axsync::Mutex;
@@ -195,16 +195,18 @@ extern "C" fn ethif_output(netif: *mut netif, p: *mut pbuf) -> err_t {
     }
 }
 
-static ETH0: LazyInit<InterfaceWrapper> = LazyInit::new();
+static IFACE_LIST: LazyInit<Mutex<vec::Vec<InterfaceWrapper>>> = LazyInit::new();
 
 /// Poll the network stack.
 ///
 /// It may receive packets from the NIC and process them, and transmit queued
 /// packets to the NIC.
 pub fn poll_interfaces() {
-    ETH0.poll();
-    unsafe {
-        netif_poll(&mut ETH0.netif.lock().0);
+    for iface in IFACE_LIST.lock().iter() {
+        iface.poll();
+        unsafe {
+            //netif_poll(&mut iface.netif.lock().0);
+        }
     }
 }
 
@@ -223,7 +225,7 @@ pub fn init() {
     }
     
 
-    //IFACE_LIST.init_by(Mutex::new(vec::Vec::new()));
+    IFACE_LIST.init_by(Mutex::new(vec::Vec::new()));
 }
 
 pub fn init_netdev(net_dev: AxNetDevice) {
@@ -244,38 +246,38 @@ pub fn init_netdev(net_dev: AxNetDevice) {
             netif.hwaddr_len = 6;
             netif.hwaddr = dev.mac_address().0;
 
-            ETH0.init_by(InterfaceWrapper {
+            let eth0 = InterfaceWrapper {
                 name: "eth0",
                 dev: Arc::new(Mutex::new(DeviceWrapper::new(dev))),
                 netif: Mutex::new(NetifWrapper(netif)),
-            });
+            };
 
             unsafe {
-                lwip_init();
-                rx_custom_pbuf_init();
                 netif_add(
-                    &mut ETH0.netif.lock().0,
+                    &mut eth0.netif.lock().0,
                     &ipaddr,
                     &netmask,
                     &gw,
-                    &ETH0 as *const _ as *mut c_void,
+                    &eth0 as *const _ as *mut c_void,
                     Some(ethif_init),
                     Some(ethernet_input),
                 );
-                netif_set_link_up(&mut ETH0.netif.lock().0);
-                netif_set_up(&mut ETH0.netif.lock().0);
-                netif_set_default(&mut ETH0.netif.lock().0);
+                netif_set_link_up(&mut eth0.netif.lock().0);
+                netif_set_up(&mut eth0.netif.lock().0);
+                netif_set_default(&mut eth0.netif.lock().0);
             }
 
-            info!("created net interface {:?}:", ETH0.name());
+            info!("created net interface {:?}:", eth0.name());
             info!(
                 "  ether:    {}",
-                MacAddr::from_bytes(&ETH0.netif.lock().0.hwaddr)
+                MacAddr::from_bytes(&eth0.netif.lock().0.hwaddr)
             );
-            let ip = IpAddr::from(ETH0.netif.lock().0.ip_addr);
-            let mask = mask_to_prefix(IpAddr::from(ETH0.netif.lock().0.netmask)).unwrap();
+            let ip = IpAddr::from(eth0.netif.lock().0.ip_addr);
+            let mask = mask_to_prefix(IpAddr::from(eth0.netif.lock().0.netmask)).unwrap();
             info!("  ip:       {}/{}", ip, mask);
-            info!("  gateway:  {}", IpAddr::from(ETH0.netif.lock().0.gw));
+            info!("  gateway:  {}", IpAddr::from(eth0.netif.lock().0.gw));
+
+            IFACE_LIST.lock().push(eth0);
         }
     }
 }
@@ -283,8 +285,10 @@ pub fn init_netdev(net_dev: AxNetDevice) {
 pub fn lwip_loop_once() {
     let guard = LWIP_MUTEX.lock();
     unsafe {
-        ETH0.poll();
-        netif_poll(&mut ETH0.netif.lock().0);
+        for iface in IFACE_LIST.lock().iter() {
+            iface.poll();
+            //netif_poll(&mut iface.netif.lock().0);
+        }
         sys_check_timeouts();
     }
     drop(guard);
