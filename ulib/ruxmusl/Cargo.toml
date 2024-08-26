@@ -58,5 +58,7 @@ ruxos_posix_api = { path = "../../api/ruxos_posix_api" }
 num_enum = { version = "0.5.11", default-features = false }
 ruxhal = { path = "../../modules/ruxhal" }
 axlog = { path = "../../modules/axlog" }
+<<<<<<< HEAD
 kernel_guard = "0.1.0"
 crate_interface = "0.1.1"
+elf = { version = "0.7" , default-features = false }

@@ -110,7 +110,9 @@ restore_neno_registers:
 .p2align 7
     SAVE_REGS
     mov     x0, sp
+    bl      save_neno_registers
     bl      handle_irq_exception
+    bl      restore_neno_registers
     b       .Lexception_return
 .endm
 

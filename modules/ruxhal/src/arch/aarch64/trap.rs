@@ -48,6 +48,8 @@ fn invalid_exception(tf: &TrapFrame, kind: TrapKind, source: TrapSource) {
     );
 }
 
+use crate::arch::disable_irqs;
+
 #[no_mangle]
 fn handle_sync_exception(tf: &mut TrapFrame) {
     let esr = ESR_EL1.extract();

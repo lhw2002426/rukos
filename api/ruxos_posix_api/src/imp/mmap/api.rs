@@ -8,7 +8,7 @@
  */
 
 use crate::ctypes;
-use alloc::vec::Vec;
+use alloc::{sync::Arc, vec::Vec};
 use axerrno::LinuxError;
 use core::{
     ffi::{c_int, c_void},

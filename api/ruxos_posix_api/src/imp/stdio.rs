@@ -59,8 +59,6 @@ impl Write for StdoutRaw {
 
 pub struct Stdin {
     inner: &'static Mutex<BufReader<StdinRaw>>,
-    #[cfg(feature = "fd")]
-    nonblocking: AtomicBool,
 }
 
 impl Stdin {
@@ -77,17 +75,6 @@ impl Stdin {
                 return Ok(read_len);
             }
             crate::sys_sched_yield();
-        }
-    }
-
-    // Attempt a non-blocking read operation.
-    #[cfg(feature = "fd")]
-    fn read_nonblocked(&self, buf: &mut [u8]) -> AxResult<usize> {
-        if let Some(mut inner) = self.inner.try_lock() {
-            let read_len = inner.read(buf)?;
-            Ok(read_len)
-        } else {
-            Err(AxError::WouldBlock)
         }
     }
 }
@@ -115,11 +102,7 @@ impl Write for Stdout {
 /// Constructs a new handle to the standard input of the current process.
 pub fn stdin() -> Stdin {
     static INSTANCE: Mutex<BufReader<StdinRaw>> = Mutex::new(BufReader::new(StdinRaw));
-    Stdin {
-        inner: &INSTANCE,
-        #[cfg(feature = "fd")]
-        nonblocking: AtomicBool::from(false),
-    }
+    Stdin { inner: &INSTANCE }
 }
 
 /// Constructs a new handle to the standard output of the current process.
@@ -131,10 +114,7 @@ pub fn stdout() -> Stdout {
 #[cfg(feature = "fd")]
 impl ruxfdtable::FileLike for Stdin {
     fn read(&self, buf: &mut [u8]) -> LinuxResult<usize> {
-        match self.nonblocking.load(Ordering::Relaxed) {
-            true => Ok(self.read_nonblocked(buf)?),
-            false => Ok(self.read_blocked(buf)?),
-        }
+        Ok(self.read_blocked(buf)?)
     }
 
     fn write(&self, _buf: &[u8]) -> LinuxResult<usize> {
@@ -166,8 +146,7 @@ impl ruxfdtable::FileLike for Stdin {
         })
     }
 
-    fn set_nonblocking(&self, nonblocking: bool) -> LinuxResult {
-        self.nonblocking.store(nonblocking, Ordering::Relaxed);
+    fn set_nonblocking(&self, _nonblocking: bool) -> LinuxResult {
         Ok(())
     }
 }

@@ -1,0 +1,1568 @@
+    [92;1mBuilding[0m App: dl, Arch: aarch64, Platform: aarch64-qemu-virt, App type: c
+[37mcargo build[0m [90m--target aarch64-unknown-none-softfloat --target-dir /media/robert/data/rukos-0411/rukos/target --release  -p ruxmusl --features "ruxfeat/log-level-error ruxfeat/virtio-9p ruxfeat/rtc ruxfeat/tls ruxmusl/alloc ruxmusl/paging ruxmusl/fs ruxmusl/musl ruxmusl/poll ruxmusl/multitask ruxmusl/fp_simd ruxmusl/pipe ruxmusl/epoll ruxmusl/irq ruxmusl/select ruxmusl/signal ruxmusl/net ruxmusl/fd ruxmusl/musl ruxmusl/fp_simd ruxmusl/fd"[0m
+echo --------------build_dl---------------------
+--------------build_dl---------------------
+mkdir apps/c/dl/root -p
+mkdir apps/c/dl/root/lib -p
+cp apps/c/dl/../../../ulib/ruxmusl/install/lib/libc.so apps/c/dl/root/lib/ld-musl-aarch64.so.1
+# aarch64-linux-musl-gcc -mgeneral-regs-only  -ggdb  -static -fPIE -pie  apps/c/dl/root/hello.c -o apps/c/dl/root/statichello 
+# aarch64-linux-musl-gcc -mgeneral-regs-only  -ggdb apps/c/dl/root/hello.c -o apps/c/dl/root/dynamichello 
+echo --------------build_dl---------------------
+--------------build_dl---------------------
+[37maarch64-linux-musl-gcc[0m [90m-nostdinc -fno-builtin -ffreestanding -Wall -isystem/media/robert/data/rukos-0411/rukos/ulib/ruxmusl/install/include -O3   -c -o apps/c/dl/dl.o apps/c/dl/dl.c[0m
+    [96;1mLinking[0m apps/c/dl/dl_aarch64-qemu-virt.elf
+[37mrust-lld -flavor gnu[0m [90m-nostdlib -static -no-pie --gc-sections -T/media/robert/data/rukos-0411/rukos/modules/ruxhal/linker_aarch64-qemu-virt.lds ulib/ruxmusl/install/lib/libc.a target/aarch64-unknown-none-softfloat/release/libruxmusl.a  apps/c/dl/dl.o -o apps/c/dl/dl_aarch64-qemu-virt.elf[0m
+[37mrust-objcopy --binary-architecture=aarch64[0m [90mapps/c/dl/dl_aarch64-qemu-virt.elf --strip-all -O binary apps/c/dl/dl_aarch64-qemu-virt.bin[0m
+    [96;1mRunning[0m on qemu...
+[37mqemu-system-aarch64[0m [90m-m 2G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/c/dl/dl_aarch64-qemu-virt.bin -append ";/python3.11/bin/python3.11,/python3.11/lib/python3.11/test/test___all__.py;" -device virtio-net-device,netdev=net0 -fsdev local,id=myid,path=apps/c/dl/root,security_model=none -device virtio-9p-device,fsdev=myid,mount_tag=rootfs -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555,hostfwd=tcp::5556-:5556,hostfwd=udp::5556-:5556,hostfwd=tcp::5557-:5557,hostfwd=udp::5557-:5557,hostfwd=tcp::5558-:5558,hostfwd=udp::5558-:5558,hostfwd=tcp::5559-:5559,hostfwd=udp::5559-:5559, -nographic[0m
+
+8888888b.                     .d88888b.   .d8888b.  
+888   Y88b                   d88P" "Y88b d88P  Y88b 
+888    888                   888     888 Y88b.      
+888   d88P 888  888 888  888 888     888  "Y888b.   
+8888888P"  888  888 `Y8bd8P' 888     888     "Y88b. 
+888 T88b   888  888   X88K   888     888       "888 
+888  T88b  Y88b 888 .d8""8b. Y88b. .d88P Y88b  d88P 
+888   T88b  "Y88888 888  888  "Y88888P"   "Y8888P" 
+
+arch = aarch64
+platform = aarch64-qemu-virt
+target = aarch64-unknown-none-softfloat
+smp = 1
+build_mode = release
+log_level = error
+
+[37m[1712916428.015421 0 axfs_ramfs::dir:55] [31mAlreadyExists sys[m
+[mHello, Ruxos dl!
+argc 2, argv 0xffff000041062f00
+arg 0: /python3.11/bin/python3.11
+arg 1: /python3.11/lib/python3.11/test/test___all__.py
+arg 2: (null)
+[37m[1712916428.156115 0:2 ruxos_posix_api::imp::execve::stack:32] [31msp_addr : ffff000040119778-ffff000040b19778[m
+[m[37m[1712916429.269087 0:2 ruxos_posix_api::imp::mmap::api:48] [31mmmap failed because start:0x0 is not aligned or len:0x0 == 0[m
+[m__hello__
+__phello__
+__phello__.spam
+_aix_support
+_bootsubprocess
+_collections_abc
+_compat_pickle
+_compression
+_markupbase
+_osx_support
+_py_abc
+_pydecimal
+_pyio
+_sitebuiltins
+_strptime
+_sysconfigdata__linux_aarch64-linux-gnu
+_threading_local
+_weakrefset
+abc
+aifc
+antigravity
+argparse
+ast
+asynchat
+asyncio
+asyncio.__main__
+asyncio.base_events
+asyncio.base_futures
+asyncio.base_subprocess
+asyncio.base_tasks
+asyncio.constants
+asyncio.coroutines
+asyncio.events
+asyncio.exceptions
+asyncio.format_helpers
+asyncio.futures
+asyncio.locks
+asyncio.log
+asyncio.mixins
+asyncio.proactor_events
+asyncio.protocols
+asyncio.queues
+asyncio.runners
+asyncio.selector_events
+asyncio.sslproto
+asyncio.staggered
+asyncio.streams
+asyncio.subprocess
+asyncio.taskgroups
+asyncio.tasks
+asyncio.threads
+asyncio.timeouts
+asyncio.transports
+asyncio.trsock
+asyncio.unix_events
+asyncio.windows_events
+asyncio.windows_utils
+asyncore
+base64
+bdb
+bisect
+bz2
+cProfile
+calendar
+cgi
+cgitb
+chunk
+cmd
+code
+codecs
+codeop
+collections
+collections.abc
+colorsys
+compileall
+concurrent
+concurrent.futures
+concurrent.futures._base
+concurrent.futures.process
+concurrent.futures.thread
+configparser
+contextlib
+contextvars
+copy
+copyreg
+crypt
+csv
+ctypes
+ctypes._aix
+ctypes._endian
+ctypes.macholib
+ctypes.macholib.dyld
+ctypes.macholib.dylib
+ctypes.macholib.framework
+ctypes.test
+ctypes.test.__main__
+ctypes.test.test_anon
+ctypes.test.test_array_in_pointer
+ctypes.test.test_arrays
+ctypes.test.test_as_parameter
+ctypes.test.test_bitfields
+ctypes.test.test_buffers
+ctypes.test.test_bytes
+ctypes.test.test_byteswap
+ctypes.test.test_callbacks
+ctypes.test.test_cast
+ctypes.test.test_cfuncs
+ctypes.test.test_checkretval
+ctypes.test.test_delattr
+ctypes.test.test_errno
+ctypes.test.test_find
+ctypes.test.test_frombuffer
+ctypes.test.test_funcptr
+ctypes.test.test_functions
+ctypes.test.test_incomplete
+ctypes.test.test_init
+ctypes.test.test_internals
+ctypes.test.test_keeprefs
+ctypes.test.test_libc
+ctypes.test.test_loading
+ctypes.test.test_macholib
+ctypes.test.test_memfunctions
+ctypes.test.test_numbers
+ctypes.test.test_objects
+ctypes.test.test_parameters
+ctypes.test.test_pep3118
+ctypes.test.test_pickling
+ctypes.test.test_pointers
+ctypes.test.test_prototypes
+ctypes.test.test_python_api
+ctypes.test.test_random_things
+ctypes.test.test_refcounts
+ctypes.test.test_repr
+ctypes.test.test_returnfuncptrs
+ctypes.test.test_simplesubclasses
+ctypes.test.test_sizes
+ctypes.test.test_slicing
+ctypes.test.test_stringptr
+ctypes.test.test_strings
+ctypes.test.test_struct_fields
+ctypes.test.test_structures
+ctypes.test.test_unaligned_structures
+ctypes.test.test_unicode
+ctypes.test.test_values
+ctypes.test.test_varsize_struct
+ctypes.test.test_win32
+ctypes.test.test_wintypes
+ctypes.util
+ctypes.wintypes
+curses
+curses.ascii
+curses.has_key
+curses.panel
+curses.textpad
+dataclasses
+datetime
+dbm
+dbm.dumb
+dbm.gnu
+dbm.ndbm
+decimal
+difflib
+dis
+distutils
+distutils._msvccompiler
+distutils.archive_util
+distutils.bcppcompiler
+distutils.ccompiler
+distutils.cmd
+distutils.command
+distutils.command.bdist
+distutils.command.bdist_dumb
+distutils.command.bdist_rpm
+distutils.command.build
+distutils.command.build_clib
+distutils.command.build_ext
+distutils.command.build_py
+distutils.command.build_scripts
+distutils.command.check
+distutils.command.clean
+distutils.command.config
+distutils.command.install
+distutils.command.install_data
+distutils.command.install_egg_info
+distutils.command.install_headers
+distutils.command.install_lib
+distutils.command.install_scripts
+distutils.command.register
+distutils.command.sdist
+distutils.command.upload
+distutils.config
+distutils.core
+distutils.cygwinccompiler
+distutils.debug
+distutils.dep_util
+distutils.dir_util
+distutils.dist
+distutils.errors
+distutils.extension
+distutils.fancy_getopt
+distutils.file_util
+distutils.filelist
+distutils.log
+distutils.msvc9compiler
+distutils.msvccompiler
+distutils.spawn
+distutils.sysconfig
+distutils.tests
+distutils.tests.support
+distutils.tests.test_archive_util
+distutils.tests.test_bdist
+distutils.tests.test_bdist_dumb
+distutils.tests.test_bdist_rpm
+distutils.tests.test_build
+distutils.tests.test_build_clib
+distutils.tests.test_build_ext
+distutils.tests.test_build_py
+distutils.tests.test_build_scripts
+distutils.tests.test_check
+distutils.tests.test_clean
+distutils.tests.test_cmd
+distutils.tests.test_config
+distutils.tests.test_config_cmd
+distutils.tests.test_core
+distutils.tests.test_cygwinccompiler
+distutils.tests.test_dep_util
+distutils.tests.test_dir_util
+distutils.tests.test_dist
+distutils.tests.test_extension
+distutils.tests.test_file_util
+distutils.tests.test_filelist
+distutils.tests.test_install
+distutils.tests.test_install_data
+distutils.tests.test_install_headers
+distutils.tests.test_install_lib
+distutils.tests.test_install_scripts
+distutils.tests.test_log
+distutils.tests.test_msvc9compiler
+distutils.tests.test_msvccompiler
+distutils.tests.test_register
+distutils.tests.test_sdist
+distutils.tests.test_spawn
+distutils.tests.test_sysconfig
+distutils.tests.test_text_file
+distutils.tests.test_unixccompiler
+distutils.tests.test_upload
+distutils.tests.test_util
+distutils.tests.test_version
+distutils.tests.test_versionpredicate
+distutils.text_file
+distutils.unixccompiler
+distutils.util
+distutils.version
+distutils.versionpredicate
+doctest
+email
+email._encoded_words
+email._header_value_parser
+email._parseaddr
+email._policybase
+email.base64mime
+email.charset
+email.contentmanager
+email.encoders
+email.errors
+email.feedparser
+email.generator
+email.header
+email.headerregistry
+email.iterators
+email.message
+email.mime
+email.mime.application
+email.mime.audio
+email.mime.base
+email.mime.image
+email.mime.message
+email.mime.multipart
+email.mime.nonmultipart
+email.mime.text
+email.parser
+email.policy
+email.quoprimime
+email.utils
+encodings
+encodings.aliases
+encodings.ascii
+encodings.base64_codec
+encodings.big5
+encodings.big5hkscs
+encodings.bz2_codec
+encodings.charmap
+encodings.cp037
+encodings.cp1006
+encodings.cp1026
+encodings.cp1125
+encodings.cp1140
+encodings.cp1250
+encodings.cp1251
+encodings.cp1252
+encodings.cp1253
+encodings.cp1254
+encodings.cp1255
+encodings.cp1256
+encodings.cp1257
+encodings.cp1258
+encodings.cp273
+encodings.cp424
+encodings.cp437
+encodings.cp500
+encodings.cp720
+encodings.cp737
+encodings.cp775
+encodings.cp850
+encodings.cp852
+encodings.cp855
+encodings.cp856
+encodings.cp857
+encodings.cp858
+encodings.cp860
+encodings.cp861
+encodings.cp862
+encodings.cp863
+encodings.cp864
+encodings.cp865
+encodings.cp866
+encodings.cp869
+encodings.cp874
+encodings.cp875
+encodings.cp932
+encodings.cp949
+encodings.cp950
+encodings.euc_jis_2004
+encodings.euc_jisx0213
+encodings.euc_jp
+encodings.euc_kr
+encodings.gb18030
+encodings.gb2312
+encodings.gbk
+encodings.hex_codec
+encodings.hp_roman8
+encodings.hz
+encodings.idna
+encodings.iso2022_jp
+encodings.iso2022_jp_1
+encodings.iso2022_jp_2
+encodings.iso2022_jp_2004
+encodings.iso2022_jp_3
+encodings.iso2022_jp_ext
+encodings.iso2022_kr
+encodings.iso8859_1
+encodings.iso8859_10
+encodings.iso8859_11
+encodings.iso8859_13
+encodings.iso8859_14
+encodings.iso8859_15
+encodings.iso8859_16
+encodings.iso8859_2
+encodings.iso8859_3
+encodings.iso8859_4
+encodings.iso8859_5
+encodings.iso8859_6
+encodings.iso8859_7
+encodings.iso8859_8
+encodings.iso8859_9
+encodings.johab
+encodings.koi8_r
+encodings.koi8_t
+encodings.koi8_u
+encodings.kz1048
+encodings.latin_1
+encodings.mac_arabic
+encodings.mac_croatian
+encodings.mac_cyrillic
+encodings.mac_farsi
+encodings.mac_greek
+encodings.mac_iceland
+encodings.mac_latin2
+encodings.mac_roman
+encodings.mac_romanian
+encodings.mac_turkish
+encodings.mbcs
+encodings.oem
+encodings.palmos
+encodings.ptcp154
+encodings.punycode
+encodings.quopri_codec
+encodings.raw_unicode_escape
+encodings.rot_13
+encodings.shift_jis
+encodings.shift_jis_2004
+encodings.shift_jisx0213
+encodings.tis_620
+encodings.undefined
+encodings.unicode_escape
+encodings.utf_16
+encodings.utf_16_be
+encodings.utf_16_le
+encodings.utf_32
+encodings.utf_32_be
+encodings.utf_32_le
+encodings.utf_7
+encodings.utf_8
+encodings.utf_8_sig
+encodings.uu_codec
+encodings.zlib_codec
+ensurepip
+ensurepip.__main__
+ensurepip._uninstall
+enum
+filecmp
+fileinput
+fnmatch
+fractions
+ftplib
+functools
+genericpath
+getopt
+getpass
+gettext
+glob
+graphlib
+gzip
+hashlib
+heapq
+hmac
+html
+html.entities
+html.parser
+http
+http.client
+http.cookiejar
+http.cookies
+http.server
+idlelib
+idlelib.__main__
+idlelib.autocomplete
+idlelib.autocomplete_w
+idlelib.autoexpand
+idlelib.browser
+idlelib.calltip
+idlelib.calltip_w
+idlelib.codecontext
+idlelib.colorizer
+idlelib.config
+idlelib.config_key
+idlelib.configdialog
+idlelib.debugger
+idlelib.debugger_r
+idlelib.debugobj
+idlelib.debugobj_r
+idlelib.delegator
+idlelib.dynoption
+idlelib.editor
+idlelib.filelist
+idlelib.format
+idlelib.grep
+idlelib.help
+idlelib.help_about
+idlelib.history
+idlelib.hyperparser
+idlelib.idle
+idlelib.idle_test
+idlelib.idle_test.htest
+idlelib.idle_test.mock_idle
+idlelib.idle_test.mock_tk
+idlelib.idle_test.template
+idlelib.idle_test.test_autocomplete
+idlelib.idle_test.test_autocomplete_w
+idlelib.idle_test.test_autoexpand
+idlelib.idle_test.test_browser
+idlelib.idle_test.test_calltip
+idlelib.idle_test.test_calltip_w
+idlelib.idle_test.test_codecontext
+idlelib.idle_test.test_colorizer
+idlelib.idle_test.test_config
+idlelib.idle_test.test_config_key
+idlelib.idle_test.test_configdialog
+idlelib.idle_test.test_debugger
+idlelib.idle_test.test_debugger_r
+idlelib.idle_test.test_debugobj
+idlelib.idle_test.test_debugobj_r
+idlelib.idle_test.test_delegator
+idlelib.idle_test.test_editmenu
+idlelib.idle_test.test_editor
+idlelib.idle_test.test_filelist
+idlelib.idle_test.test_format
+idlelib.idle_test.test_grep
+idlelib.idle_test.test_help
+idlelib.idle_test.test_help_about
+idlelib.idle_test.test_history
+idlelib.idle_test.test_hyperparser
+idlelib.idle_test.test_iomenu
+idlelib.idle_test.test_macosx
+idlelib.idle_test.test_mainmenu
+idlelib.idle_test.test_multicall
+idlelib.idle_test.test_outwin
+idlelib.idle_test.test_parenmatch
+idlelib.idle_test.test_pathbrowser
+idlelib.idle_test.test_percolator
+idlelib.idle_test.test_pyparse
+idlelib.idle_test.test_pyshell
+idlelib.idle_test.test_query
+idlelib.idle_test.test_redirector
+idlelib.idle_test.test_replace
+idlelib.idle_test.test_rpc
+idlelib.idle_test.test_run
+idlelib.idle_test.test_runscript
+idlelib.idle_test.test_scrolledlist
+idlelib.idle_test.test_search
+idlelib.idle_test.test_searchbase
+idlelib.idle_test.test_searchengine
+idlelib.idle_test.test_sidebar
+idlelib.idle_test.test_squeezer
+idlelib.idle_test.test_stackviewer
+idlelib.idle_test.test_statusbar
+idlelib.idle_test.test_text
+idlelib.idle_test.test_textview
+idlelib.idle_test.test_tooltip
+idlelib.idle_test.test_tree
+idlelib.idle_test.test_undo
+idlelib.idle_test.test_util
+idlelib.idle_test.test_warning
+idlelib.idle_test.test_window
+idlelib.idle_test.test_zoomheight
+idlelib.idle_test.test_zzdummy
+idlelib.idle_test.tkinter_testing_utils
+idlelib.iomenu
+idlelib.macosx
+idlelib.mainmenu
+idlelib.multicall
+idlelib.outwin
+idlelib.parenmatch
+idlelib.pathbrowser
+idlelib.percolator
+idlelib.pyparse
+idlelib.pyshell
+idlelib.query
+idlelib.redirector
+idlelib.replace
+idlelib.rpc
+idlelib.run
+idlelib.runscript
+idlelib.scrolledlist
+idlelib.search
+idlelib.searchbase
+idlelib.searchengine
+idlelib.sidebar
+idlelib.squeezer
+idlelib.stackviewer
+idlelib.statusbar
+idlelib.textview
+idlelib.tooltip
+idlelib.tree
+idlelib.undo
+idlelib.util
+idlelib.window
+idlelib.zoomheight
+idlelib.zzdummy
+imaplib
+imghdr
+imp
+importlib
+importlib._abc
+importlib._bootstrap
+importlib._bootstrap_external
+importlib.abc
+importlib.machinery
+importlib.metadata
+importlib.metadata._adapters
+importlib.metadata._collections
+importlib.metadata._functools
+importlib.metadata._itertools
+importlib.metadata._meta
+importlib.metadata._text
+importlib.readers
+importlib.resources
+importlib.resources._adapters
+importlib.resources._common
+importlib.resources._itertools
+importlib.resources._legacy
+importlib.resources.abc
+importlib.resources.readers
+importlib.resources.simple
+importlib.simple
+importlib.util
+inspect
+io
+ipaddress
+json
+json.decoder
+json.encoder
+json.scanner
+json.tool
+keyword
+lib2to3
+lib2to3.__main__
+lib2to3.btm_matcher
+lib2to3.btm_utils
+lib2to3.fixer_base
+lib2to3.fixer_util
+lib2to3.fixes
+lib2to3.fixes.fix_apply
+lib2to3.fixes.fix_asserts
+lib2to3.fixes.fix_basestring
+lib2to3.fixes.fix_buffer
+lib2to3.fixes.fix_dict
+lib2to3.fixes.fix_except
+lib2to3.fixes.fix_exec
+lib2to3.fixes.fix_execfile
+lib2to3.fixes.fix_exitfunc
+lib2to3.fixes.fix_filter
+lib2to3.fixes.fix_funcattrs
+lib2to3.fixes.fix_future
+lib2to3.fixes.fix_getcwdu
+lib2to3.fixes.fix_has_key
+lib2to3.fixes.fix_idioms
+lib2to3.fixes.fix_import
+lib2to3.fixes.fix_imports
+lib2to3.fixes.fix_imports2
+lib2to3.fixes.fix_input
+lib2to3.fixes.fix_intern
+lib2to3.fixes.fix_isinstance
+lib2to3.fixes.fix_itertools
+lib2to3.fixes.fix_itertools_imports
+lib2to3.fixes.fix_long
+lib2to3.fixes.fix_map
+lib2to3.fixes.fix_metaclass
+lib2to3.fixes.fix_methodattrs
+lib2to3.fixes.fix_ne
+lib2to3.fixes.fix_next
+lib2to3.fixes.fix_nonzero
+lib2to3.fixes.fix_numliterals
+lib2to3.fixes.fix_operator
+lib2to3.fixes.fix_paren
+lib2to3.fixes.fix_print
+lib2to3.fixes.fix_raise
+lib2to3.fixes.fix_raw_input
+lib2to3.fixes.fix_reduce
+lib2to3.fixes.fix_reload
+lib2to3.fixes.fix_renames
+lib2to3.fixes.fix_repr
+lib2to3.fixes.fix_set_literal
+lib2to3.fixes.fix_standarderror
+lib2to3.fixes.fix_sys_exc
+lib2to3.fixes.fix_throw
+lib2to3.fixes.fix_tuple_params
+lib2to3.fixes.fix_types
+lib2to3.fixes.fix_unicode
+lib2to3.fixes.fix_urllib
+lib2to3.fixes.fix_ws_comma
+lib2to3.fixes.fix_xrange
+lib2to3.fixes.fix_xreadlines
+lib2to3.fixes.fix_zip
+lib2to3.main
+lib2to3.patcomp
+lib2to3.pgen2
+lib2to3.pgen2.conv
+lib2to3.pgen2.driver
+lib2to3.pgen2.grammar
+lib2to3.pgen2.literals
+lib2to3.pgen2.parse
+lib2to3.pgen2.pgen
+lib2to3.pgen2.token
+lib2to3.pgen2.tokenize
+lib2to3.pygram
+lib2to3.pytree
+lib2to3.refactor
+lib2to3.tests
+lib2to3.tests.__main__
+lib2to3.tests.pytree_idempotency
+lib2to3.tests.support
+lib2to3.tests.test_all_fixers
+lib2to3.tests.test_fixers
+lib2to3.tests.test_main
+lib2to3.tests.test_parser
+lib2to3.tests.test_pytree
+lib2to3.tests.test_refactor
+lib2to3.tests.test_util
+linecache
+locale
+logging
+logging.config
+logging.handlers
+lzma
+mailbox
+mailcap
+mimetypes
+modulefinder
+multiprocessing
+multiprocessing.connection
+multiprocessing.context
+multiprocessing.dummy
+multiprocessing.dummy.connection
+multiprocessing.forkserver
+multiprocessing.heap
+multiprocessing.managers
+multiprocessing.pool
+multiprocessing.popen_fork
+multiprocessing.popen_forkserver
+multiprocessing.popen_spawn_posix
+multiprocessing.popen_spawn_win32
+multiprocessing.process
+multiprocessing.queues
+multiprocessing.reduction
+multiprocessing.resource_sharer
+multiprocessing.resource_tracker
+multiprocessing.shared_memory
+multiprocessing.sharedctypes
+multiprocessing.spawn
+multiprocessing.synchronize
+multiprocessing.util
+netrc
+nntplib
+ntpath
+nturl2path
+numbers
+opcode
+operator
+optparse
+os
+pathlib
+pdb
+pickle
+pickletools
+pipes
+pkgutil
+platform
+plistlib
+poplib
+posixpath
+pprint
+profile
+pstats
+pty
+py_compile
+pyclbr
+pydoc
+pydoc_data
+pydoc_data.topics
+queue
+quopri
+random
+re
+re._casefix
+re._compiler
+re._constants
+re._parser
+reprlib
+rlcompleter
+runpy
+sched
+secrets
+selectors
+shelve
+shlex
+shutil
+signal
+site
+smtpd
+smtplib
+sndhdr
+socket
+socketserver
+sqlite3
+sqlite3.dbapi2
+sqlite3.dump
+sre_compile
+sre_constants
+sre_parse
+ssl
+stat
+statistics
+string
+stringprep
+struct
+subprocess
+sunau
+symtable
+sysconfig
+tabnanny
+tarfile
+telnetlib
+tempfile
+test
+test.__main__
+test._test_atexit
+test._test_eintr
+test._test_embed_set_config
+test._test_embed_structseq
+test._test_multiprocessing
+[37m[1712916441.129984 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011635000[m
+[m[37m[1712916441.130480 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011636000[m
+[m[37m[1712916441.130777 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011637000[m
+[m[37m[1712916441.131120 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011638000[m
+[m[37m[1712916441.131415 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011639000[m
+[m[37m[1712916441.131706 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001163a000[m
+[m[37m[1712916441.132000 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001163b000[m
+[m[37m[1712916441.132298 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001163c000[m
+[m[37m[1712916441.132646 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001163d000[m
+[m[37m[1712916441.132934 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001163e000[m
+[m[37m[1712916441.133223 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001163f000[m
+[m[37m[1712916441.133510 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011640000[m
+[m[37m[1712916441.133855 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011641000[m
+[m[37m[1712916441.134216 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011642000[m
+[m[37m[1712916441.134508 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011643000[m
+[m[37m[1712916441.134797 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011644000[m
+[m[37m[1712916441.135132 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011645000[m
+[m[37m[1712916441.135423 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011646000[m
+[m[37m[1712916441.135711 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011647000[m
+[m[37m[1712916441.136001 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011648000[m
+[m[37m[1712916441.136327 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011649000[m
+[m[37m[1712916441.136618 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001164a000[m
+[m[37m[1712916441.136907 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001164b000[m
+[m[37m[1712916441.137196 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001164c000[m
+[m[37m[1712916441.137485 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001164d000[m
+[m[37m[1712916441.137809 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001164e000[m
+[m[37m[1712916441.138096 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001164f000[m
+[m[37m[1712916441.138393 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011650000[m
+[m[37m[1712916441.138682 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011651000[m
+[m[37m[1712916441.139006 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011652000[m
+[m[37m[1712916441.139294 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011653000[m
+[m[37m[1712916441.139582 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011654000[m
+[m[37m[1712916441.139869 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011655000[m
+[m[37m[1712916441.140190 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011656000[m
+[m[37m[1712916441.140487 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011657000[m
+[m[37m[1712916441.140784 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011658000[m
+[m[37m[1712916441.141080 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011659000[m
+[m[37m[1712916441.141414 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001165a000[m
+[m[37m[1712916441.141716 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001165b000[m
+[m[37m[1712916441.142014 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001165c000[m
+[m[37m[1712916441.142310 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001165d000[m
+[m[37m[1712916441.142599 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001165e000[m
+[m[37m[1712916441.142926 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001165f000[m
+[m[37m[1712916441.143215 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011660000[m
+[m[37m[1712916441.143504 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011661000[m
+[m[37m[1712916441.143794 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011662000[m
+[m[37m[1712916441.144151 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011663000[m
+[m[37m[1712916441.144454 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011664000[m
+[m[37m[1712916441.144742 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011665000[m
+[m[37m[1712916441.145033 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011666000[m
+[m[37m[1712916441.145365 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011667000[m
+[m[37m[1712916441.145658 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011668000[m
+[m[37m[1712916441.146021 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011669000[m
+[m[37m[1712916441.146337 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001166a000[m
+[m[37m[1712916441.146679 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001166b000[m
+[m[37m[1712916441.146970 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001166c000[m
+[m[37m[1712916441.147261 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001166d000[m
+[m[37m[1712916441.147643 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001166e000[m
+[m[37m[1712916441.147983 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001166f000[m
+[m[37m[1712916441.148276 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011670000[m
+[m[37m[1712916441.148566 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011671000[m
+[m[37m[1712916441.148857 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011672000[m
+[m[37m[1712916441.149190 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011673000[m
+[m[37m[1712916441.149482 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011674000[m
+[m[37m[1712916441.149777 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800011675000[m
+[mtest._test_venv_multiprocessing
+test.archiver_tests
+test.audiotests
+test.audit-tests
+test.autotest
+test.bisect_cmd
+test.curses_tests
+test.datetimetester
+[37m[1712916443.203932 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013172000[m
+[m[37m[1712916443.204335 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013173000[m
+[m[37m[1712916443.204628 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013174000[m
+[m[37m[1712916443.205020 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013175000[m
+[m[37m[1712916443.205414 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013176000[m
+[m[37m[1712916443.205807 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013177000[m
+[m[37m[1712916443.206124 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013178000[m
+[m[37m[1712916443.206456 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013179000[m
+[m[37m[1712916443.206740 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001317a000[m
+[m[37m[1712916443.207030 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001317b000[m
+[m[37m[1712916443.207320 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001317c000[m
+[m[37m[1712916443.207653 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001317d000[m
+[m[37m[1712916443.207944 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001317e000[m
+[m[37m[1712916443.208236 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001317f000[m
+[m[37m[1712916443.208526 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013180000[m
+[m[37m[1712916443.208851 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013181000[m
+[m[37m[1712916443.209140 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013182000[m
+[m[37m[1712916443.209431 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013183000[m
+[m[37m[1712916443.209736 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013184000[m
+[m[37m[1712916443.210063 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013185000[m
+[m[37m[1712916443.210355 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013186000[m
+[m[37m[1712916443.210647 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013187000[m
+[m[37m[1712916443.210936 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013188000[m
+[m[37m[1712916443.211226 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013189000[m
+[m[37m[1712916443.211553 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001318a000[m
+[m[37m[1712916443.211842 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001318b000[m
+[m[37m[1712916443.212133 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001318c000[m
+[m[37m[1712916443.212420 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001318d000[m
+[m[37m[1712916443.212748 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001318e000[m
+[m[37m[1712916443.213039 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001318f000[m
+[m[37m[1712916443.213331 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013190000[m
+[m[37m[1712916443.213625 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013191000[m
+[m[37m[1712916443.213964 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013192000[m
+[m[37m[1712916443.214272 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013193000[m
+[m[37m[1712916443.214567 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013194000[m
+[m[37m[1712916443.214861 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013195000[m
+[m[37m[1712916443.215152 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013196000[m
+[m[37m[1712916443.215487 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013197000[m
+[m[37m[1712916443.215778 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013198000[m
+[m[37m[1712916443.216070 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800013199000[m
+[m[37m[1712916443.216361 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001319a000[m
+[m[37m[1712916443.216688 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001319b000[m
+[m[37m[1712916443.216980 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001319c000[m
+[m[37m[1712916443.217272 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001319d000[m
+[m[37m[1712916443.217567 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001319e000[m
+[m[37m[1712916443.217895 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff80001319f000[m
+[m[37m[1712916443.218183 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131a0000[m
+[m[37m[1712916443.218473 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131a1000[m
+[m[37m[1712916443.218766 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131a2000[m
+[m[37m[1712916443.219089 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131a3000[m
+[m[37m[1712916443.219381 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131a4000[m
+[m[37m[1712916443.219675 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131a5000[m
+[m[37m[1712916443.219968 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131a6000[m
+[m[37m[1712916443.220260 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131a7000[m
+[m[37m[1712916443.220587 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131a8000[m
+[m[37m[1712916443.220878 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131a9000[m
+[m[37m[1712916443.221170 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131aa000[m
+[m[37m[1712916443.221464 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131ab000[m
+[m[37m[1712916443.221792 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131ac000[m
+[m[37m[1712916443.222081 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131ad000[m
+[m[37m[1712916443.222373 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131ae000[m
+[m[37m[1712916443.222662 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131af000[m
+[m[37m[1712916443.222990 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131b0000[m
+[m[37m[1712916443.223281 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131b1000[m
+[m[37m[1712916443.223570 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000131b2000[m
+[mtest.dis_module
+test.encoded_modules
+test.encoded_modules.module_iso_8859_1
+test.encoded_modules.module_koi8_r
+test.fork_wait
+test.imp_dummy
+test.leakers
+test.leakers.test_ctypes
+test.leakers.test_selftype
+test.libregrtest
+test.libregrtest.cmdline
+test.libregrtest.filter
+test.libregrtest.findtests
+test.libregrtest.logger
+test.libregrtest.main
+test.libregrtest.pgo
+test.libregrtest.refleak
+test.libregrtest.result
+test.libregrtest.results
+test.libregrtest.run_workers
+test.libregrtest.runtests
+test.libregrtest.save_env
+test.libregrtest.setup
+test.libregrtest.single
+test.libregrtest.testresult
+test.libregrtest.utils
+test.libregrtest.win_utils
+test.libregrtest.worker
+test.list_tests
+test.lock_tests
+test.mapping_tests
+test.memory_watchdog
+test.mock_socket
+test.mp_fork_bomb
+test.mp_preload
+test.multibytecodec_support
+test.pickletester
+test.profilee
+test.pyclbr_input
+test.pydoc_mod
+test.pydocfodder
+test.pythoninfo
+test.re_tests
+test.regrtest
+test.relimport
+test.reperf
+test.seq_tests
+test.signalinterproctester
+test.sortperf
+test.ssl_servers
+test.ssltests
+test.string_tests
+test.support
+test.support.bytecode_helper
+test.support.hashlib_helper
+test.support.import_helper
+test.support.interpreters
+test.support.logging_helper
+test.support.os_helper
+test.support.pty_helper
+test.support.script_helper
+test.support.socket_helper
+test.support.threading_helper
+test.support.warnings_helper
+test.test___all__
+test.test__locale
+test.test__opcode
+test.test__osx_support
+test.test__xxsubinterpreters
+test.test_abc
+test.test_abstract_numbers
+test.test_aifc
+test.test_argparse
+[37m[1712916444.861310 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014ee8000[m
+[m[37m[1712916444.861763 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014ee9000[m
+[m[37m[1712916444.862055 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014eea000[m
+[m[37m[1712916444.862346 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014eeb000[m
+[m[37m[1712916444.862633 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014eec000[m
+[m[37m[1712916444.862964 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014eed000[m
+[m[37m[1712916444.863265 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014eee000[m
+[m[37m[1712916444.863623 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014eef000[m
+[m[37m[1712916444.863987 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014ef0000[m
+[m[37m[1712916444.864377 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014ef1000[m
+[m[37m[1712916444.864732 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014ef2000[m
+[m[37m[1712916444.865084 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014ef3000[m
+[m[37m[1712916444.865387 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014ef4000[m
+[m[37m[1712916444.865727 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014ef5000[m
+[m[37m[1712916444.866017 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014ef6000[m
+[m[37m[1712916444.866307 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014ef7000[m
+[m[37m[1712916444.866602 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014ef8000[m
+[m[37m[1712916444.866938 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014ef9000[m
+[m[37m[1712916444.867273 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014efa000[m
+[m[37m[1712916444.867570 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014efb000[m
+[m[37m[1712916444.867927 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014efc000[m
+[m[37m[1712916444.868272 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014efd000[m
+[m[37m[1712916444.868564 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014efe000[m
+[m[37m[1712916444.868876 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014eff000[m
+[m[37m[1712916444.869169 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f00000[m
+[m[37m[1712916444.869499 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f01000[m
+[m[37m[1712916444.869815 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f02000[m
+[m[37m[1712916444.870158 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f03000[m
+[m[37m[1712916444.870499 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f04000[m
+[m[37m[1712916444.870881 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f05000[m
+[m[37m[1712916444.871226 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f06000[m
+[m[37m[1712916444.871569 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f07000[m
+[m[37m[1712916444.871999 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f08000[m
+[m[37m[1712916444.872317 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f09000[m
+[m[37m[1712916444.872623 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f0a000[m
+[m[37m[1712916444.872977 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f0b000[m
+[m[37m[1712916444.873335 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f0c000[m
+[m[37m[1712916444.873654 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f0d000[m
+[m[37m[1712916444.874039 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f0e000[m
+[m[37m[1712916444.874350 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f0f000[m
+[m[37m[1712916444.874699 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f10000[m
+[m[37m[1712916444.875019 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f11000[m
+[m[37m[1712916444.875317 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f12000[m
+[m[37m[1712916444.875614 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f13000[m
+[m[37m[1712916444.875954 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f14000[m
+[m[37m[1712916444.876250 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f15000[m
+[m[37m[1712916444.876547 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f16000[m
+[m[37m[1712916444.876840 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f17000[m
+[m[37m[1712916444.877176 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f18000[m
+[m[37m[1712916444.877480 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f19000[m
+[m[37m[1712916444.877792 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f1a000[m
+[m[37m[1712916444.878087 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f1b000[m
+[m[37m[1712916444.878383 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f1c000[m
+[m[37m[1712916444.878742 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f1d000[m
+[m[37m[1712916444.879039 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f1e000[m
+[m[37m[1712916444.879348 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f1f000[m
+[m[37m[1712916444.879647 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f20000[m
+[m[37m[1712916444.879984 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f21000[m
+[m[37m[1712916444.880287 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f22000[m
+[m[37m[1712916444.880592 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f23000[m
+[m[37m[1712916444.880899 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f24000[m
+[m[37m[1712916444.881239 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f25000[m
+[m[37m[1712916444.881556 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f26000[m
+[m[37m[1712916444.881866 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f27000[m
+[m[37m[1712916444.882177 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff800014f28000[m
+[mtest.test_array
+test.test_asdl_parser
+test.test_ast
+test.test_asyncgen
+test.test_asynchat
+test.test_asyncio
+test.test_asyncio.__main__
+test.test_asyncio.echo
+test.test_asyncio.echo2
+test.test_asyncio.echo3
+test.test_asyncio.functional
+test.test_asyncio.test_base_events
+test.test_asyncio.test_buffered_proto
+test.test_asyncio.test_context
+test.test_asyncio.test_events
+test.test_asyncio.test_futures
+test.test_asyncio.test_futures2
+test.test_asyncio.test_locks
+test.test_asyncio.test_pep492
+test.test_asyncio.test_proactor_events
+test.test_asyncio.test_protocols
+test.test_asyncio.test_queues
+test.test_asyncio.test_runners
+test.test_asyncio.test_selector_events
+test.test_asyncio.test_sendfile
+test.test_asyncio.test_server
+test.test_asyncio.test_sock_lowlevel
+test.test_asyncio.test_ssl
+test.test_asyncio.test_sslproto
+test.test_asyncio.test_streams
+test.test_asyncio.test_subprocess
+test.test_asyncio.test_taskgroups
+test.test_asyncio.test_tasks
+test.test_asyncio.test_threads
+test.test_asyncio.test_timeouts
+test.test_asyncio.test_transports
+test.test_asyncio.test_unix_events
+test.test_asyncio.test_waitfor
+test.test_asyncio.test_windows_events
+test.test_asyncio.test_windows_utils
+test.test_asyncio.utils
+test.test_asyncore
+test.test_atexit
+test.test_audioop
+test.test_audit
+test.test_augassign
+test.test_base64
+test.test_baseexception
+test.test_bdb
+test.test_bigaddrspace
+test.test_bigmem
+test.test_binascii
+test.test_binop
+test.test_bisect
+test.test_bool
+test.test_buffer
+test.test_bufio
+test.test_builtin
+test.test_bytes
+test.test_bz2
+test.test_c_locale_coercion
+test.test_calendar
+test.test_call
+test.test_capi
+test.test_capi.__main__
+test.test_capi.test_codecs
+test.test_capi.test_eval_code_ex
+test.test_capi.test_getargs
+test.test_capi.test_misc
+test.test_capi.test_structmembers
+test.test_capi.test_unicode
+test.test_cgi
+test.test_cgitb
+test.test_charmapcodec
+test.test_check_c_globals
+test.test_class
+test.test_clinic
+test.test_cmath
+test.test_cmd
+test.test_cmd_line
+test.test_cmd_line_script
+test.test_code
+test.test_code_module
+test.test_codeccallbacks
+test.test_codecencodings_cn
+test.test_codecencodings_hk
+test.test_codecencodings_iso2022
+test.test_codecencodings_jp
+test.test_codecencodings_kr
+test.test_codecencodings_tw
+test.test_codecmaps_cn
+test.test_codecmaps_hk
+test.test_codecmaps_jp
+test.test_codecmaps_kr
+test.test_codecmaps_tw
+test.test_codecs
+test.test_codeop
+test.test_collections
+test.test_colorsys
+test.test_compare
+test.test_compile
+test.test_compileall
+test.test_complex
+test.test_configparser
+test.test_contains
+test.test_context
+test.test_contextlib
+test.test_contextlib_async
+test.test_copy
+test.test_copyreg
+test.test_coroutines
+test.test_cppext
+test.test_cppext.setup
+test.test_cprofile
+test.test_crashers
+test.test_crypt
+test.test_csv
+test.test_ctypes
+test.test_curses
+test.test_dataclasses
+test.test_dataclasses.dataclass_module_1
+test.test_dataclasses.dataclass_module_1_str
+test.test_dataclasses.dataclass_module_2
+test.test_dataclasses.dataclass_module_2_str
+test.test_dataclasses.dataclass_textanno
+test.test_datetime
+test.test_dbm
+test.test_dbm_dumb
+test.test_dbm_gnu
+test.test_dbm_ndbm
+test.test_decimal
+test.test_decorators
+test.test_defaultdict
+test.test_deque
+test.test_descr
+test.test_descrtut
+test.test_devpoll
+test.test_dict
+test.test_dict_version
+test.test_dictcomps
+test.test_dictviews
+test.test_difflib
+test.test_dis
+test.test_distutils
+test.test_doctest
+test.test_doctest.doctest_aliases
+test.test_doctest.doctest_lineno
+test.test_doctest.sample_doctest
+test.test_doctest.sample_doctest_no_docstrings
+test.test_doctest.sample_doctest_no_doctests
+test.test_doctest.test_doctest
+test.test_doctest.test_doctest2
+test.test_docxmlrpc
+test.test_dtrace
+test.test_dynamic
+test.test_dynamicclassattribute
+test.test_eintr
+test.test_email
+test.test_email.__main__
+test.test_email.test__encoded_words
+test.test_email.test__header_value_parser
+test.test_email.test_asian_codecs
+test.test_email.test_contentmanager
+test.test_email.test_defect_handling
+test.test_email.test_email
+test.test_email.test_generator
+test.test_email.test_headerregistry
+test.test_email.test_inversion
+test.test_email.test_message
+test.test_email.test_parser
+test.test_email.test_pickleable
+test.test_email.test_policy
+test.test_email.test_utils
+test.test_email.torture_test
+test.test_embed
+test.test_ensurepip
+test.test_enum
+test.test_enumerate
+test.test_eof
+test.test_epoll
+test.test_errno
+test.test_except_star
+test.test_exception_group
+test.test_exception_hierarchy
+test.test_exception_variations
+test.test_exceptions
+test.test_extcall
+test.test_faulthandler
+test.test_fcntl
+test.test_file
+test.test_file_eintr
+test.test_filecmp
+test.test_fileinput
+test.test_fileio
+test.test_fileutils
+test.test_finalization
+test.test_float
+test.test_flufl
+test.test_fnmatch
+test.test_fork1
+test.test_format
+test.test_fractions
+test.test_frame
+test.test_frozen
+test.test_fstring
+test.test_ftplib
+test.test_funcattrs
+test.test_functools
+test.test_future_stmt
+test.test_future_stmt.badsyntax_future10
+test.test_future_stmt.badsyntax_future3
+test.test_future_stmt.badsyntax_future4
+test.test_future_stmt.badsyntax_future5
+test.test_future_stmt.badsyntax_future6
+test.test_future_stmt.badsyntax_future7
+test.test_future_stmt.badsyntax_future8
+test.test_future_stmt.badsyntax_future9
+test.test_future_stmt.future_test1
+test.test_future_stmt.future_test2
+test.test_future_stmt.test_future
+test.test_future_stmt.test_future_flags
+test.test_future_stmt.test_future_multiple_features
+test.test_future_stmt.test_future_multiple_imports
+test.test_future_stmt.test_future_single_import
+test.test_gc
+test.test_gdb
+test.test_gdb.gdb_sample
+test.test_gdb.test_backtrace
+test.test_gdb.test_cfunction
+test.test_gdb.test_cfunction_full
+test.test_gdb.test_misc
+test.test_gdb.test_pretty_print
+test.test_gdb.util
+test.test_generator_stop
+test.test_generators
+test.test_genericalias
+test.test_genericclass
+test.test_genericpath
+test.test_genexps
+test.test_getopt
+test.test_getpass
+test.test_getpath
+test.test_gettext
+test.test_glob
+test.test_global
+test.test_grammar
+test.test_graphlib
+test.test_grp
+test.test_gzip
+test.test_hash
+test.test_hashlib
+test.test_heapq
+test.test_hmac
+test.test_html
+test.test_htmlparser
+test.test_http_cookiejar
+test.test_http_cookies
+test.test_httplib
+test.test_httpservers
+test.test_idle
+test.test_imaplib
+test.test_imghdr
+test.test_imp
+test.test_import
+test.test_import.__main__
+test.test_importlib
+test.test_importlib.__main__
+test.test_importlib.abc
+test.test_importlib.builtin
+test.test_importlib.builtin.__main__
+test.test_importlib.builtin.test_finder
+test.test_importlib.builtin.test_loader
+test.test_importlib.data
+test.test_importlib.data01
+test.test_importlib.data01.subdirectory
+test.test_importlib.data02
+test.test_importlib.data02.one
+test.test_importlib.data02.two
+test.test_importlib.data03
+test.test_importlib.extension
+test.test_importlib.extension.__main__
+test.test_importlib.extension.test_case_sensitivity
+test.test_importlib.extension.test_finder
+test.test_importlib.extension.test_loader
+test.test_importlib.extension.test_path_hook
+test.test_importlib.fixtures
+test.test_importlib.frozen
+test.test_importlib.frozen.__main__
+test.test_importlib.frozen.test_finder
+test.test_importlib.frozen.test_loader
+test.test_importlib.import_
+test.test_importlib.import_.__main__
+test.test_importlib.import_.test___loader__
+test.test_importlib.import_.test___package__
+test.test_importlib.import_.test_api
+test.test_importlib.import_.test_caching
+test.test_importlib.import_.test_fromlist
+test.test_importlib.import_.test_meta_path
+test.test_importlib.import_.test_packages
+test.test_importlib.import_.test_path
+test.test_importlib.import_.test_relative_imports
+test.test_importlib.resources
+test.test_importlib.resources.util
+test.test_importlib.source
+test.test_importlib.source.__main__
+test.test_importlib.source.test_case_sensitivity
+test.test_importlib.source.test_file_loader
+test.test_importlib.source.test_finder
+test.test_importlib.source.test_path_hook
+test.test_importlib.source.test_source_encoding
+test.test_importlib.stubs
+test.test_importlib.test_abc
+test.test_importlib.test_api
+test.test_importlib.test_compatibilty_files
+test.test_importlib.test_contents
+test.test_importlib.test_files
+test.test_importlib.test_lazy
+test.test_importlib.test_locks
+test.test_importlib.test_main
+test.test_importlib.test_metadata_api
+test.test_importlib.test_namespace_pkgs
+test.test_importlib.test_open
+test.test_importlib.test_path
+test.test_importlib.test_pkg_import
+test.test_importlib.test_read
+test.test_importlib.test_reader
+test.test_importlib.test_resource
+test.test_importlib.test_spec
+test.test_importlib.test_threaded_import
+test.test_importlib.test_util
+test.test_importlib.test_windows
+test.test_importlib.test_zip
+test.test_importlib.threaded_import_hangers
+test.test_importlib.update-zips
+test.test_importlib.util
+test.test_importlib.zipdata01
+test.test_importlib.zipdata02
+test.test_index
+test.test_inspect
+test.test_inspect.inspect_fodder
+test.test_inspect.inspect_fodder2
+test.test_inspect.inspect_stock_annotations
+test.test_inspect.inspect_stringized_annotations
+test.test_inspect.inspect_stringized_annotations_2
+test.test_inspect.test_inspect
+test.test_int
+test.test_int_literal
+test.test_interpreters
+test.test_io
+test.test_ioctl
+test.test_ipaddress
+test.test_isinstance
+test.test_iter
+test.test_iterlen
+test.test_itertools
+test.test_json
+test.test_json.__main__
+test.test_json.test_decode
+test.test_json.test_default
+test.test_json.test_dump
+test.test_json.test_encode_basestring_ascii
+test.test_json.test_enum
+test.test_json.test_fail
+test.test_json.test_float
+test.test_json.test_indent
+test.test_json.test_pass1
+test.test_json.test_pass2
+test.test_json.test_pass3
+test.test_json.test_recursion
+test.test_json.test_scanstring
+test.test_json.test_separators
+test.test_json.test_speedups
+test.test_json.test_tool
+test.test_json.test_unicode
+test.test_keyword
+test.test_keywordonlyarg
+test.test_kqueue
+test.test_largefile
+test.test_launcher
+test.test_lib2to3
+test.test_linecache
+test.test_list
+test.test_listcomps
+test.test_lltrace
+test.test_locale
+test.test_logging
+[37m[1712916453.259727 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200a1000[m
+[m[37m[1712916453.260123 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200a2000[m
+[m[37m[1712916453.260420 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200a3000[m
+[m[37m[1712916453.260723 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200a4000[m
+[m[37m[1712916453.261030 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200a5000[m
+[m[37m[1712916453.261335 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200a6000[m
+[m[37m[1712916453.261642 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200a7000[m
+[m[37m[1712916453.261951 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200a8000[m
+[m[37m[1712916453.262253 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200a9000[m
+[m[37m[1712916453.262554 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200aa000[m
+[m[37m[1712916453.262854 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200ab000[m
+[m[37m[1712916453.263208 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200ac000[m
+[m[37m[1712916453.263512 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200ad000[m
+[m[37m[1712916453.263807 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200ae000[m
+[m[37m[1712916453.264099 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200af000[m
+[m[37m[1712916453.264395 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200b0000[m
+[m[37m[1712916453.264734 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200b1000[m
+[m[37m[1712916453.265033 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200b2000[m
+[m[37m[1712916453.265346 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200b3000[m
+[m[37m[1712916453.265703 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200b4000[m
+[m[37m[1712916453.266002 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200b5000[m
+[m[37m[1712916453.266292 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200b6000[m
+[m[37m[1712916453.266582 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200b7000[m
+[m[37m[1712916453.266872 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200b8000[m
+[m[37m[1712916453.267163 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200b9000[m
+[m[37m[1712916453.267453 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200ba000[m
+[m[37m[1712916453.267744 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200bb000[m
+[m[37m[1712916453.268035 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200bc000[m
+[m[37m[1712916453.268324 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200bd000[m
+[m[37m[1712916453.268614 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200be000[m
+[m[37m[1712916453.268903 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200bf000[m
+[m[37m[1712916453.269190 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200c0000[m
+[m[37m[1712916453.269479 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200c1000[m
+[m[37m[1712916453.269783 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200c2000[m
+[m[37m[1712916453.270073 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200c3000[m
+[m[37m[1712916453.270360 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200c4000[m
+[m[37m[1712916453.270706 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200c5000[m
+[m[37m[1712916453.270993 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200c6000[m
+[m[37m[1712916453.271282 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200c7000[m
+[m[37m[1712916453.271569 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200c8000[m
+[m[37m[1712916453.271855 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200c9000[m
+[m[37m[1712916453.272142 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200ca000[m
+[m[37m[1712916453.272440 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200cb000[m
+[m[37m[1712916453.272729 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200cc000[m
+[m[37m[1712916453.273016 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200cd000[m
+[m[37m[1712916453.273307 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200ce000[m
+[m[37m[1712916453.273602 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200cf000[m
+[m[37m[1712916453.273893 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200d0000[m
+[m[37m[1712916453.274261 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200d1000[m
+[m[37m[1712916453.274553 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200d2000[m
+[m[37m[1712916453.274846 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200d3000[m
+[m[37m[1712916453.275138 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200d4000[m
+[m[37m[1712916453.275433 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200d5000[m
+[m[37m[1712916453.275724 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200d6000[m
+[m[37m[1712916453.276015 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200d7000[m
+[m[37m[1712916453.276312 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200d8000[m
+[m[37m[1712916453.276611 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200d9000[m
+[m[37m[1712916453.276907 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200da000[m
+[m[37m[1712916453.277207 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200db000[m
+[m[37m[1712916453.277508 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200dc000[m
+[m[37m[1712916453.277871 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200dd000[m
+[m[37m[1712916453.278169 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200de000[m
+[m[37m[1712916453.278499 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200df000[m
+[m[37m[1712916453.278796 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200e0000[m
+[m[37m[1712916453.279093 0:2 ruxhal::paging:138] [31mswapping swaped_vaddr: VA:0xffff8000200e1000[m
+[mtest.test_long
+test.test_longexp
+test.test_lzma
+test.test_mailbox
+test.test_mailcap
+[37m[1712916453.164092 0:2 ruxruntime::lang_items:14] [31mpanicked at modules/ruxhal/src/arch/aarch64/trap.rs:122:13:
+Unhandled synchronous exception @ 0xffff0000400877f8: ESR=0x3a000000 (EC 0b001110, ISS 0x0)[m
+[m

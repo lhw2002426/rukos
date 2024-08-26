@@ -1,0 +1,239 @@
+    [92;1mBuilding[0m App: dl, Arch: aarch64, Platform: aarch64-qemu-virt, App type: c
+[37mcargo build[0m [90m--target aarch64-unknown-none-softfloat --target-dir /media/robert/data/rukos-0411/rukos/target --release  -p ruxmusl --features "ruxfeat/log-level-debug ruxfeat/virtio-9p ruxfeat/rtc ruxfeat/tls ruxmusl/alloc ruxmusl/paging ruxmusl/fs ruxmusl/musl ruxmusl/poll ruxmusl/multitask ruxmusl/fp_simd ruxmusl/pipe ruxmusl/epoll ruxmusl/irq ruxmusl/select ruxmusl/signal ruxmusl/net ruxmusl/fd ruxmusl/musl ruxmusl/fp_simd ruxmusl/fd"[0m
+echo --------------build_dl---------------------
+--------------build_dl---------------------
+mkdir apps/c/dl/root -p
+mkdir apps/c/dl/root/lib -p
+cp apps/c/dl/../../../ulib/ruxmusl/install/lib/libc.so apps/c/dl/root/lib/ld-musl-aarch64.so.1
+# aarch64-linux-musl-gcc -mgeneral-regs-only  -ggdb  -static -fPIE -pie  apps/c/dl/root/hello.c -o apps/c/dl/root/statichello 
+# aarch64-linux-musl-gcc -mgeneral-regs-only  -ggdb apps/c/dl/root/hello.c -o apps/c/dl/root/dynamichello 
+echo --------------build_dl---------------------
+--------------build_dl---------------------
+[37maarch64-linux-musl-gcc[0m [90m-nostdinc -fno-builtin -ffreestanding -Wall -isystem/media/robert/data/rukos-0411/rukos/ulib/ruxmusl/install/include -O3   -c -o apps/c/dl/dl.o apps/c/dl/dl.c[0m
+    [96;1mLinking[0m apps/c/dl/dl_aarch64-qemu-virt.elf
+[37mrust-lld -flavor gnu[0m [90m-nostdlib -static -no-pie --gc-sections -T/media/robert/data/rukos-0411/rukos/modules/ruxhal/linker_aarch64-qemu-virt.lds ulib/ruxmusl/install/lib/libc.a target/aarch64-unknown-none-softfloat/release/libruxmusl.a  apps/c/dl/dl.o -o apps/c/dl/dl_aarch64-qemu-virt.elf[0m
+[37mrust-objcopy --binary-architecture=aarch64[0m [90mapps/c/dl/dl_aarch64-qemu-virt.elf --strip-all -O binary apps/c/dl/dl_aarch64-qemu-virt.bin[0m
+    [96;1mRunning[0m on qemu...
+[37mqemu-system-aarch64[0m [90m-m 2G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/c/dl/dl_aarch64-qemu-virt.bin -append ";/python3.11/bin/python3.11,/python3.11/lib/python3.11/test/test___all__.py;" -device virtio-net-device,netdev=net0 -fsdev local,id=myid,path=apps/c/dl/root,security_model=none -device virtio-9p-device,fsdev=myid,mount_tag=rootfs -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555,hostfwd=tcp::5556-:5556,hostfwd=udp::5556-:5556,hostfwd=tcp::5557-:5557,hostfwd=udp::5557-:5557,hostfwd=tcp::5558-:5558,hostfwd=udp::5558-:5558,hostfwd=tcp::5559-:5559,hostfwd=udp::5559-:5559, -nographic -D qemu.log -d in_asm,int,mmu,pcall,cpu_reset,guest_errors[0m
+
+8888888b.                     .d88888b.   .d8888b.  
+888   Y88b                   d88P" "Y88b d88P  Y88b 
+888    888                   888     888 Y88b.      
+888   d88P 888  888 888  888 888     888  "Y888b.   
+8888888P"  888  888 `Y8bd8P' 888     888     "Y88b. 
+888 T88b   888  888   X88K   888     888       "888 
+888  T88b  Y88b 888 .d8""8b. Y88b. .d88P Y88b  d88P 
+888   T88b  "Y88888 888  888  "Y88888P"   "Y8888P" 
+
+arch = aarch64
+platform = aarch64-qemu-virt
+target = aarch64-unknown-none-softfloat
+smp = 1
+build_mode = release
+log_level = debug
+
+[37m[1712907192.006066 0 ruxruntime:175] [32mLogging is enabled.[m
+[m[37m[1712907192.009521 0 ruxruntime:176] [32mPrimary CPU 0 started, dtb = 0x48000000.[m
+[m[37m[1712907192.010476 0 ruxruntime:178] [32mFound physcial memory regions:[m
+[m[37m[1712907192.011962 0 ruxruntime:180] [32m  [PA:0x40080000, PA:0x40103000) .text (READ | EXECUTE | RESERVED)[m
+[m[37m[1712907192.013161 0 ruxruntime:180] [32m  [PA:0x40103000, PA:0x40116000) .rodata (READ | RESERVED)[m
+[m[37m[1712907192.013642 0 ruxruntime:180] [32m  [PA:0x40116000, PA:0x4011a000) .data .tdata .tbss .percpu (READ | WRITE | RESERVED)[m
+[m[37m[1712907192.014048 0 ruxruntime:180] [32m  [PA:0x4011a000, PA:0x4015a000) boot stack (READ | WRITE | RESERVED)[m
+[m[37m[1712907192.014389 0 ruxruntime:180] [32m  [PA:0x4015a000, PA:0x40185000) .bss (READ | WRITE | RESERVED)[m
+[m[37m[1712907192.014804 0 ruxruntime:180] [32m  [PA:0x40185000, PA:0xc0000000) free memory (READ | WRITE | EXECUTE | FREE)[m
+[m[37m[1712907192.015367 0 ruxruntime:180] [32m  [PA:0x9000000, PA:0x9001000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1712907192.015737 0 ruxruntime:180] [32m  [PA:0x8000000, PA:0x8020000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1712907192.016083 0 ruxruntime:180] [32m  [PA:0xa000000, PA:0xa004000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1712907192.016427 0 ruxruntime:180] [32m  [PA:0x10000000, PA:0x3eff0000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1712907192.016775 0 ruxruntime:180] [32m  [PA:0x4010000000, PA:0x4020000000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1712907192.017135 0 ruxruntime:180] [32m  [PA:0x9010000, PA:0x9011000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1712907192.017740 0 ruxruntime:365] [32mInitialize global memory allocator...[m
+[m[37m[1712907192.018304 0 ruxruntime:366] [32m  use slab allocator.[m
+[m[37m[1712907192.020158 0 axalloc:221] [36minitialize global allocator at: [0xffff000040185000, 0xffff0000c0000000)[m
+[m[37m[1712907192.025328 0 ruxruntime:194] [32mInitialize kernel page table...[m
+[m[37m[1712907192.032169 0 ruxruntime:198] [32mInitialize platform devices...[m
+[m[37m[1712907192.032639 0 ruxhal::platform::aarch64_common::gic:60] [32mInitialize GICv2...[m
+[m[37m[1712907192.033913 0 ruxhal::platform::aarch64_common::pl031:23] [32mInitialize pl031 rtc...[m
+[m[37m[1712907192.034536 0 ruxhal::platform::aarch64_common::pl031:25] [36m1712907192[m
+[m[37m[1712907192.035330 0 ruxtask::api:77] [32mInitialize scheduling...[m
+[m[37m[1712907192.038242 0 ruxtask::task:265] [36mnew task: Task(1, "idle")[m
+[m[37m[1712907192.038898 0 ruxtask::task:465] [36mtaskStack::layout = Layout { size: 4096, align: 8 (1 << 3) }[m
+[m[37m[1712907192.041674 0 axalloc:127] [36mexpand heap memory: [0xffff000040197000, 0xffff0000401a7000)[m
+[m[37m[1712907192.042380 0 axalloc:127] [36mexpand heap memory: [0xffff0000401a7000, 0xffff0000401c7000)[m
+[m[37m[1712907192.042710 0 axalloc:127] [36mexpand heap memory: [0xffff0000401c7000, 0xffff000040207000)[m
+[m[37m[1712907192.043319 0 axalloc:127] [36mexpand heap memory: [0xffff000040207000, 0xffff000040287000)[m
+[m[37m[1712907192.047265 0 ruxtask::task:265] [36mnew task: Task(3, "gc")[m
+[m[37m[1712907192.047614 0 ruxtask::task:465] [36mtaskStack::layout = Layout { size: 262144, align: 8 (1 << 3) }[m
+[m[37m[1712907192.048290 0 axalloc:127] [36mexpand heap memory: [0xffff000040287000, 0xffff000040487000)[m
+[m[37m[1712907192.049561 0 ruxtask::api:85] [32m  use FIFO scheduler.[m
+[m[37m[1712907192.050465 0 ruxdriver:170] [32mInitialize device drivers...[m
+[m[37m[1712907192.050979 0 ruxdriver:171] [32m  device model: static[m
+[m[37m[1712907192.052195 0 virtio_drivers::device::v9p:30] [32mdevice features: VIRTIO_9P_F_MOUNT_TAG[m
+[m[37m[1712907192.053528 0 ruxdriver::bus::mmio:20] [32mregistered a new _9P device at [PA:0xa003c00, PA:0xa003e00): "virtio-9p"[m
+[m[37m[1712907192.054516 0 virtio_drivers::device::net::dev_raw:31] [32mDevice features CTRL_GUEST_OFFLOADS | MAC | GSO | MRG_RXBUF | STATUS | CTRL_VQ | CTRL_RX | CTRL_VLAN | CTRL_RX_EXTRA | GUEST_ANNOUNCE | CTL_MAC_ADDR | RING_INDIRECT_DESC | RING_EVENT_IDX[m
+[m[37m[1712907192.056298 0 virtio_drivers::device::net::dev_raw:41] [36mGot MAC=[52, 54, 00, 12, 34, 56], status=LINK_UP[m
+[m[37m[1712907192.061671 0 ruxdriver::bus::mmio:20] [32mregistered a new Net device at [PA:0xa003e00, PA:0xa004000): "virtio-net"[m
+[m[37m[1712907192.062813 0 ruxdriver:178] [36mnumber of NICs: 1[m
+[m[37m[1712907192.063125 0 ruxdriver:181] [36m  NIC 0: "virtio-net"[m
+[m[37m[1712907192.063413 0 ruxdriver:186] [36mnumber of block devices: 0[m
+[m[37m[1712907192.063730 0 ruxdriver:202] [36mnumber of 9p devices: 1[m
+[m[37m[1712907192.064049 0 ruxdriver:205] [36m  9p device 0: "virtio-9p"[m
+[m[37m[1712907192.064598 0 axnet:53] [32mInitialize network subsystem...[m
+[m[37m[1712907192.064933 0 axnet:56] [32m  use NIC 0: "virtio-net"[m
+[m[37m[1712907192.066647 0 axalloc:127] [36mexpand heap memory: [0xffff00004048d000, 0xffff00004088d000)[m
+[m[37m[1712907192.067182 0 axalloc:127] [36mexpand heap memory: [0xffff00004088d000, 0xffff00004108d000)[m
+[m[37m[1712907192.068748 0 axnet::smoltcp_impl:335] [32mcreated net interface "eth0":[m
+[m[37m[1712907192.069085 0 axnet::smoltcp_impl:336] [32m  ether:    52-54-00-12-34-56[m
+[m[37m[1712907192.069767 0 axnet::smoltcp_impl:337] [32m  ip:       10.0.2.15/24[m
+[m[37m[1712907192.070291 0 axnet::smoltcp_impl:338] [32m  gateway:  10.0.2.2[m
+[m[37m[1712907192.070850 0 rux9p:51] [32mInitialize virtio 9pfs...[m
+[m[37m[1712907192.071405 0 rux9p:54] [32m  use 9pfs device 0: "virtio-9p"[m
+[m[37m[1712907192.071934 0 rux9p::drv:45] [32m9p dev init success[m
+[m[37m[1712907192.075049 0 rux9p::fs:49] [32m9pfs server's protocol: 9P2000.L[m
+[m[37m[1712907192.079468 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: cpuinfo[m
+[m[37m[1712907192.083607 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: meminfo[m
+[m[37m[1712907192.085219 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: sys[m
+[m[37m[1712907192.085569 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: sys/net[m
+[m[37m[1712907192.086015 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: net[m
+[m[37m[1712907192.086221 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: sys/net/core[m
+[m[37m[1712907192.086375 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: net/core[m
+[m[37m[1712907192.086520 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: core[m
+[m[37m[1712907192.086697 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: sys/net/core/somaxconn[m
+[m[37m[1712907192.087002 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: net/core/somaxconn[m
+[m[37m[1712907192.087266 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: core/somaxconn[m
+[m[37m[1712907192.087425 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: somaxconn[m
+[m[37m[1712907192.087753 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: sys[m
+[m[37m[1712907192.088067 0 axfs_ramfs::dir:55] [31mAlreadyExists sys[m
+[m[37m[1712907192.088213 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: sys/vm[m
+[m[37m[1712907192.088364 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: vm[m
+[m[37m[1712907192.088535 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: sys/vm/overcommit_memory[m
+[m[37m[1712907192.088717 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: vm/overcommit_memory[m
+[m[37m[1712907192.088977 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: overcommit_memory[m
+[m[37m[1712907192.089366 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: self[m
+[m[37m[1712907192.089587 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: self/stat[m
+[m[37m[1712907192.089745 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: stat[m
+[m[37m[1712907192.090289 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: kernel[m
+[m[37m[1712907192.090439 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: kernel/mm[m
+[m[37m[1712907192.090589 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: mm[m
+[m[37m[1712907192.090731 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: kernel/mm/transparent_hugepage[m
+[m[37m[1712907192.090916 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: mm/transparent_hugepage[m
+[m[37m[1712907192.091110 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: transparent_hugepage[m
+[m[37m[1712907192.091289 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: kernel/mm/transparent_hugepage/enabled[m
+[m[37m[1712907192.091502 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: mm/transparent_hugepage/enabled[m
+[m[37m[1712907192.091704 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: transparent_hugepage/enabled[m
+[m[37m[1712907192.091931 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: enabled[m
+[m[37m[1712907192.092242 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: devices[m
+[m[37m[1712907192.092405 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: devices/system[m
+[m[37m[1712907192.092572 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: system[m
+[m[37m[1712907192.092725 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: devices/system/clocksource[m
+[m[37m[1712907192.092911 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: system/clocksource[m
+[m[37m[1712907192.093086 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: clocksource[m
+[m[37m[1712907192.093252 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: devices/system/clocksource/clocksource0[m
+[m[37m[1712907192.093463 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: system/clocksource/clocksource0[m
+[m[37m[1712907192.093661 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: clocksource/clocksource0[m
+[m[37m[1712907192.093847 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: clocksource0[m
+[m[37m[1712907192.094013 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: devices/system/clocksource/clocksource0/current_clocksource[m
+[m[37m[1712907192.094257 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: system/clocksource/clocksource0/current_clocksource[m
+[m[37m[1712907192.094485 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: clocksource/clocksource0/current_clocksource[m
+[m[37m[1712907192.094701 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: clocksource0/current_clocksource[m
+[m[37m[1712907192.094898 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: current_clocksource[m
+[m[37m[1712907192.095859 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: passwd[m
+[m[37m[1712907192.096172 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: group[m
+[m[37m[1712907192.096479 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: localtime[m
+[m[37m[1712907192.096672 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: hosts[m
+[m[37m[1712907192.097150 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: resolv.conf[m
+[m[37m[1712907192.098167 0 ruxfs::root:172] [32mmounting /dev[m
+[m[37m[1712907192.098645 0 rux9p::fs:445] [36mlookup 9pfs: /dev[m
+[m[37m[1712907192.101537 0 rux9p::fs:445] [36mlookup 9pfs: /dev[m
+[m[37m[1712907192.102810 0 ruxfs::root:172] [32mmounting /tmp[m
+[m[37m[1712907192.103016 0 rux9p::fs:445] [36mlookup 9pfs: /tmp[m
+[m[37m[1712907192.103301 0 rux9p::fs:445] [36mlookup 9pfs: /tmp[m
+[m[37m[1712907192.104087 0 ruxfs::root:172] [32mmounting /proc[m
+[m[37m[1712907192.104214 0 rux9p::fs:445] [36mlookup 9pfs: /proc[m
+[m[37m[1712907192.104505 0 rux9p::fs:445] [36mlookup 9pfs: /proc[m
+[m[37m[1712907192.104767 0 ruxfs::root:172] [32mmounting /sys[m
+[m[37m[1712907192.104894 0 rux9p::fs:445] [36mlookup 9pfs: /sys[m
+[m[37m[1712907192.105166 0 rux9p::fs:445] [36mlookup 9pfs: /sys[m
+[m[37m[1712907192.105425 0 ruxfs::root:172] [32mmounting /etc[m
+[m[37m[1712907192.105551 0 rux9p::fs:445] [36mlookup 9pfs: /etc[m
+[m[37m[1712907192.105833 0 rux9p::fs:445] [36mlookup 9pfs: /etc[m
+[m[37m[1712907192.107003 0 ruxruntime:259] [32mInitialize interrupt handlers...[m
+[m[37m[1712907192.108343 0 ruxruntime:269] [32mPrimary CPU 0 init OK.[m
+[m[37m[1712907192.113122 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 96[m
+[m[37m[1712907192.113895 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: SET_TID_ADDRESS[m
+[m[37m[1712907192.114388 0:2 ruxos_posix_api::imp::pthread:359] [36mset_tid_address <= addr: 0xffff000040184ae8[m
+[m[37m[1712907192.114791 0:2 ruxos_posix_api::imp::pthread:358] [36msys_set_tid_address => Ok(2)[m
+[m[37m[1712907192.116640 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 29[m
+[m[37m[1712907192.116814 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: IOCTL[m
+[m[37m[1712907192.117206 0:2 ruxos_posix_api::imp::ioctl:33] [36msys_ioctl <= fd: 1, request: 21523[m
+[m[37m[1712907192.117712 0:2 ruxos_posix_api::imp::ioctl:34] [36msys_ioctl => Ok(0)[m
+[m[37m[1712907192.118040 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[1712907192.118213 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[1712907192.118604 0:2 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[1712907192.119096 0:2 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff00004015a008 16[m
+[mHello, Ruxos dl![37m[1712907192.120483 0:2 ruxos_posix_api::imp::io:47] [36msys_write => Ok(16)[m
+[m[37m[1712907192.121077 0:2 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff000040153adf 1[m
+[m
+[37m[1712907192.121366 0:2 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[1712907192.121698 0:2 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(17)[m
+[m[37m[1712907192.124030 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[1712907192.124208 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[1712907192.124374 0:2 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[1712907192.124550 0:2 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff00004015a008 31[m
+[margc 2, argv 0xffff00004108cf00[37m[1712907192.124790 0:2 ruxos_posix_api::imp::io:47] [36msys_write => Ok(31)[m
+[m[37m[1712907192.124951 0:2 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff000040103080 1[m
+[m
+[37m[1712907192.125138 0:2 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[1712907192.125292 0:2 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(32)[m
+[m[37m[1712907192.126117 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[1712907192.126293 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[1712907192.126458 0:2 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[1712907192.126633 0:2 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff00004015a008 33[m
+[marg 0: /python3.11/bin/python3.11[37m[1712907192.126878 0:2 ruxos_posix_api::imp::io:47] [36msys_write => Ok(33)[m
+[m[37m[1712907192.127045 0:2 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff00004010300a 1[m
+[m
+[37m[1712907192.127231 0:2 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[1712907192.127391 0:2 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(34)[m
+[m[37m[1712907192.127681 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[1712907192.127919 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[1712907192.128152 0:2 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[1712907192.128327 0:2 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff00004015a008 54[m
+[marg 1: /python3.11/lib/python3.11/test/test___all__.py[37m[1712907192.128605 0:2 ruxos_posix_api::imp::io:47] [36msys_write => Ok(54)[m
+[m[37m[1712907192.128762 0:2 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff00004010300a 1[m
+[m
+[37m[1712907192.128947 0:2 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[1712907192.129103 0:2 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(55)[m
+[m[37m[1712907192.129275 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[1712907192.129449 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[1712907192.129608 0:2 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 1, iocnt: 2[m
+[m[37m[1712907192.129782 0:2 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff00004015a008 13[m
+[marg 2: (null)[37m[1712907192.129991 0:2 ruxos_posix_api::imp::io:47] [36msys_write => Ok(13)[m
+[m[37m[1712907192.130146 0:2 ruxos_posix_api::imp::io:46] [36msys_write <= 1 0xffff00004010300a 1[m
+[m
+[37m[1712907192.130332 0:2 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[1712907192.130485 0:2 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(14)[m
+[m[37m[1712907192.130703 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 221[m
+[m[37m[1712907192.130941 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: EXECVE[m
+[m[37m[1712907192.131663 0:2 ruxos_posix_api::imp::execve::load_elf:29] [36msys_execve: new elf prog: Ok("/python3.11/bin/python3.11")[m
+[m[37m[1712907192.132439 0:2 ruxos_posix_api::imp::fs:196] [36msys_open <= Ok("/python3.11/bin/python3.11") 0o2 0o0[m
+[m[37m[1712907192.133097 0:2 ruxfs::fops:125] [36mopen file: /python3.11/bin/python3.11 READ | WRITE[m
+[m[37m[1712907192.134026 0:2 ruxfs::root:95] [36mlookup at root: /python3.11/bin/python3.11[m
+[m[37m[1712907192.134640 0:2 rux9p::fs:445] [36mlookup 9pfs: python3.11/bin/python3.11[m
+[m[37m[1712907192.138285 0:2 rux9p::fs:401] [36mget_attr Ok(FileAttr { vaild: 6143, qid: _9PQid { ftype: 0, version: 4051022770, path: 6841006 }, mode: 33261, n_link: 1, uid: 1000, gid: 1000, rdev: 0, size: 26701080, blk_size: 4096, n_blk: 52152, atime_sec: 1712892933, atime_ns: 825766536, mtime_sec: 1712892850, mtime_ns: 499531723, ctime_sec: 1712892850, ctime_ns: 515531392, btime_sec: 0, btime_ns: 0, gen: 1709481589, date_version: 0 })[m
+[m[37m[1712907192.142118 0:2 ruxos_posix_api::imp::fs:197] [36msys_open => Ok(3)[m
+[m[37m[1712907192.142597 0:2 ruxos_posix_api::imp::fs:351] [36msys_fstat <= 3 0xffff0000401531a0[m
+[m[37m[1712907192.143342 0:2 rux9p::fs:401] [36mget_attr Ok(FileAttr { vaild: 6143, qid: _9PQid { ftype: 0, version: 4051022770, path: 6841006 }, mode: 33261, n_link: 1, uid: 1000, gid: 1000, rdev: 0, size: 26701080, blk_size: 4096, n_blk: 52152, atime_sec: 1712892933, atime_ns: 825766536, mtime_sec: 1712892850, mtime_ns: 499531723, ctime_sec: 1712892850, ctime_ns: 515531392, btime_sec: 0, btime_ns: 0, gen: 1709481589, date_version: 0 })[m
+[m[37m[1712907192.144689 0:2 ruxos_posix_api::imp::fs:352] [36msys_fstat => Ok(0)[m
+[m[37m[1712907192.145253 0:2 axalloc:127] [36mexpand heap memory: [0xffff00004108d000, 0xffff00004308d000)[m
+[m[37m[1712907192.146824 0:2 axalloc:127] [36mexpand heap memory: [0xffff00004308d000, 0xffff00004708d000)[m
+[m[37m[1712907192.156117 0:2 ruxos_posix_api::imp::io:23] [36msys_read <= 3 0xffff000044000000 26701080[m
+[m[37m[1712907192.156862 0:2 rux9p::fs:556] [36mread 9pid:3 length: 26701080[m
+[m[37m[1712907192.227201 0:2 ruxos_posix_api::imp::io:24] [36msys_read => Ok(26701080)[m
+[m[37m[1712907192.227780 0:2 ruxos_posix_api::imp::execve::load_elf:44] [36msys_execve: read file size 0x1976d18[m
+[m[37m[1712907192.228157 0:2 ruxos_posix_api::imp::fd_ops:66] [36msys_close <= 3[m
+[m[37m[1712907192.228968 0:2 ruxos_posix_api::imp::fd_ops:70] [36msys_close => Ok(0)[m
+[m[37m[1712907192.231265 0:2 ruxos_posix_api::imp::mmap::api:39] [36msys_mmap <= start: 0x0, len: 0x6594280, prot:0x7, flags:0x1, fd: 0[m
+[m[37m[1712907192.232528 0:2 ruxruntime::lang_items:14] [31mpanicked at api/ruxos_posix_api/src/imp/mmap/utils.rs:80:37:
+should be effective fid: EINVAL[m
+[m[37m[1712907192.233237 0:2 ruxhal::platform::aarch64_common::psci:105] [32mShutting down...[m
+[m

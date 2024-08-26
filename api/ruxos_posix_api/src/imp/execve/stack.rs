@@ -10,13 +10,38 @@ pub struct Stack {
     top: usize,
 }
 
+#[link_section = ".bss.stack"]
+static mut STATIC_STACK:[u8; 0x20000] = [0; 0x20000];
+
 impl Stack {
     /// alloc a stack
     pub fn new() -> Self {
+<<<<<<< HEAD
         Self {
             data: vec![0u8; STACK_SIZE],
             top: STACK_SIZE,
         }
+=======
+        //let size = 0xa00000; // 10M
+        //let p = sys_mmap(null_mut(), size, 7, 0x21, -1, 0);
+        // unsafe{
+        //     let mut vec = core::slice::from_raw_parts_mut(p as *mut u8, size);
+        //     vec.fill(0);
+        // }
+
+        unsafe{
+            let p = STATIC_STACK;
+            let size = 0x20000;
+            let start = p.as_ptr() as usize;
+            let sp = start + size / 2;
+            let end = sp;
+
+            error!("sp_addr : {:x?}-{:x?}", start, end);
+
+            Self { sp, start, end }
+        }
+        
+>>>>>>> ysp/python-dyn
     }
 
     /// addr of top of stack

@@ -56,6 +56,7 @@ impl ElfProg {
         let flags = ctypes::MAP_ANONYMOUS | ctypes::MAP_PRIVATE;
         let base = crate::sys_mmap(null_mut(), msize, prot as _, flags as _, -1, 0) as usize;
 
+        msize *= 16;
         // copy LOAD segments
         for seg in segs {
             if seg.p_type == elf::abi::PT_LOAD {
