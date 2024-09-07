@@ -74,6 +74,49 @@ pub unsafe fn sys_clock_settime(_clk: ctypes::clockid_t, ts: *const ctypes::time
     })
 }
 
+/// Sleep until some nanoseconds
+///
+/// TODO: should be woken by signals, and set errno
+/// TODO: deal with flags
+pub unsafe fn sys_clock_nanosleep(which_clock: ctypes::clockid_t, flags: c_int, req: *const ctypes::timespec, rem: *mut ctypes::timespec) -> c_int {
+    syscall_body!(sys_clock_nanosleep, {
+        unsafe {
+            if req.is_null() || (*req).tv_nsec < 0 || (*req).tv_nsec > 999999999 {
+                return Err(LinuxError::EINVAL);
+            }
+        }
+
+        let deadline = unsafe {
+            debug!("sys_clock_nanosleep <= {}.{:09}s", (*req).tv_sec, (*req).tv_nsec);
+            Duration::from(*req)
+        };
+
+        let now = ruxhal::time::current_time();
+
+        if now >= deadline {
+            return Ok(0);
+        }
+
+        #[cfg(feature = "multitask")]
+        ruxtask::sleep_until(deadline);
+        #[cfg(not(feature = "multitask"))]
+        ruxhal::time::busy_wait_until(deadline);
+
+        let after = ruxhal::time::current_time();
+        let actual = after - now;
+        let due = deadline - now;
+        debug!("lhw deug in sys_clock_nanosleep test time {:?} {:?}", actual, due);
+
+        if let Some(diff) = due.checked_sub(actual) {
+            if !rem.is_null() {
+                unsafe { (*rem) = diff.into() };
+            }
+            return Err(LinuxError::EINTR);
+        }
+        Ok(0)
+    })
+}
+
 /// Sleep some nanoseconds
 ///
 /// TODO: should be woken by signals, and set errno

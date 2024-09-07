@@ -112,6 +112,18 @@ impl FdSets {
             }
             i += BITS_PER_USIZE;
         }
+        unsafe { 
+            info!("lhw debug in select poll all {}",res_num);
+            if !res_read_fds.is_null() {
+                info!("read {:b}",(*res_read_fds).fds_bits[0])
+            }
+            if !res_write_fds.is_null() {
+                info!("write {:b}",(*res_write_fds).fds_bits[0])
+            }
+            if !res_except_fds.is_null() {
+                info!("exception {:b}",(*res_except_fds).fds_bits[0])
+            }
+        }
         Ok(res_num)
     }
 }
@@ -124,7 +136,7 @@ pub unsafe fn sys_select(
     exceptfds: *mut ctypes::fd_set,
     timeout: *mut ctypes::timeval,
 ) -> c_int {
-    debug!(
+    info!(
         "sys_select <= {} {:#x} {:#x} {:#x}",
         nfds, readfds as usize, writefds as usize, exceptfds as usize
     );

@@ -1,0 +1,188 @@
+[37mmkdir[0m [90m-p apps/c/python3[0m
+    [92;1mBuilding[0m App: python3, Arch: aarch64, Platform: aarch64-qemu-virt, App type: c
+[37mcargo build[0m [90m--target aarch64-unknown-none-softfloat --target-dir /root/rux/rukos/target --release  -p ruxmusl --features "ruxfeat/log-level-off ruxfeat/rtc ruxfeat/virtio-9p ruxfeat/tty ruxfeat/tls ruxmusl/paging ruxmusl/alloc ruxmusl/irq ruxmusl/musl ruxmusl/multitask ruxmusl/fs ruxmusl/pipe ruxmusl/poll ruxmusl/signal ruxmusl/net ruxmusl/epoll ruxmusl/select ruxmusl/fd ruxmusl/musl ruxmusl/fp_simd ruxmusl/fd ruxmusl/sched_rr"[0m
+[37maarch64-linux-musl-gcc[0m [90m-nostdinc -fno-builtin -ffreestanding -Wall -isystem/root/rux/rukos/ulib/ruxmusl/install_aarch64_release/include -O3   -c -o apps/c/python3/main.o apps/c/python3/main.c[0m
+    [96;1mLinking[0m apps/c/python3/python3_aarch64-qemu-virt.elf
+[37mrust-lld -flavor gnu[0m [90m-nostdlib -static -no-pie --gc-sections -T/root/rux/rukos/modules/ruxhal/linker_aarch64-qemu-virt.lds ulib/ruxmusl/install_aarch64_release/lib/libc.a target/aarch64-unknown-none-softfloat/release/libruxmusl.a  apps/c/python3/main.o -o apps/c/python3/python3_aarch64-qemu-virt.elf[0m
+[37mrust-objcopy --binary-architecture=aarch64[0m [90mapps/c/python3/python3_aarch64-qemu-virt.elf --strip-all -O binary apps/c/python3/python3_aarch64-qemu-virt.bin[0m
+    [96;1mRunning[0m on qemu...
+[37mqemu-system-aarch64[0m [90m-m 2G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/c/python3/python3_aarch64-qemu-virt.bin -append ";/bin/python3.11,/lib/python3.11/test/test_asynchat.py;PYTHONLIB=/lib,PYTHONHOME=/" -device virtio-net-device,netdev=net0 -fsdev local,id=myid,path=apps/c/python3/rootfs,security_model=none -device virtio-9p-device,fsdev=myid,mount_tag=rootfs -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555,hostfwd=tcp::5556-:5556,hostfwd=udp::5556-:5556,hostfwd=tcp::5557-:5557,hostfwd=udp::5557-:5557,hostfwd=tcp::5558-:5558,hostfwd=udp::5558-:5558,hostfwd=tcp::5559-:5559,hostfwd=udp::5559-:5559, -nographic[0m
+
+8888888b.                     .d88888b.   .d8888b.  
+888   Y88b                   d88P" "Y88b d88P  Y88b 
+888    888                   888     888 Y88b.      
+888   d88P 888  888 888  888 888     888  "Y888b.   
+8888888P"  888  888 `Y8bd8P' 888     888     "Y88b. 
+888 T88b   888  888   X88K   888     888       "888 
+888  T88b  Y88b 888 .d8""8b. Y88b. .d88P Y88b  d88P 
+888   T88b  "Y88888 888  888  "Y88888P"   "Y8888P" 
+
+arch = aarch64
+platform = aarch64-qemu-virt
+target = aarch64-unknown-none-softfloat
+smp = 1
+build_mode = release
+log_level = off
+
+lhw python handle first none close
+.error: uncaptured python exception, closing channel <__main__.echo_client connected localhost:5557 at 0xffff8000018818d0> (<class 'ConnectionRefusedError'>:[Errno 111] Connection refused [/lib/python3.11/asynchat.py|handle_read|124] [/lib/python3.11/asyncore.py|recv|378])
+..error: uncaptured python exception, closing channel <__main__.echo_client connected localhost:5565 at 0xffff800001882c10> (<class 'ConnectionRefusedError'>:[Errno 111] Connection refused [/lib/python3.11/asynchat.py|handle_read|124] [/lib/python3.11/asyncore.py|recv|378])
+...error: uncaptured python exception, closing channel <__main__.echo_client connected localhost:5579 at 0xffff800001882a90> (<class 'ConnectionRefusedError'>:[Errno 111] Connection refused [/lib/python3.11/asynchat.py|handle_read|124] [/lib/python3.11/asyncore.py|recv|378])
+.......FFFFFFFFFF..
+======================================================================
+FAIL: test_empty_line (__main__.TestAsynchat_WithPoll.test_empty_line)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 217, in test_empty_line
+    self.assertEqual(c.contents,
+AssertionError: Lists differ: [] != [b'hello world', b'', b"I'm not dead yet!"]
+
+Second list contains 3 additional elements.
+First extra element 0:
+b'hello world'
+
+- []
++ [b'hello world', b'', b"I'm not dead yet!"]
+
+======================================================================
+FAIL: test_line_terminator1 (__main__.TestAsynchat_WithPoll.test_line_terminator1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 142, in test_line_terminator1
+    self.line_terminator_check(b'\n', l)
+  File "/lib/python3.11/test/test_asynchat.py", line 133, in line_terminator_check
+    self.assertEqual(c.contents, [b"hello world", b"I'm not dead yet!"])
+AssertionError: Lists differ: [] != [b'hello world', b"I'm not dead yet!"]
+
+Second list contains 2 additional elements.
+First extra element 0:
+b'hello world'
+
+- []
++ [b'hello world', b"I'm not dead yet!"]
+
+======================================================================
+FAIL: test_line_terminator2 (__main__.TestAsynchat_WithPoll.test_line_terminator2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 147, in test_line_terminator2
+    self.line_terminator_check(b'\r\n', l)
+  File "/lib/python3.11/test/test_asynchat.py", line 133, in line_terminator_check
+    self.assertEqual(c.contents, [b"hello world", b"I'm not dead yet!"])
+AssertionError: Lists differ: [] != [b'hello world', b"I'm not dead yet!"]
+
+Second list contains 2 additional elements.
+First extra element 0:
+b'hello world'
+
+- []
++ [b'hello world', b"I'm not dead yet!"]
+
+======================================================================
+FAIL: test_line_terminator3 (__main__.TestAsynchat_WithPoll.test_line_terminator3)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 152, in test_line_terminator3
+    self.line_terminator_check(b'qqq', l)
+  File "/lib/python3.11/test/test_asynchat.py", line 133, in line_terminator_check
+    self.assertEqual(c.contents, [b"hello world", b"I'm not dead yet!"])
+AssertionError: Lists differ: [] != [b'hello world', b"I'm not dead yet!"]
+
+Second list contains 2 additional elements.
+First extra element 0:
+b'hello world'
+
+- []
++ [b'hello world', b"I'm not dead yet!"]
+
+======================================================================
+FAIL: test_none_terminator (__main__.TestAsynchat_WithPoll.test_none_terminator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 185, in test_none_terminator
+    self.assertEqual(c.buffer, data)
+AssertionError: b'' != b"hello world, I'm not dead yet!\n"
+
+======================================================================
+FAIL: test_numeric_terminator1 (__main__.TestAsynchat_WithPoll.test_numeric_terminator1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 169, in test_numeric_terminator1
+    self.numeric_terminator_check(1)
+  File "/lib/python3.11/test/test_asynchat.py", line 164, in numeric_terminator_check
+    self.assertEqual(c.contents, [data[:termlen]])
+AssertionError: Lists differ: [] != [b'h']
+
+Second list contains 1 additional elements.
+First extra element 0:
+b'h'
+
+- []
++ [b'h']
+
+======================================================================
+FAIL: test_numeric_terminator2 (__main__.TestAsynchat_WithPoll.test_numeric_terminator2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 172, in test_numeric_terminator2
+    self.numeric_terminator_check(6)
+  File "/lib/python3.11/test/test_asynchat.py", line 164, in numeric_terminator_check
+    self.assertEqual(c.contents, [data[:termlen]])
+AssertionError: Lists differ: [] != [b'hello ']
+
+Second list contains 1 additional elements.
+First extra element 0:
+b'hello '
+
+- []
++ [b'hello ']
+
+======================================================================
+FAIL: test_push (__main__.TestAsynchat_WithPoll.test_push)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 256, in test_push
+    self.assertEqual(c.contents, [b'bytes', b'bytes', b'bytes'])
+AssertionError: Lists differ: [] != [b'bytes', b'bytes', b'bytes']
+
+Second list contains 3 additional elements.
+First extra element 0:
+b'bytes'
+
+- []
++ [b'bytes', b'bytes', b'bytes']
+
+======================================================================
+FAIL: test_simple_producer (__main__.TestAsynchat_WithPoll.test_simple_producer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 196, in test_simple_producer
+    self.assertEqual(c.contents, [b"hello world", b"I'm not dead yet!"])
+AssertionError: Lists differ: [] != [b'hello world', b"I'm not dead yet!"]
+
+Second list contains 2 additional elements.
+First extra element 0:
+b'hello world'
+
+- []
++ [b'hello world', b"I'm not dead yet!"]
+
+======================================================================
+FAIL: test_string_producer (__main__.TestAsynchat_WithPoll.test_string_producer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 206, in test_string_producer
+    self.assertEqual(c.contents, [b"hello world", b"I'm not dead yet!"])
+AssertionError: Lists differ: [] != [b'hello world', b"I'm not dead yet!"]
+
+Second list contains 2 additional elements.
+First extra element 0:
+b'hello world'
+
+- []
++ [b'hello world', b"I'm not dead yet!"]
+
+----------------------------------------------------------------------
+Ran 25 tests in 5.597s
+
+FAILED (failures=10)

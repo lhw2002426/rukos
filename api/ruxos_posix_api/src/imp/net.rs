@@ -21,6 +21,26 @@ use ruxnet::{TcpSocket, UdpSocket};
 use crate::ctypes;
 use crate::utils::char_ptr_to_str;
 
+const SOL_SOCKET: i32 = 1;
+const SO_ACCEPTCONN: i32 = 30;
+const SO_BROADCAST: i32 = 6;
+const SO_DONTROUTE: i32 = 5;
+const SO_ERROR: i32 = 4;
+const SO_KEEPALIVE: i32 = 9;
+const SO_LINGER: i32 = 13;
+const SO_OOBINLINE: i32 = 10;
+const SO_RCVBUF: i32 = 8;
+const SO_RCVLOWAT: i32 = 18;
+const SO_RCVTIMEO: i32 = 20;
+const SO_REUSEADDR: i32 = 2;
+const SO_SNDBUF: i32 = 7;
+const SO_SNDLOWAT: i32 = 19;
+const SO_SNDTIMEO: i32 = 21;
+const SO_TYPE: i32 = 3;
+
+const AF_UNIX: i32 = 1;
+const UNIXSOCK_LISTEN: u32 = 0x01;
+
 pub enum Socket {
     Udp(Mutex<UdpSocket>),
     Tcp(Mutex<TcpSocket>),
@@ -263,6 +283,65 @@ pub fn sys_socket(domain: c_int, socktype: c_int, protocol: c_int) -> c_int {
                 Socket::Tcp(Mutex::new(tcp_socket)).add_to_fd_table()
             }
             _ => Err(LinuxError::EINVAL),
+        }
+    })
+}
+
+/// `getsockopt`, currently ignored
+///
+/// TODO: implement this
+pub fn sys_getsockopt(
+    socket_fd: c_int,
+    level: c_int,
+    optname: c_int,
+    optval: *mut c_void,
+    optlen: *mut ctypes::socklen_t,
+) -> c_int {
+    unsafe {
+        info!(
+            "sys_getsockopt <= fd: {}, level: {}, optname: {}, optlen: {}, IGNORED",
+            socket_fd, level, optname, *optlen
+        );
+    }
+    syscall_body!(sys_getsockopt, {
+        return Ok(0);
+        if optval.is_null() {
+            return Err(LinuxError::EFAULT);
+        }
+        let socket = Socket::from_fd(socket_fd)?;
+        match level as u32 {
+            ctypes::SOL_SOCKET => {
+                let val = match optname {
+                    SO_ACCEPTCONN => {
+                        match &*socket {
+                            Socket::Udp(_) => 0,
+                            Socket::Tcp(tcpsocket) => if tcpsocket.lock().is_listening() { 1 } else { 0 },
+                        }
+                    }
+                    SO_TYPE => {
+                        match &*socket {
+                            Socket::Udp(_) => ctypes::SOCK_DGRAM,
+                            Socket::Tcp(_) => ctypes::SOCK_STREAM,
+                        }
+                    }
+                    SO_RCVLOWAT | SO_SNDLOWAT => 1,
+                    SO_BROADCAST => 1,
+                    // TODO: SO_RCVBUF, SO_SNDBUF 
+                    SO_ERROR | SO_DONTROUTE | SO_KEEPALIVE
+                    | SO_LINGER | SO_OOBINLINE | SO_RCVBUF
+                    | SO_RCVTIMEO | SO_REUSEADDR | SO_SNDBUF
+                    | SO_SNDTIMEO => 0,
+                    _ => return Err(LinuxError::ENOPROTOOPT),
+                };
+    
+                unsafe {
+                    core::ptr::write(optlen as *mut usize, core::mem::size_of::<i32>());
+                    core::ptr::write(optval as *mut i32, val as i32);
+                }
+    
+                Ok(0)
+            }
+            _ => Err(LinuxError::ENOSYS),
         }
     })
 }

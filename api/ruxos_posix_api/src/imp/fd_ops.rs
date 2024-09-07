@@ -159,7 +159,7 @@ pub fn close_file_like(fd: c_int) -> LinuxResult {
 
 /// Close a file by `fd`.
 pub fn sys_close(fd: c_int) -> c_int {
-    debug!("sys_close <= {}", fd);
+    info!("sys_close <= {}", fd);
     if (0..=2).contains(&fd) {
         return 0; // stdin, stdout, stderr
     }

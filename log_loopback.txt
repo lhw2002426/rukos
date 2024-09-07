@@ -1,0 +1,282 @@
+[37mmkdir[0m [90m-p apps/c/loopback[0m
+    [92;1mBuilding[0m App: loopback, Arch: aarch64, Platform: aarch64-qemu-virt, App type: c
+[37mcargo build[0m [90m--target aarch64-unknown-none-softfloat --target-dir /root/rux/rukos/target --release  -p ruxmusl --features "ruxfeat/log-level-info ruxfeat/tls ruxmusl/alloc ruxmusl/paging ruxmusl/net ruxmusl/multitask ruxmusl/fd ruxmusl/musl ruxmusl/fp_simd ruxmusl/fd ruxmusl/sched_rr"[0m
+[37maarch64-linux-musl-gcc[0m [90m-nostdinc -fno-builtin -ffreestanding -Wall -isystem/root/rux/rukos/ulib/ruxmusl/install_aarch64_release/include -O3   -c -o apps/c/loopback/loopback.o apps/c/loopback/loopback.c[0m
+    [96;1mLinking[0m apps/c/loopback/loopback_aarch64-qemu-virt.elf
+[37mrust-lld -flavor gnu[0m [90m-nostdlib -static -no-pie --gc-sections -T/root/rux/rukos/modules/ruxhal/linker_aarch64-qemu-virt.lds ulib/ruxmusl/install_aarch64_release/lib/libc.a target/aarch64-unknown-none-softfloat/release/libruxmusl.a  apps/c/loopback/loopback.o -o apps/c/loopback/loopback_aarch64-qemu-virt.elf[0m
+[37mrust-objcopy --binary-architecture=aarch64[0m [90mapps/c/loopback/loopback_aarch64-qemu-virt.elf --strip-all -O binary apps/c/loopback/loopback_aarch64-qemu-virt.bin[0m
+    [96;1mRunning[0m on qemu...
+[37mqemu-system-aarch64[0m [90m-m 2G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/c/loopback/loopback_aarch64-qemu-virt.bin -append ";;" -device virtio-net-device,netdev=net0 -fsdev local,id=myid,path=./,security_model=none -device virtio-9p-device,fsdev=myid,mount_tag=rootfs -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555,hostfwd=tcp::5556-:5556,hostfwd=udp::5556-:5556,hostfwd=tcp::5557-:5557,hostfwd=udp::5557-:5557,hostfwd=tcp::5558-:5558,hostfwd=udp::5558-:5558,hostfwd=tcp::5559-:5559,hostfwd=udp::5559-:5559, -nographic[0m
+
+8888888b.                     .d88888b.   .d8888b.  
+888   Y88b                   d88P" "Y88b d88P  Y88b 
+888    888                   888     888 Y88b.      
+888   d88P 888  888 888  888 888     888  "Y888b.   
+8888888P"  888  888 `Y8bd8P' 888     888     "Y88b. 
+888 T88b   888  888   X88K   888     888       "888 
+888  T88b  Y88b 888 .d8""8b. Y88b. .d88P Y88b  d88P 
+888   T88b  "Y88888 888  888  "Y88888P"   "Y8888P" 
+
+arch = aarch64
+platform = aarch64-qemu-virt
+target = aarch64-unknown-none-softfloat
+smp = 1
+build_mode = release
+log_level = info
+
+[37m[  0.002454 0 ruxruntime:175] [32mLogging is enabled.[m
+[m[37m[  0.003196 0 ruxruntime:176] [32mPrimary CPU 0 started, dtb = 0x48000000.[m
+[m[37m[  0.003413 0 ruxruntime:178] [32mFound physcial memory regions:[m
+[m[37m[  0.003590 0 ruxruntime:180] [32m  [PA:0x40080000, PA:0x400d3000) .text (READ | EXECUTE | RESERVED)[m
+[m[37m[  0.003890 0 ruxruntime:180] [32m  [PA:0x400d3000, PA:0x400e1000) .rodata (READ | RESERVED)[m
+[m[37m[  0.004070 0 ruxruntime:180] [32m  [PA:0x400e1000, PA:0x400e5000) .data .tdata .tbss .percpu (READ | WRITE | RESERVED)[m
+[m[37m[  0.004242 0 ruxruntime:180] [32m  [PA:0x400e5000, PA:0x40165000) boot stack (READ | WRITE | RESERVED)[m
+[m[37m[  0.004372 0 ruxruntime:180] [32m  [PA:0x40165000, PA:0x4018f000) .bss (READ | WRITE | RESERVED)[m
+[m[37m[  0.004484 0 ruxruntime:180] [32m  [PA:0x4018f000, PA:0xc0000000) free memory (READ | WRITE | EXECUTE | FREE)[m
+[m[37m[  0.004654 0 ruxruntime:180] [32m  [PA:0x9000000, PA:0x9001000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.004798 0 ruxruntime:180] [32m  [PA:0x8000000, PA:0x8020000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.004888 0 ruxruntime:180] [32m  [PA:0xa000000, PA:0xa004000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.004976 0 ruxruntime:180] [32m  [PA:0x10000000, PA:0x3eff0000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.005079 0 ruxruntime:180] [32m  [PA:0x4010000000, PA:0x4020000000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.005172 0 ruxruntime:180] [32m  [PA:0x9010000, PA:0x9011000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.005334 0 ruxruntime:371] [32mInitialize global memory allocator...[m
+[m[37m[  0.005531 0 ruxruntime:372] [32m  use slab allocator.[m
+[m[37m[  0.007135 0 ruxruntime:194] [32mInitialize kernel page table...[m
+[m[37m[  0.009165 0 ruxruntime:201] [32mInitialize platform devices...[m
+[m[37m[  0.009410 0 ruxhal::platform::aarch64_common::gic:60] [32mInitialize GICv2...[m
+[m[37m[  0.010085 0 ruxtask::api:77] [32mInitialize scheduling...[m
+[m[37m[  0.013612 0 ruxtask::api:85] [32m  use Round-robin scheduler.[m
+[m[37m[  0.014082 0 ruxdriver:168] [32mInitialize device drivers...[m
+[m[37m[  0.014276 0 ruxdriver:169] [32m  device model: dyn[m
+[m[37m[  0.017076 0 ruxdriver:138] [32mregistered a new Net device: "loopback"[m
+[m[37m[  0.018130 0 virtio_drivers::device::net::dev_raw:31] [32mDevice features CTRL_GUEST_OFFLOADS | MAC | GSO | MRG_RXBUF | STATUS | CTRL_VQ | CTRL_RX | CTRL_VLAN | CTRL_RX_EXTRA | GUEST_ANNOUNCE | CTL_MAC_ADDR | RING_INDIRECT_DESC | RING_EVENT_IDX[m
+[m[37m[  0.020892 0 ruxdriver::bus::mmio:20] [32mregistered a new Net device at [PA:0xa003e00, PA:0xa004000): "virtio-net"[m
+[m[37m[  0.021348 0 ruxnet:64] [32mInitialize network subsystem...[m
+[m[37m[  0.021562 0 ruxnet:70] [32m  net stack: smoltcp[m
+[m[37m[  0.026701 0 ruxnet:78] [32m  use NIC: "loopback"[m
+[m[37m[  0.028107 0 ruxnet::smoltcp_impl:366] [32mcreated net interface "loopback":[m
+[m[37m[  0.028633 0 ruxnet::smoltcp_impl:367] [32m  ether:    00-00-00-00-00-00[m
+[m[37m[  0.029224 0 ruxnet::smoltcp_impl:368] [32m  ip:       127.0.0.1/24[m
+[m[37m[  0.029993 0 ruxnet:78] [32m  use NIC: "virtio-net"[m
+[m[37m[  0.030735 0 ruxnet::smoltcp_impl:380] [32mcreated net interface "eth0":[m
+[m[37m[  0.030930 0 ruxnet::smoltcp_impl:381] [32m  ether:    52-54-00-12-34-56[m
+[m[37m[  0.031139 0 ruxnet::smoltcp_impl:382] [32m  ip:       10.0.2.15/24[m
+[m[37m[  0.031422 0 ruxnet::smoltcp_impl:383] [32m  gateway:  10.0.2.2[m
+[m[37m[  0.031643 0 ruxruntime:265] [32mInitialize interrupt handlers...[m
+[m[37m[  0.032232 0 ruxruntime:275] [32mPrimary CPU 0 init OK.[m
+[m[37m[  0.034925 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.038072 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.039063 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.039631 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.039853 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.041286 0:4 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.042983 0:4 ruxnet::smoltcp_impl::tcp:234] [32mlhw debug in tcp listen[m
+[mServer listening on 0.0.0.0:5555
+[37m[  0.045134 0:4 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.045368 0:4 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  0.049103 0:5 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  1.053399 0:5 smoltcp::iface::interface::ipv4:56] [32mlhw debug in get_source_address_ipv4 127.0.0.1, 127.0.0.1[m
+[m[37m[  1.053758 0:5 smoltcp::socket::tcp:928] [32mlhw debug in connect use loacl endpoint addr 127.0.0.1[m
+[m[37m[  1.054044 0:5 smoltcp::socket::tcp:939] [32mlhw debug in socket connet local addr 127.0.0.1, remote addr 127.0.0.1[m
+[m[37m[  1.054544 0:5 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.054796 0:5 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.055108 0:5 smoltcp::iface::interface:617] [32mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.055836 0:5 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.056165 0:5 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.056305 0:5 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.056525 0:5 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.056886 0:5 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.057020 0:5 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.057247 0:5 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[  1.057604 0:5 smoltcp::iface::interface:1045] [32mlhw debug in lookup hardware before dispatch ethernet[m
+[m[37m[  1.057822 0:5 smoltcp::iface::interface::ethernet:57] [32mlhw debug tx consume in dispatch ethernet[m
+[m[37m[  1.058290 0:5 driver_net::loopback:107] [32mlhw debug loopback transmit [FF, FF, FF, FF, FF, FF, 0, 0, 0, 0, 0, 0, 8, 6, 0, 1, 8, 0, 6, 4, 0, 1, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1, FF, FF, FF, FF, FF, FF, 7F, 0, 0, 1][m
+[m[37m[  1.058873 0:5 smoltcp::iface::interface:1057] [32mlhw debug in lookup hardware after dispatch ethernet[m
+[m[37m[  1.059126 0:5 smoltcp::iface::interface:714] [32mlhw debug in egress neighbor missing[m
+[m[37m[  1.059343 0:5 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 10.0.2.15[m
+[m[37m[  1.059515 0:5 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 10.0.2.15/24[m
+[m[37m[  1.059759 0:5 smoltcp::iface::interface:924] [32mlhw debug in route use router[m
+[m[37m[  1.060055 0:5 smoltcp::iface::route:157] [32mlhw debug in lookup addr [0, 0, 0, 0]  prefix 0[m
+[m[37m[  1.060391 0:5 smoltcp::iface::interface:932] [32mlhw debug in has neighbor [127, 0, 0, 1] Some(Ipv4(Address([10, 0, 2, 2])))[m
+[m[37m[  1.061108 0:5 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 10.0.2.15[m
+[m[37m[  1.061321 0:5 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 10.0.2.15/24[m
+[m[37m[  1.061488 0:5 smoltcp::iface::interface:924] [32mlhw debug in route use router[m
+[m[37m[  1.061652 0:5 smoltcp::iface::route:157] [32mlhw debug in lookup addr [0, 0, 0, 0]  prefix 0[m
+[m[37m[  1.061902 0:5 smoltcp::iface::socket_meta:91] [32mlhw debug in egress permitted false[m
+[m[37m[  1.062413 0:5 ruxnet::smoltcp_impl::tcp:473] [32mlhw debug in poll connect synsent[m
+[m[37m[  1.062798 0:4 driver_net::loopback:116] [32mlhw debug loopback receive [FF, FF, FF, FF, FF, FF, 0, 0, 0, 0, 0, 0, 8, 6, 0, 1, 8, 0, 6, 4, 0, 1, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1, FF, FF, FF, FF, FF, FF, 7F, 0, 0, 1][m
+[m[37m[  1.063473 0:4 smoltcp::iface::interface::ipv4:255] [32mlhw debug in process_arp[m
+[m[37m[  1.063774 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.064005 0:4 smoltcp::iface::interface::ipv4:291] [32mlhw debug before neighbor_cache fill 127.0.0.1, 00-00-00-00-00-00[m
+[m[37m[  1.064425 0:4 smoltcp::iface::interface:891] [32mlhw debug in dispatch packet Arp(EthernetIpv4 { operation: Reply, source_hardware_addr: Address([0, 0, 0, 0, 0, 0]), source_protocol_addr: Address([7F, 0, 0, 1]), target_hardware_addr: Address([0, 0, 0, 0, 0, 0]), target_protocol_addr: Address([7F, 0, 0, 1]) }) hardware addr 00-00-00-00-00-00[m
+[m[37m[  1.066951 0:4 smoltcp::iface::interface::ethernet:57] [32mlhw debug tx consume in dispatch ethernet[m
+[m[37m[  1.067359 0:4 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 6, 0, 1, 8, 0, 6, 4, 0, 2, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1][m
+[m[37m[  1.067941 0:4 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 6, 0, 1, 8, 0, 6, 4, 0, 2, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1][m
+[m[37m[  1.068281 0:4 smoltcp::iface::interface::ipv4:255] [32mlhw debug in process_arp[m
+[m[37m[  1.068440 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.068581 0:4 smoltcp::iface::interface::ipv4:291] [32mlhw debug before neighbor_cache fill 127.0.0.1, 00-00-00-00-00-00[m
+[m[37m[  1.068885 0:4 smoltcp::iface::interface::ipv4:313] [32mlhw debug process arp not request[m
+[m[37m[  1.069209 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.069316 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.069447 0:4 smoltcp::iface::interface:932] [32mlhw debug in has neighbor [127, 0, 0, 1] Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.069677 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.070061 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.070311 0:4 smoltcp::iface::socket_meta:74] [32mlhw debug in egress permitted has neighbor true 127.0.0.1[m
+[m[37m[  1.070843 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.071175 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.071349 0:4 smoltcp::iface::interface:617] [32mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.071635 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.071910 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.072287 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.072436 0:4 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.072589 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.072672 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.072798 0:4 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[  1.073034 0:4 smoltcp::iface::interface:1278] [32mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.073791 0:4 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 34, 0, 0, 40, 0, 40, 6, 3C, C2, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E5, 0, 0, 0, 0, 80, 2, FF, FF, 77, E8, 0, 0, 2, 4, 5, B4, 3, 3, 1, 4, 2, 0, 0, 0][m
+[m[37m[  1.074300 0:4 smoltcp::iface::interface:1290] [32mlhw debug after tx consume in dispatch ip2 Ok(())[m
+[m[37m[  1.074821 0:4 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 34, 0, 0, 40, 0, 40, 6, 3C, C2, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E5, 0, 0, 0, 0, 80, 2, FF, FF, 77, E8, 0, 0, 2, 4, 5, B4, 3, 3, 1, 4, 2, 0, 0, 0][m
+[m[37m[  1.076169 0:4 smoltcp::iface::interface::ipv4:214] [32mlhw debug in process ipv4 not judge ipv4 127.0.0.1 None true[m
+[m[37m[  1.077067 0:4 smoltcp::socket::tcp:1458] [32mlhw debug preocess socket LISTEN Syn None[m
+[m[37m[  1.077668 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.077808 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.077959 0:4 smoltcp::iface::interface:617] [32mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.078186 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.078286 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.078446 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.078531 0:4 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.078655 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.078737 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.078820 0:4 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[  1.078905 0:4 smoltcp::iface::interface:1278] [32mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.079002 0:4 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 34, 0, 0, 40, 0, 40, 6, 3C, C2, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 77, A8, E0, 27, E6, 80, 12, FF, FF, F2, 79, 0, 0, 2, 4, 5, B4, 3, 3, 1, 4, 2, 0, 0, 0][m
+[m[37m[  1.079313 0:4 smoltcp::iface::interface:1290] [32mlhw debug after tx consume in dispatch ip2 Ok(())[m
+[m[37m[  1.079487 0:4 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 34, 0, 0, 40, 0, 40, 6, 3C, C2, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 77, A8, E0, 27, E6, 80, 12, FF, FF, F2, 79, 0, 0, 2, 4, 5, B4, 3, 3, 1, 4, 2, 0, 0, 0][m
+[m[37m[  1.079923 0:4 smoltcp::iface::interface::ipv4:214] [32mlhw debug in process ipv4 not judge ipv4 127.0.0.1 None true[m
+[m[37m[  1.080215 0:4 smoltcp::socket::tcp:1458] [32mlhw debug preocess socket SYN-SENT Syn Some(SeqNumber(-1461704730))[m
+[m[37m[  1.081169 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.081332 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.081473 0:4 smoltcp::iface::interface:617] [32mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.081695 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.081845 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.082001 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.082337 0:4 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.082526 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.082609 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.082693 0:4 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[  1.082792 0:4 smoltcp::iface::interface:1278] [32mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.082943 0:4 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E6, 2B, E6, 59, 78, 50, 10, 80, 0, B0, 45, 0, 0][m
+[m[37m[  1.083233 0:4 smoltcp::iface::interface:1290] [32mlhw debug after tx consume in dispatch ip2 Ok(())[m
+[m[37m[  1.083350 0:4 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E6, 2B, E6, 59, 78, 50, 10, 80, 0, B0, 45, 0, 0][m
+[m[37m[  1.083647 0:4 smoltcp::iface::interface::ipv4:214] [32mlhw debug in process ipv4 not judge ipv4 127.0.0.1 None true[m
+[m[37m[  1.083892 0:4 smoltcp::socket::tcp:1458] [32mlhw debug preocess socket SYN-RECEIVED None Some(SeqNumber(736516472))[m
+[m[37m[  1.085091 0:4 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  1.085395 0:4 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  1.085861 0:5 ruxnet::smoltcp_impl::tcp:190] [33mlhw debug tcp connect normal false[m
+[m[37m[  1.086794 0:5 ruxnet::smoltcp_impl::tcp:350] [32mlhw debug in tcp send [48, 65, 6C, 6C, 6F, 20, 66, 72, 6F, 6D, 20, 63, 6C, 69, 65, 6E, 74][m
+[m[37m[  1.087429 0:5 ruxnet::smoltcp_impl::tcp:360] [32mlhw debug tcp send block on[m
+[m[37m[  1.087933 0:5 ruxnet::smoltcp_impl::tcp:370] [32mlhw debug tcp send ok[m
+[mClient sent: Hello from client
+[37m[  1.088738 0:5 ruxnet::smoltcp_impl::tcp:308] [32mlhw debug in tcp recv[m
+[m[37m[  1.088966 0:5 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.089077 0:5 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.089161 0:5 smoltcp::iface::interface:617] [32mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.089296 0:5 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.089383 0:5 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.089464 0:5 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.089546 0:5 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.089835 0:5 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.090113 0:5 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.090272 0:5 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[  1.090938 0:5 smoltcp::iface::interface:1278] [32mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.091408 0:5 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 39, 0, 0, 40, 0, 40, 6, 3C, BD, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E6, 2B, E6, 59, 78, 50, 18, 80, 0, 50, 1F, 0, 0, 48, 65, 6C, 6C, 6F, 20, 66, 72, 6F, 6D, 20, 63, 6C, 69, 65, 6E, 74][m
+[m[37m[  1.091980 0:5 smoltcp::iface::interface:1290] [32mlhw debug after tx consume in dispatch ip2 Ok(())[m
+[m[37m[  1.092477 0:5 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 39, 0, 0, 40, 0, 40, 6, 3C, BD, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E6, 2B, E6, 59, 78, 50, 18, 80, 0, 50, 1F, 0, 0, 48, 65, 6C, 6C, 6F, 20, 66, 72, 6F, 6D, 20, 63, 6C, 69, 65, 6E, 74][m
+[m[37m[  1.093379 0:5 smoltcp::iface::interface::ipv4:214] [32mlhw debug in process ipv4 not judge ipv4 127.0.0.1 None true[m
+[m[37m[  1.093634 0:5 smoltcp::socket::tcp:1458] [32mlhw debug preocess socket ESTABLISHED Psh Some(SeqNumber(736516472))[m
+[m[37m[  1.094558 0:5 ruxnet::smoltcp_impl::tcp:313] [32mlhw debug tcp recv block 0 true[m
+[m[37m[  1.094878 0:6 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  1.095104 0:6 ruxnet::smoltcp_impl::tcp:308] [32mlhw debug in tcp recv[m
+[m[37m[  1.095291 0:6 ruxnet::smoltcp_impl::tcp:313] [32mlhw debug tcp recv block 17 true[m
+[m[37m[  1.095700 0:6 ruxnet::smoltcp_impl::tcp:336] [32mlhw debug recv suc 17[m
+[mServer received: Hello from client
+[37m[  1.096176 0:6 ruxnet::smoltcp_impl::tcp:350] [32mlhw debug in tcp send [48, 65, 6C, 6C, 6F, 20, 66, 72, 6F, 6D, 20, 73, 65, 72, 76, 65, 72][m
+[m[37m[  1.096452 0:6 ruxnet::smoltcp_impl::tcp:360] [32mlhw debug tcp send block on[m
+[m[37m[  1.096606 0:6 ruxnet::smoltcp_impl::tcp:370] [32mlhw debug tcp send ok[m
+[mServer sent: Hello from server
+[37m[  1.096934 0:6 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 5[m
+[m[37m[  1.097385 0:6 ruxnet::smoltcp_impl::tcp:547] [32mlhw debug in tcp drop[m
+[m[37m[  1.097500 0:6 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.097598 0:6 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.097682 0:6 smoltcp::iface::interface:617] [32mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.097814 0:6 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.097898 0:6 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.097978 0:6 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.098059 0:6 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.098179 0:6 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.098259 0:6 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.098340 0:6 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[  1.098425 0:6 smoltcp::iface::interface:1278] [32mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.098517 0:6 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 39, 0, 0, 40, 0, 40, 6, 3C, BD, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 78, A8, E0, 27, F7, 50, 18, 80, 0, 47, FE, 0, 0, 48, 65, 6C, 6C, 6F, 20, 66, 72, 6F, 6D, 20, 73, 65, 72, 76, 65, 72][m
+[m[37m[  1.098822 0:6 smoltcp::iface::interface:1290] [32mlhw debug after tx consume in dispatch ip2 Ok(())[m
+[m[37m[  1.098917 0:6 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 39, 0, 0, 40, 0, 40, 6, 3C, BD, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 78, A8, E0, 27, F7, 50, 18, 80, 0, 47, FE, 0, 0, 48, 65, 6C, 6C, 6F, 20, 66, 72, 6F, 6D, 20, 73, 65, 72, 76, 65, 72][m
+[m[37m[  1.099303 0:6 smoltcp::iface::interface::ipv4:214] [32mlhw debug in process ipv4 not judge ipv4 127.0.0.1 None true[m
+[m[37m[  1.099412 0:6 smoltcp::socket::tcp:1458] [32mlhw debug preocess socket ESTABLISHED Psh Some(SeqNumber(-1461704713))[m
+[m[37m[  1.099647 0:6 ruxnet::smoltcp_impl::tcp:269] [32mlhw debug in tcp shutdown[m
+[m[37m[  1.099939 0:6 smoltcp::socket::tcp:964] [32mlhw debug socket close[m
+[m[37m[  1.100175 0:6 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.100360 0:6 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.100513 0:6 smoltcp::iface::interface:617] [32mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.100757 0:6 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.100925 0:6 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.101115 0:6 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.101264 0:6 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.101482 0:6 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.101626 0:6 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.101771 0:6 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[  1.101922 0:6 smoltcp::iface::interface:1278] [32mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.102340 0:6 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 89, A8, E0, 27, F7, 50, 11, 80, 0, B0, 22, 0, 0][m
+[m[37m[  1.102905 0:6 smoltcp::iface::interface:1290] [32mlhw debug after tx consume in dispatch ip2 Ok(())[m
+[m[37m[  1.103180 0:6 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 89, A8, E0, 27, F7, 50, 11, 80, 0, B0, 22, 0, 0][m
+[m[37m[  1.103630 0:6 smoltcp::iface::interface::ipv4:214] [32mlhw debug in process ipv4 not judge ipv4 127.0.0.1 None true[m
+[m[37m[  1.103860 0:6 smoltcp::socket::tcp:1458] [32mlhw debug preocess socket ESTABLISHED Fin Some(SeqNumber(-1461704713))[m
+[m[37m[  1.105572 0:6 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[  1.107846 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.108094 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.108251 0:4 smoltcp::iface::interface:617] [32mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.108512 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.108668 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.108851 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.109110 0:4 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.109336 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.109471 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.109595 0:4 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[  1.109687 0:4 smoltcp::iface::interface:1278] [32mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.109799 0:4 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, F7, 2B, E6, 59, 8A, 50, 10, 7F, F7, B0, 2B, 0, 0][m
+[m[37m[  1.110215 0:4 smoltcp::iface::interface:1290] [32mlhw debug after tx consume in dispatch ip2 Ok(())[m
+[m[37m[  1.110384 0:4 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, F7, 2B, E6, 59, 8A, 50, 10, 7F, F7, B0, 2B, 0, 0][m
+[m[37m[  1.111189 0:4 smoltcp::iface::interface::ipv4:214] [32mlhw debug in process ipv4 not judge ipv4 127.0.0.1 None true[m
+[m[37m[  1.112586 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.112928 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.113431 0:4 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[  1.113725 0:4 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[  1.113855 0:4 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[  1.114007 0:4 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[  1.114153 0:4 smoltcp::iface::interface:1278] [32mlhw debug tx consume in dispatch ip2[m
+[m[37m[  1.114525 0:4 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 8A, 0, 0, 0, 0, 50, 4, 0, 0, 1, 7, 0, 0][m
+[m[37m[  1.114935 0:4 smoltcp::iface::interface:1290] [32mlhw debug after tx consume in dispatch ip2 Ok(())[m
+[m[37m[  1.115121 0:4 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 8A, 0, 0, 0, 0, 50, 4, 0, 0, 1, 7, 0, 0][m
+[m[37m[  1.115503 0:4 smoltcp::iface::interface::ipv4:214] [32mlhw debug in process ipv4 not judge ipv4 127.0.0.1 None true[m
+[m[37m[  1.115677 0:4 smoltcp::socket::tcp:1458] [32mlhw debug preocess socket CLOSE-WAIT Rst None[m
+[m[37m[  1.115988 0:4 smoltcp::socket::tcp:1703] [32mlhw debug process RST close[m
+[m[37m[  1.116337 0:5 ruxnet::smoltcp_impl::tcp:313] [32mlhw debug tcp recv block 17 false[m
+[m[37m[  1.116604 0:5 ruxnet::smoltcp_impl::tcp:316] [33m[AxError::ConnectionRefused] socket recv() failed[m
+[m[37m[  1.117011 0:5 ruxos_posix_api::imp::io:24] [32msys_read => Err(ECONNREFUSED)[m
+[mClient received: 
+[37m[  1.117553 0:5 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 4[m
+[m[37m[  1.117740 0:5 ruxnet::smoltcp_impl::tcp:547] [32mlhw debug in tcp drop[m
+[m[37m[  1.117906 0:5 ruxnet::smoltcp_impl::tcp:269] [32mlhw debug in tcp shutdown[m
+[m[37m[  1.118075 0:5 smoltcp::socket::tcp:964] [32mlhw debug socket close[m
+[m[37m[  1.118292 0:5 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mQEMU: Terminated
+

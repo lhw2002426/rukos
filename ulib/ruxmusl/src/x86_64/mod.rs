@@ -270,6 +270,15 @@ pub fn syscall(syscall_id: SyscallId, args: [usize; 6]) -> isize {
                 args[0] as c_int,
                 args[1] as c_int,
                 args[2] as c_int,
+                args[3] as *mut c_void,
+                args[4] as *mut ctypes::socklen_t,
+            ) as _,
+
+            #[cfg(feature = "net")]
+            SyscallId::GETSOCKOPT => ruxos_posix_api::sys_getsockopt(
+                args[0] as c_int,
+                args[1] as c_int,
+                args[2] as c_int,
                 args[3] as *const c_void,
                 args[4] as ctypes::socklen_t,
             ) as _,

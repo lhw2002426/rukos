@@ -30,7 +30,7 @@ unsafe impl Sync for LoopbackDevice {}
 impl LoopbackDevice {
     /// Creates a new driver instance and initializes the device
     pub fn new(mac_address: Option<[u8; 6]>) -> Self {
-        let buf_pool = match NetBufPool::new(1024, NET_BUF_LEN) {
+        let buf_pool = match NetBufPool::new(2048, NET_BUF_LEN) {
             Ok(pool) => pool,
             Err(_) => {
                 panic!("fail to create netbufpool");
@@ -102,12 +102,18 @@ impl NetDriverOps for LoopbackDevice {
     }
 
     fn transmit(&mut self, tx_buf: NetBufPtr) -> DevResult {
-        unsafe { self.queue.push_back(NetBuf::from_buf_ptr(tx_buf)) }
+        unsafe {
+            use log::{debug, info};
+            info!("lhw debug loopback transmit {:X?}", tx_buf.packet());
+            self.queue.push_back(NetBuf::from_buf_ptr(tx_buf)) 
+        }
         Ok(())
     }
 
     fn receive(&mut self) -> DevResult<NetBufPtr> {
         if let Some(token) = self.queue.pop_front() {
+            use log::{debug, info};
+            info!("lhw debug loopback receive {:X?}", token.packet());
             Ok(token.into_buf_ptr())
         } else {
             Err(DevError::Again)
