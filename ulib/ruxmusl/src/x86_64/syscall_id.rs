@@ -126,6 +126,9 @@ pub enum SyscallId {
     #[cfg(feature = "net")]
     SETSOCKOPT = 54,
 
+    #[cfg(feature = "net")]
+    GETSOCKOPT = 55,
+
     // TODO: check clone
     #[cfg(feature = "multitask")]
     CLONE = 56,

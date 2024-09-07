@@ -110,6 +110,8 @@ typedef struct {{
         let allow_vars = [
             "O_.*",
             "AF_.*",
+            "SO_.*",
+            "SOL_.*",
             "SOCK_.*",
             "IPPROTO_.*",
             "FD_.*",

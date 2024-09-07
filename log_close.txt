@@ -1,0 +1,844 @@
+[37mmkdir[0m [90m-p apps/c/python3[0m
+    [92;1mBuilding[0m App: python3, Arch: aarch64, Platform: aarch64-qemu-virt, App type: c
+[37mcargo build[0m [90m--target aarch64-unknown-none-softfloat --target-dir /root/rux/rukos/target --release  -p ruxmusl --features "ruxfeat/log-level-info ruxfeat/rtc ruxfeat/virtio-9p ruxfeat/tty ruxfeat/tls ruxmusl/paging ruxmusl/alloc ruxmusl/irq ruxmusl/musl ruxmusl/multitask ruxmusl/fs ruxmusl/pipe ruxmusl/poll ruxmusl/signal ruxmusl/net ruxmusl/epoll ruxmusl/select ruxmusl/fd ruxmusl/musl ruxmusl/fp_simd ruxmusl/fd ruxmusl/sched_rr"[0m
+[37maarch64-linux-musl-gcc[0m [90m-nostdinc -fno-builtin -ffreestanding -Wall -isystem/root/rux/rukos/ulib/ruxmusl/install_aarch64_release/include -O3   -c -o apps/c/python3/main.o apps/c/python3/main.c[0m
+    [96;1mLinking[0m apps/c/python3/python3_aarch64-qemu-virt.elf
+[37mrust-lld -flavor gnu[0m [90m-nostdlib -static -no-pie --gc-sections -T/root/rux/rukos/modules/ruxhal/linker_aarch64-qemu-virt.lds ulib/ruxmusl/install_aarch64_release/lib/libc.a target/aarch64-unknown-none-softfloat/release/libruxmusl.a  apps/c/python3/main.o -o apps/c/python3/python3_aarch64-qemu-virt.elf[0m
+[37mrust-objcopy --binary-architecture=aarch64[0m [90mapps/c/python3/python3_aarch64-qemu-virt.elf --strip-all -O binary apps/c/python3/python3_aarch64-qemu-virt.bin[0m
+    [96;1mRunning[0m on qemu...
+[37mqemu-system-aarch64[0m [90m-m 2G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/c/python3/python3_aarch64-qemu-virt.bin -append ";/bin/python3.11,/lib/python3.11/test/test_asynchat_uni.py;PYTHONLIB=/lib,PYTHONHOME=/" -device virtio-net-device,netdev=net0 -fsdev local,id=myid,path=apps/c/python3/rootfs,security_model=none -device virtio-9p-device,fsdev=myid,mount_tag=rootfs -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555,hostfwd=tcp::5556-:5556,hostfwd=udp::5556-:5556,hostfwd=tcp::5557-:5557,hostfwd=udp::5557-:5557,hostfwd=tcp::5558-:5558,hostfwd=udp::5558-:5558,hostfwd=tcp::5559-:5559,hostfwd=udp::5559-:5559, -nographic[0m
+
+8888888b.                     .d88888b.   .d8888b.  
+888   Y88b                   d88P" "Y88b d88P  Y88b 
+888    888                   888     888 Y88b.      
+888   d88P 888  888 888  888 888     888  "Y888b.   
+8888888P"  888  888 `Y8bd8P' 888     888     "Y88b. 
+888 T88b   888  888   X88K   888     888       "888 
+888  T88b  Y88b 888 .d8""8b. Y88b. .d88P Y88b  d88P 
+888   T88b  "Y88888 888  888  "Y88888P"   "Y8888P" 
+
+arch = aarch64
+platform = aarch64-qemu-virt
+target = aarch64-unknown-none-softfloat
+smp = 1
+build_mode = release
+log_level = info
+
+[37m[1725379859.002537 0 ruxruntime:175] [32mLogging is enabled.[m
+[m[37m[1725379859.003664 0 ruxruntime:176] [32mPrimary CPU 0 started, dtb = 0x48000000.[m
+[m[37m[1725379859.003940 0 ruxruntime:178] [32mFound physcial memory regions:[m
+[m[37m[1725379859.004231 0 ruxruntime:180] [32m  [PA:0x40080000, PA:0x400fb000) .text (READ | EXECUTE | RESERVED)[m
+[m[37m[1725379859.004763 0 ruxruntime:180] [32m  [PA:0x400fb000, PA:0x4010e000) .rodata (READ | RESERVED)[m
+[m[37m[1725379859.004998 0 ruxruntime:180] [32m  [PA:0x4010e000, PA:0x40112000) .data .tdata .tbss .percpu (READ | WRITE | RESERVED)[m
+[m[37m[1725379859.005241 0 ruxruntime:180] [32m  [PA:0x40112000, PA:0x40192000) boot stack (READ | WRITE | RESERVED)[m
+[m[37m[1725379859.005471 0 ruxruntime:180] [32m  [PA:0x40192000, PA:0x401bb000) .bss (READ | WRITE | RESERVED)[m
+[m[37m[1725379859.005703 0 ruxruntime:180] [32m  [PA:0x401bb000, PA:0xc0000000) free memory (READ | WRITE | EXECUTE | FREE)[m
+[m[37m[1725379859.006034 0 ruxruntime:180] [32m  [PA:0x9000000, PA:0x9001000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1725379859.006245 0 ruxruntime:180] [32m  [PA:0x8000000, PA:0x8020000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1725379859.006454 0 ruxruntime:180] [32m  [PA:0xa000000, PA:0xa004000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1725379859.006666 0 ruxruntime:180] [32m  [PA:0x10000000, PA:0x3eff0000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1725379859.006870 0 ruxruntime:180] [32m  [PA:0x4010000000, PA:0x4020000000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1725379859.007087 0 ruxruntime:180] [32m  [PA:0x9010000, PA:0x9011000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1725379859.007343 0 ruxruntime:371] [32mInitialize global memory allocator...[m
+[m[37m[1725379859.007579 0 ruxruntime:372] [32m  use slab allocator.[m
+[m[37m[1725379859.008912 0 ruxruntime:194] [32mInitialize kernel page table...[m
+[m[37m[1725379859.011509 0 ruxruntime:201] [32mInitialize platform devices...[m
+[m[37m[1725379859.013145 0 ruxhal::platform::aarch64_common::gic:60] [32mInitialize GICv2...[m
+[m[37m[1725379859.013841 0 ruxhal::platform::aarch64_common::pl031:23] [32mInitialize pl031 rtc...[m
+[m[37m[1725379859.020415 0 ruxtask::api:77] [32mInitialize scheduling...[m
+[m[37m[1725379859.023552 0 ruxtask::api:85] [32m  use Round-robin scheduler.[m
+[m[37m[1725379859.024095 0 ruxdriver:168] [32mInitialize device drivers...[m
+[m[37m[1725379859.024320 0 ruxdriver:169] [32m  device model: dyn[m
+[m[37m[1725379859.026750 0 ruxdriver:138] [32mregistered a new Net device: "loopback"[m
+[m[37m[1725379859.027776 0 virtio_drivers::device::v9p:30] [32mdevice features: VIRTIO_9P_F_MOUNT_TAG[m
+[m[37m[1725379859.029072 0 ruxdriver::bus::mmio:20] [32mregistered a new _9P device at [PA:0xa003c00, PA:0xa003e00): "virtio-9p"[m
+[m[37m[1725379859.029604 0 virtio_drivers::device::net::dev_raw:31] [32mDevice features CTRL_GUEST_OFFLOADS | MAC | GSO | MRG_RXBUF | STATUS | CTRL_VQ | CTRL_RX | CTRL_VLAN | CTRL_RX_EXTRA | GUEST_ANNOUNCE | CTL_MAC_ADDR | RING_INDIRECT_DESC | RING_EVENT_IDX[m
+[m[37m[1725379859.033115 0 ruxdriver::bus::mmio:20] [32mregistered a new Net device at [PA:0xa003e00, PA:0xa004000): "virtio-net"[m
+[m[37m[1725379859.034037 0 ruxnet:87] [32mInitialize network subsystem...[m
+[m[37m[1725379859.034466 0 ruxnet:93] [32m  net stack: smoltcp[m
+[m[37m[1725379859.042331 0 ruxnet:101] [32m  use NIC: "loopback"[m
+[m[37m[1725379859.043365 0 ruxnet::smoltcp_impl:366] [32mcreated net interface "loopback":[m
+[m[37m[1725379859.043654 0 ruxnet::smoltcp_impl:367] [32m  ether:    00-00-00-00-00-00[m
+[m[37m[1725379859.044114 0 ruxnet::smoltcp_impl:368] [32m  ip:       127.0.0.1/24[m
+[m[37m[1725379859.044759 0 ruxnet:101] [32m  use NIC: "virtio-net"[m
+[m[37m[1725379859.045196 0 ruxnet::smoltcp_impl:380] [32mcreated net interface "eth0":[m
+[m[37m[1725379859.045467 0 ruxnet::smoltcp_impl:381] [32m  ether:    52-54-00-12-34-56[m
+[m[37m[1725379859.045797 0 ruxnet::smoltcp_impl:382] [32m  ip:       10.0.2.15/24[m
+[m[37m[1725379859.046186 0 ruxnet::smoltcp_impl:383] [32m  gateway:  10.0.2.2[m
+[m[37m[1725379859.046491 0 rux9p:51] [32mInitialize virtio 9pfs...[m
+[m[37m[1725379859.046702 0 rux9p:54] [32m  use 9pfs device 0: "virtio-9p"[m
+[m[37m[1725379859.046945 0 rux9p::drv:45] [32m9p dev init success[m
+[m[37m[1725379859.048230 0 rux9p::fs:49] [32m9pfs server's protocol: 9P2000.L[m
+[m[37m[1725379859.063240 0 axfs_ramfs::dir:55] [31mAlreadyExists sys[m
+[m[37m[1725379859.064893 0 ruxfs::root:176] [32mmounting /dev[m
+[m[37m[1725379859.068549 0 ruxfs::root:176] [32mmounting /tmp[m
+[m[37m[1725379859.070511 0 ruxfs::root:176] [32mmounting /proc[m
+[m[37m[1725379859.072211 0 ruxfs::root:176] [32mmounting /sys[m
+[m[37m[1725379859.080198 0 ruxfs::root:176] [32mmounting /etc[m
+[m[37m[1725379859.087159 0 ruxruntime:265] [32mInitialize interrupt handlers...[m
+[m[37m[1725379859.087974 0 ruxruntime:275] [32mPrimary CPU 0 init OK.[m
+[m[37m[1725379859.405632 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379859.439959 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379859.443528 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[1725379859.443819 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[1725379859.534210 0:2 ruxos_posix_api::imp::fs:592] [32msys_readlinkat => Err(EINVAL)[m
+[m[37m[1725379859.536090 0:2 ruxos_posix_api::imp::fs:220] [32msys_openat => Err(ENOENT)[m
+[m[37m[1725379859.537444 0:2 ruxos_posix_api::imp::fs:220] [32msys_openat => Err(ENOENT)[m
+[m[37m[1725379859.538438 0:2 ruxos_posix_api::imp::fs:220] [32msys_openat => Err(ENOENT)[m
+[m[37m[1725379859.539444 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379859.571234 0:2 ruxos_posix_api::imp::mmap::api:79] [31mmmap failed because start:0x0 is not aligned or len:0x0 == 0[m
+[m[37m[1725379859.571501 0:2 ruxos_posix_api::imp::mmap::api:46] [32msys_mmap => Err(EINVAL)[m
+[m[37m[1725379859.571769 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379859.580421 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379859.587114 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379859.838886 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379859.841593 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379859.842949 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379859.845141 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379859.856423 0:2 ruxos_posix_api::imp::fd_ops:278] [33munsupported fcntl parameters: cmd 1[m
+[m[37m[1725379859.860562 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.867463 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.960996 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.963188 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379860.082686 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.092456 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.095961 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.155674 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.158145 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379860.182858 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.187838 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.215755 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.218831 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379860.233996 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.234543 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.234806 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.234967 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.235090 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.235345 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.235599 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.235808 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.235987 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.236166 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.236356 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.236569 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.236786 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.237108 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.237456 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.238067 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.238405 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.238681 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.238925 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.239289 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.239483 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.239630 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.239792 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.239950 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.240106 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.240362 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.240960 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.242208 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.242562 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.242838 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.243127 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.243595 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.244043 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.244206 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.244425 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.244560 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.244689 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.244823 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.244955 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.245182 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.245947 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.246222 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.246396 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.246562 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.246738 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.246926 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.247124 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.247308 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.247475 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.247639 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.248064 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.248282 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.248499 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.248691 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.248889 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.249082 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.249272 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.249481 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.249649 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.249837 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.249999 0:2 ruxos_posix_api::imp::rt_sig:98] [32msys_rt_sigaction => Err(EFAULT)[m
+[m[37m[1725379860.264949 0:2 ruxos_posix_api::imp::fd_ops:278] [33munsupported fcntl parameters: cmd 1[m
+[m[37m[1725379860.265809 0:2 ruxos_posix_api::imp::fs:291] [32msys_lseek => Err(EINVAL)[m
+[m[37m[1725379860.267407 0:2 ruxos_posix_api::imp::fd_ops:278] [33munsupported fcntl parameters: cmd 1[m
+[m[37m[1725379860.268069 0:2 ruxos_posix_api::imp::fs:291] [32msys_lseek => Err(EINVAL)[m
+[m[37m[1725379860.268722 0:2 ruxos_posix_api::imp::fd_ops:278] [33munsupported fcntl parameters: cmd 1[m
+[m[37m[1725379860.269094 0:2 ruxos_posix_api::imp::fs:291] [32msys_lseek => Err(EINVAL)[m
+[m[37m[1725379860.318077 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379860.318973 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379860.323060 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.323545 0:2 ruxos_posix_api::imp::net:270] [32msys_socket => Err(EINVAL)[m
+[m[37m[1725379860.323838 0:2 ruxos_posix_api::imp::net:270] [32msys_socket => Err(EINVAL)[m
+[m[37m[1725379860.324728 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379860.334838 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.578065 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.630348 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.639676 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.661739 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379860.665167 0:2 ruxos_posix_api::imp::fs:592] [32msys_readlinkat => Err(EINVAL)[m
+[m[37m[1725379860.665660 0:2 ruxos_posix_api::imp::fs:592] [32msys_readlinkat => Err(EINVAL)[m
+[m[37m[1725379860.665934 0:2 ruxos_posix_api::imp::fs:592] [32msys_readlinkat => Err(EINVAL)[m
+[m[37m[1725379860.666123 0:2 ruxos_posix_api::imp::fs:592] [32msys_readlinkat => Err(EINVAL)[m
+[m[37m[1725379860.666308 0:2 ruxos_posix_api::imp::fs:592] [32msys_readlinkat => Err(EINVAL)[m
+[m[37m[1725379860.693556 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379862.310500 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379862.314505 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379862.316326 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379862.318088 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379862.334286 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379862.339513 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379862.359219 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379862.362720 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379862.379270 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379862.381968 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379862.384459 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379862.407082 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379862.418119 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379862.677742 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379862.683859 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379862.723323 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379862.728435 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379862.826025 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379862.827956 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379862.840689 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379862.843506 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379862.847419 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379863.886618 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.893647 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.101490 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.103400 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379863.120267 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.123005 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.136251 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.138090 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379863.157925 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.161191 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.216232 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.217940 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379863.238444 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.241827 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.272546 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.274032 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379863.305401 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.310404 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.436850 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.438630 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379863.456254 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.459296 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.501073 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.502742 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379863.564044 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.568026 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.688705 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.690832 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379863.700814 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379863.702198 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379863.703439 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379863.712870 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.715945 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.760023 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.762371 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379863.784079 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379863.789376 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.000307 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.001838 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379864.041642 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.054956 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.061823 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.222272 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.224190 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379864.248478 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.252472 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.424460 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.426354 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379864.449063 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.453457 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.483293 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.485962 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379864.514359 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.519274 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.544659 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.547477 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379864.579242 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.583477 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.617388 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.618848 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379864.642040 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.645183 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.689433 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.691500 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379864.713075 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.717281 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.809958 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.811419 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379864.827673 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379864.830559 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.866231 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.867943 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379865.897286 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.902463 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.240315 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.242077 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379865.263454 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.266816 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.509309 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.511098 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379865.542113 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.545632 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.650182 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.652361 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379865.672440 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.675811 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.721246 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.722963 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379865.740980 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.763506 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.774238 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.778822 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.793735 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.795896 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379865.809940 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379865.812261 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379865.814106 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379865.824193 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.827435 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.857745 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379865.860106 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379866.885120 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.889020 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.959376 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.962167 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379866.983361 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.986259 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.013698 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.015378 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379866.034381 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.037137 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.127668 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.129726 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379866.151702 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.154828 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.184494 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.186949 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379866.242348 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.246595 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.335580 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.337133 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379866.342448 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.342663 0:2 ruxos_posix_api::imp::net:270] [32msys_socket => Err(EINVAL)[m
+[m[37m[1725379866.342873 0:2 ruxos_posix_api::imp::net:270] [32msys_socket => Err(EINVAL)[m
+[m[37m[1725379866.348057 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379866.349224 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379866.359202 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379866.361935 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379866.364117 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379866.375338 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.380443 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.401652 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.403872 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379866.423397 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.436958 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.442304 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.488322 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.490745 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379866.512929 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.517247 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.629007 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.630536 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379866.645661 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.649886 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.692279 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.694126 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379866.729888 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.734057 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.780284 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.782736 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379866.812042 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379866.817012 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.990175 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.993424 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379867.010512 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.014007 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.167865 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.169753 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379867.187920 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.190836 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.238452 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.240100 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379867.255519 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.277300 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.280498 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.394054 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.395635 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379867.422776 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.425774 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.479947 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.481924 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379867.500171 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.503422 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.575008 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.576733 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379867.594630 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.597945 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.629878 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.632091 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379867.663731 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.667879 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.715948 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.717947 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379867.739016 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379867.742760 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.079725 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.082030 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379868.111464 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.116003 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.216757 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.219161 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379868.273676 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.278924 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.374377 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.379277 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379868.412733 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.417694 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.458671 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.462366 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379868.485405 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.489545 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.515304 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.518114 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379868.561815 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.592116 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.597205 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.677283 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.679112 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379868.689698 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.689875 0:2 ruxos_posix_api::imp::net:270] [32msys_socket => Err(EINVAL)[m
+[m[37m[1725379868.690075 0:2 ruxos_posix_api::imp::net:270] [32msys_socket => Err(EINVAL)[m
+[m[37m[1725379868.725143 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.740652 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.745870 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.788484 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.790834 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379868.808977 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379868.811985 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.910880 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.912411 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379869.928659 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.946932 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.950461 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.010323 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.011889 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379869.026444 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.038837 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.045486 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.075032 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.091460 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.095176 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.276226 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.278122 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379869.295765 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.300481 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.425979 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.428691 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379869.464212 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.468618 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.608314 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.610399 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379869.633658 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.655011 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.672519 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.677344 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.713396 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.717357 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379869.730507 0:2 ruxos_posix_api::imp::net:270] [32msys_socket => Err(EINVAL)[m
+[m[37m[1725379869.730816 0:2 ruxos_posix_api::imp::net:270] [32msys_socket => Err(EINVAL)[m
+[m[37m[1725379869.731023 0:2 ruxos_posix_api::imp::net:270] [32msys_socket => Err(EINVAL)[m
+[m[37m[1725379869.750341 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.755556 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.800523 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.803089 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379869.824011 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379869.828602 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.139579 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.141615 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379870.153968 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379870.156179 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379870.157986 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379870.169473 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.172438 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.186991 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.189051 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379870.212466 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.225023 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.230245 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.437606 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.440528 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379870.455418 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379870.457083 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379870.458821 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379870.467940 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.471827 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.484810 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.487011 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379870.502811 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.504539 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379870.506504 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379870.508189 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379870.519687 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.523366 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.543197 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.546304 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379870.568813 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.580145 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.584062 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.656944 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.659741 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379870.674689 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379870.676524 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379870.678332 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1725379870.690764 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379870.696211 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.905468 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.907573 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.928639 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.932316 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.973166 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.974865 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.038644 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.043333 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.229109 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.230943 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.259866 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.264070 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.280280 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.282714 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.306730 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.310122 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.335630 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.338439 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.359547 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.362943 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.437930 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.439741 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.459112 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.462493 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.474193 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.476158 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.493565 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.507073 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.510845 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.534710 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.536814 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.562180 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.577407 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.581632 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.605202 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.607807 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.630246 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.633443 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.652463 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.654327 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.673204 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.676495 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.700410 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.702293 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.722790 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.725919 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.777419 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.779437 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.796420 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.799283 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.823982 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.825775 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379871.848301 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379871.852373 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.945355 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.947109 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379872.966575 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.995142 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.998413 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.037933 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.040048 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379872.061899 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.066223 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.084761 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.087166 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379872.116312 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.121689 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.157278 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.159993 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379872.186156 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.191527 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.554867 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.556852 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379872.573248 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.614056 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.617212 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.683720 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.685871 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379872.704056 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.708556 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.732462 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.734890 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379872.761563 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.765485 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.853932 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379872.855700 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379873.884125 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.886871 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.911996 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.913852 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379873.933885 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.937161 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.966954 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.969877 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379873.989946 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.992820 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.033870 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.036778 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379873.060572 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.064823 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.140237 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.142909 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379873.167483 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.170237 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.212493 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.214267 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379873.232342 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.235953 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.265358 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.267098 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379873.284914 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.289052 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.328777 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.331511 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379873.369156 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.373566 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.395362 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.397542 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379873.417823 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.422326 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.591959 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.594619 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379873.616168 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.620243 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.672967 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.675376 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379873.704610 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379873.709525 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.867113 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.868875 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379874.887240 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.915999 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.919140 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.004193 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.006640 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379874.024223 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.032537 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.036178 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.053476 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.055776 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379874.095760 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.098360 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.133984 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.135770 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379874.178798 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.182379 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.277637 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.280101 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379874.310930 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.316208 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.488567 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.490148 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379874.512437 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.516371 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.558181 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.560850 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379874.579895 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.582800 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.615059 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.616961 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[m[37m[1725379874.642936 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.645712 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.683733 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379874.685244 0:2 ruxfs::root:314] [33mdst file already exist, now remove it[m
+[mlhw test python print0
+[37m[1725379874.730898 0:2 ruxos_posix_api::imp::net:301] [32msys_getsockopt <= fd: 3, level: 1, optname: 2, optlen: 4, IGNORED[m
+[m[37m[1725379874.731301 0:2 ruxos_posix_api::imp::net:301] [32msys_getsockopt <= fd: 3, level: 1, optname: 15, optlen: 4, IGNORED[m
+[m[37m[1725379874.731643 0:2 ruxos_posix_api::imp::net:306] [32msys_getsockopt => Err(ENOPROTOOPT)[m
+[m[37m[1725379874.733840 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 4[m
+[m[37m[1725379874.735935 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[1725379874.741779 0:4 ruxnet::smoltcp_impl::tcp:240] [32mlhw debug in tcp listen[m
+[m[37m[1725379874.762332 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 5[m
+[m[37m[1725379874.763580 0:2 smoltcp::iface::interface::ipv4:56] [32mlhw debug in get_source_address_ipv4 127.0.0.1, 127.0.0.1[m
+[m[37m[1725379874.764090 0:2 smoltcp::socket::tcp:928] [32mlhw debug in connect use loacl endpoint addr 127.0.0.1[m
+[m[37m[1725379874.764413 0:2 smoltcp::socket::tcp:939] [32mlhw debug in socket connet local addr 127.0.0.1, remote addr 127.0.0.1[m
+[m[37m[1725379874.764765 0:2 ruxnet::smoltcp_impl::tcp:532] [32mlhw debug block on nonblocking[m
+[m[37m[1725379874.765040 0:2 ruxnet::smoltcp_impl::tcp:475] [32mlhw debug in poll connect synsent[m
+[m[37m[1725379874.765272 0:2 ruxnet::smoltcp_impl::tcp:191] [33mlhw debug tcp connect error inprogress 1 true[m
+[m[37m[1725379874.765536 0:2 ruxos_posix_api::imp::net:396] [32msys_connect => Err(EINPROGRESS)[m
+[m[37m[1725379874.766907 0:2 ruxos_posix_api::imp::io_mpx::poll:65] [32msys_poll <= nfds: 1 timeout: 10 ms[m
+[m[37m[1725379874.767430 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.767734 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.768071 0:2 smoltcp::iface::interface:617] [32mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[1725379874.768999 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.769418 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.769615 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.769871 0:2 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[1725379874.770402 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.770575 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.770970 0:2 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[1725379874.771349 0:2 smoltcp::iface::interface:1045] [32mlhw debug in lookup hardware before dispatch ethernet[m
+[m[37m[1725379874.771650 0:2 smoltcp::iface::interface::ethernet:57] [32mlhw debug tx consume in dispatch ethernet[m
+[m[37m[1725379874.772295 0:2 driver_net::loopback:107] [32mlhw debug loopback transmit [FF, FF, FF, FF, FF, FF, 0, 0, 0, 0, 0, 0, 8, 6, 0, 1, 8, 0, 6, 4, 0, 1, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1, FF, FF, FF, FF, FF, FF, 7F, 0, 0, 1][m
+[m[37m[1725379874.773097 0:2 smoltcp::iface::interface:1057] [32mlhw debug in lookup hardware after dispatch ethernet[m
+[m[37m[1725379874.773440 0:2 smoltcp::iface::interface:714] [32mlhw debug in egress neighbor missing[m
+[m[37m[1725379874.773750 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 10.0.2.15[m
+[m[37m[1725379874.773973 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 10.0.2.15/24[m
+[m[37m[1725379874.774233 0:2 smoltcp::iface::interface:924] [32mlhw debug in route use router[m
+[m[37m[1725379874.774542 0:2 smoltcp::iface::route:157] [32mlhw debug in lookup addr [0, 0, 0, 0]  prefix 0[m
+[m[37m[1725379874.774888 0:2 smoltcp::iface::interface:932] [32mlhw debug in has neighbor [127, 0, 0, 1] Some(Ipv4(Address([10, 0, 2, 2])))[m
+[m[37m[1725379874.778881 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 10.0.2.15[m
+[m[37m[1725379874.779091 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 10.0.2.15/24[m
+[m[37m[1725379874.779252 0:2 smoltcp::iface::interface:924] [32mlhw debug in route use router[m
+[m[37m[1725379874.780295 0:2 smoltcp::iface::route:157] [32mlhw debug in lookup addr [0, 0, 0, 0]  prefix 0[m
+[m[37m[1725379874.788990 0:2 smoltcp::iface::socket_meta:91] [32mlhw debug in egress permitted false[m
+[m[37m[1725379874.789395 0:2 ruxnet::smoltcp_impl::tcp:475] [32mlhw debug in poll connect synsent[m
+[m[37m[1725379874.790287 0:2 ruxos_posix_api::imp::io_mpx::poll:65] [32msys_poll <= nfds: 1 timeout: 10 ms[m
+[m[37m[1725379874.790651 0:2 driver_net::loopback:116] [32mlhw debug loopback receive [FF, FF, FF, FF, FF, FF, 0, 0, 0, 0, 0, 0, 8, 6, 0, 1, 8, 0, 6, 4, 0, 1, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1, FF, FF, FF, FF, FF, FF, 7F, 0, 0, 1][m
+[m[37m[1725379874.791375 0:2 smoltcp::iface::interface::ipv4:255] [32mlhw debug in process_arp[m
+[m[37m[1725379874.791649 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.791901 0:2 smoltcp::iface::interface::ipv4:291] [32mlhw debug before neighbor_cache fill 127.0.0.1, 00-00-00-00-00-00[m
+[m[37m[1725379874.792345 0:2 smoltcp::iface::interface:891] [32mlhw debug in dispatch packet Arp(EthernetIpv4 { operation: Reply, source_hardware_addr: Address([0, 0, 0, 0, 0, 0]), source_protocol_addr: Address([7F, 0, 0, 1]), target_hardware_addr: Address([0, 0, 0, 0, 0, 0]), target_protocol_addr: Address([7F, 0, 0, 1]) }) hardware addr 00-00-00-00-00-00[m
+[m[37m[1725379874.793627 0:2 smoltcp::iface::interface::ethernet:57] [32mlhw debug tx consume in dispatch ethernet[m
+[m[37m[1725379874.793919 0:2 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 6, 0, 1, 8, 0, 6, 4, 0, 2, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1][m
+[m[37m[1725379874.794393 0:2 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 6, 0, 1, 8, 0, 6, 4, 0, 2, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1, 0, 0, 0, 0, 0, 0, 7F, 0, 0, 1][m
+[m[37m[1725379874.794765 0:2 smoltcp::iface::interface::ipv4:255] [32mlhw debug in process_arp[m
+[m[37m[1725379874.794922 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.795085 0:2 smoltcp::iface::interface::ipv4:291] [32mlhw debug before neighbor_cache fill 127.0.0.1, 00-00-00-00-00-00[m
+[m[37m[1725379874.795391 0:2 smoltcp::iface::interface::ipv4:313] [32mlhw debug process arp not request[m
+[m[37m[1725379874.795568 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.795747 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.795903 0:2 smoltcp::iface::interface:932] [32mlhw debug in has neighbor [127, 0, 0, 1] Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[1725379874.796133 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.796304 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.796591 0:2 smoltcp::iface::socket_meta:74] [32mlhw debug in egress permitted has neighbor true 127.0.0.1[m
+[m[37m[1725379874.796831 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.797030 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.797198 0:2 smoltcp::iface::interface:617] [32mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[1725379874.797458 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.797603 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.797790 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.797958 0:2 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[1725379874.798236 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.798391 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.798550 0:2 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[1725379874.798820 0:2 smoltcp::iface::interface:1278] [32mlhw debug tx consume in dispatch ip2[m
+[m[37m[1725379874.799779 0:2 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 34, 0, 0, 40, 0, 40, 6, 3C, C2, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E5, 0, 0, 0, 0, 80, 2, FF, FF, 77, E8, 0, 0, 2, 4, 5, B4, 3, 3, 1, 4, 2, 0, 0, 0][m
+[m[37m[1725379874.800330 0:2 smoltcp::iface::interface:1290] [32mlhw debug after tx consume in dispatch ip2 Ok(())[m
+[m[37m[1725379874.801985 0:2 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 34, 0, 0, 40, 0, 40, 6, 3C, C2, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E5, 0, 0, 0, 0, 80, 2, FF, FF, 77, E8, 0, 0, 2, 4, 5, B4, 3, 3, 1, 4, 2, 0, 0, 0][m
+[m[37m[1725379874.804173 0:2 smoltcp::iface::interface::ipv4:214] [32mlhw debug in process ipv4 not judge ipv4 127.0.0.1 None true[m
+[m[37m[1725379874.807157 0:2 smoltcp::socket::tcp:1459] [33mlhw debug preocess socket LISTEN Syn None[m
+[m[37m[1725379874.808174 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.809077 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.809332 0:2 smoltcp::iface::interface:617] [32mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[1725379874.809726 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.809940 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.810142 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.810310 0:2 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[1725379874.810919 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.811227 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.811426 0:2 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[1725379874.811619 0:2 smoltcp::iface::interface:1278] [32mlhw debug tx consume in dispatch ip2[m
+[m[37m[1725379874.811856 0:2 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 34, 0, 0, 40, 0, 40, 6, 3C, C2, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 77, A8, E0, 27, E6, 80, 12, FF, FF, F2, 79, 0, 0, 2, 4, 5, B4, 3, 3, 1, 4, 2, 0, 0, 0][m
+[m[37m[1725379874.812479 0:2 smoltcp::iface::interface:1290] [32mlhw debug after tx consume in dispatch ip2 Ok(())[m
+[m[37m[1725379874.812684 0:2 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 34, 0, 0, 40, 0, 40, 6, 3C, C2, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B3, 15, B4, 2B, E6, 59, 77, A8, E0, 27, E6, 80, 12, FF, FF, F2, 79, 0, 0, 2, 4, 5, B4, 3, 3, 1, 4, 2, 0, 0, 0][m
+[m[37m[1725379874.813188 0:2 smoltcp::iface::interface::ipv4:214] [32mlhw debug in process ipv4 not judge ipv4 127.0.0.1 None true[m
+[m[37m[1725379874.813493 0:2 smoltcp::socket::tcp:1459] [33mlhw debug preocess socket SYN-SENT Syn Some(SeqNumber(-1461704730))[m
+[m[37m[1725379874.814468 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.814664 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.814824 0:2 smoltcp::iface::interface:617] [32mlhw debug in socket_egress before transmit dst 127.0.0.1 routed Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[1725379874.815080 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.815250 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.815424 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.815605 0:2 smoltcp::iface::interface:1012] [32mlhw debug in lookup hardware addr debugout 127.0.0.1 Some(Ipv4(Address([127, 0, 0, 1])))[m
+[m[37m[1725379874.815856 0:2 smoltcp::iface::interface:920] [32mlhw debug in route 127.0.0.1 127.0.0.1[m
+[m[37m[1725379874.816057 0:2 smoltcp::iface::interface:910] [32mlhw debug in is_samenetwork 127.0.0.1/24[m
+[m[37m[1725379874.816220 0:2 smoltcp::iface::interface:1016] [32mlhw debug in lookup hardware addr debugout2[m
+[m[37m[1725379874.816384 0:2 smoltcp::iface::interface:1278] [32mlhw debug tx consume in dispatch ip2[m
+[m[37m[1725379874.816614 0:2 driver_net::loopback:107] [32mlhw debug loopback transmit [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E6, 2B, E6, 59, 78, 50, 10, 80, 0, B0, 45, 0, 0][m
+[m[37m[1725379874.817080 0:2 smoltcp::iface::interface:1290] [32mlhw debug after tx consume in dispatch ip2 Ok(())[m
+[m[37m[1725379874.817318 0:2 driver_net::loopback:116] [32mlhw debug loopback receive [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 45, 0, 0, 28, 0, 0, 40, 0, 40, 6, 3C, CE, 7F, 0, 0, 1, 7F, 0, 0, 1, 15, B4, 15, B3, A8, E0, 27, E6, 2B, E6, 59, 78, 50, 10, 80, 0, B0, 45, 0, 0][m
+[m[37m[1725379874.817807 0:2 smoltcp::iface::interface::ipv4:214] [32mlhw debug in process ipv4 not judge ipv4 127.0.0.1 None true[m
+[m[37m[1725379874.818070 0:2 smoltcp::socket::tcp:1459] [33mlhw debug preocess socket SYN-RECEIVED None Some(SeqNumber(736516472))[m
+[m[37m[1725379874.819010 0:2 ruxos_posix_api::imp::net:301] [32msys_getsockopt <= fd: 4, level: 1, optname: 4, optlen: 4, IGNORED[m
+[m[37m[1725379874.820247 0:2 ruxnet::smoltcp_impl::tcp:314] [32mlhw debug in tcp recv[m
+[m[37m[1725379874.820517 0:2 ruxnet::smoltcp_impl::tcp:532] [32mlhw debug block on nonblocking[m
+[m[37m[1725379874.821019 0:2 ruxnet::smoltcp_impl::tcp:319] [32mlhw debug tcp recv block 0 true[m
+[merror: uncaptured python exception, closing channel <__main__.echo_client connected localhost:5555 at 0xffff8000009c2910> (<class 'ValueError'>:lhw python self connect close [/lib/python3.11/asyncore.py|readwrite|113] [/lib/python3.11/asyncore.py|handle_read_event|425] [/lib/python3.11/asynchat.py|handle_read|124] [/lib/python3.11/asyncore.py|recv|381] [/lib/python3.11/asynchat.py|handle_close|197] [/lib/python3.11/asyncore.py|close|394])
+[37m[1725379874.848269 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 5[m
+[m[37m[1725379874.852292 0:4 ruxnet::smoltcp_impl::tcp:314] [32mlhw debug in tcp recv[m
+[m[37m[1725379874.852539 0:4 ruxnet::smoltcp_impl::tcp:319] [32mlhw debug tcp recv block 0 true[m
+[m[37m[1725379874.852967 0:4 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 5[m
+[m[37m[1725379874.853292 0:4 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379875.867352 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[m[37m[1725379875.876789 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 3[m
+[mE
+======================================================================
+ERROR: test_empty_line (__main__.TestAsynchat.test_empty_line)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/asyncore.py", line 113, in readwrite
+    obj.handle_read_event()
+  File "/lib/python3.11/asyncore.py", line 425, in handle_read_event
+    self.handle_read()
+  File "/lib/python3.11/asynchat.py", line 124, in handle_read
+    data = self.recv(self.ac_in_buffer_size)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/asyncore.py", line 381, in recv
+    self.handle_close()
+  File "/lib/python3.11/asynchat.py", line 197, in handle_close
+    self.close()
+  File "/lib/python3.11/asyncore.py", line 394, in close
+    raise ValueError("lhw python self connect close")
+ValueError: lhw python self connect close
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat_uni.py", line 141, in test_empty_line
+    asyncore.loop(use_poll=self.usepoll, count=300, timeout=.01)
+  File "/lib/python3.11/asyncore.py", line 212, in loop
+    poll_fun(timeout, map)
+  File "/lib/python3.11/asyncore.py", line 193, in poll2
+    readwrite(obj, flags)
+  File "/lib/python3.11/asyncore.py", line 128, in readwrite
+    obj.handle_error()
+  File "/lib/python3.11/asyncore.py", line 481, in handle_error
+    self.handle_close()
+  File "/lib/python3.11/asynchat.py", line 197, in handle_close
+    self.close()
+  File "/lib/python3.11/asyncore.py", line 394, in close
+    raise ValueError("lhw python self connect close")
+ValueError: lhw python self connect close
+
+----------------------------------------------------------------------
+Ran 1 test in 1.180s
+
+FAILED (errors=1)
+[37m[1725379875.974822 0:2 ruxos_posix_api::imp::fd_ops:162] [32msys_close <= 4[m
+[m[37m[1725379875.082242 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[1725379875.082473 0:2 ruxhal::platform::aarch64_common::psci:105] [32mShutting down...[m
+[m

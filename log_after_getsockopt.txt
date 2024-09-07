@@ -1,0 +1,740 @@
+[37mmkdir[0m [90m-p apps/c/python3[0m
+    [92;1mBuilding[0m App: python3, Arch: aarch64, Platform: aarch64-qemu-virt, App type: c
+[37mcargo build[0m [90m--target aarch64-unknown-none-softfloat --target-dir /root/rux/rukos/target --release  -p ruxmusl --features "ruxfeat/log-level-info ruxfeat/rtc ruxfeat/virtio-9p ruxfeat/tty ruxfeat/tls ruxmusl/smp ruxmusl/paging ruxmusl/alloc ruxmusl/irq ruxmusl/musl ruxmusl/multitask ruxmusl/fs ruxmusl/pipe ruxmusl/poll ruxmusl/signal ruxmusl/net ruxmusl/epoll ruxmusl/select ruxmusl/fd ruxmusl/musl ruxmusl/fp_simd ruxmusl/fd ruxmusl/sched_rr"[0m
+[37maarch64-linux-musl-gcc[0m [90m-nostdinc -fno-builtin -ffreestanding -Wall -isystem/root/rux/rukos/ulib/ruxmusl/install_aarch64_release/include -O3   -c -o apps/c/python3/main.o apps/c/python3/main.c[0m
+    [96;1mLinking[0m apps/c/python3/python3_aarch64-qemu-virt.elf
+[37mrust-lld -flavor gnu[0m [90m-nostdlib -static -no-pie --gc-sections -T/root/rux/rukos/modules/ruxhal/linker_aarch64-qemu-virt.lds ulib/ruxmusl/install_aarch64_release/lib/libc.a target/aarch64-unknown-none-softfloat/release/libruxmusl.a  apps/c/python3/main.o -o apps/c/python3/python3_aarch64-qemu-virt.elf[0m
+[37mrust-objcopy --binary-architecture=aarch64[0m [90mapps/c/python3/python3_aarch64-qemu-virt.elf --strip-all -O binary apps/c/python3/python3_aarch64-qemu-virt.bin[0m
+    [96;1mRunning[0m on qemu...
+[37mqemu-system-aarch64[0m [90m-m 2G -smp 4 -cpu cortex-a72 -machine virt -kernel apps/c/python3/python3_aarch64-qemu-virt.bin -append ";/bin/python3.11,/lib/python3.11/test/test_asynchat.py;PYTHONLIB=/lib,PYTHONHOME=/" -device virtio-net-device,netdev=net0 -fsdev local,id=myid,path=apps/c/python3/rootfs,security_model=none -device virtio-9p-device,fsdev=myid,mount_tag=rootfs -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555,hostfwd=tcp::5556-:5556,hostfwd=udp::5556-:5556,hostfwd=tcp::5557-:5557,hostfwd=udp::5557-:5557,hostfwd=tcp::5558-:5558,hostfwd=udp::5558-:5558,hostfwd=tcp::5559-:5559,hostfwd=udp::5559-:5559, -nographic[0m
+
+8888888b.                     .d88888b.   .d8888b.  
+888   Y88b                   d88P" "Y88b d88P  Y88b 
+888    888                   888     888 Y88b.      
+888   d88P 888  888 888  888 888     888  "Y888b.   
+8888888P"  888  888 `Y8bd8P' 888     888     "Y88b. 
+888 T88b   888  888   X88K   888     888       "888 
+888  T88b  Y88b 888 .d8""8b. Y88b. .d88P Y88b  d88P 
+888   T88b  "Y88888 888  888  "Y88888P"   "Y8888P" 
+
+arch = aarch64
+platform = aarch64-qemu-virt
+target = aarch64-unknown-none-softfloat
+smp = 4
+build_mode = release
+log_level = info
+
+[37m[1724667218.002843 ruxruntime:175] [32mLogging is enabled.[m
+[m[37m[1724667218.003717 ruxruntime:176] [32mPrimary CPU 0 started, dtb = 0x48000000.[m
+[m[37m[1724667218.004018 ruxruntime:178] [32mFound physcial memory regions:[m
+[m[37m[1724667218.004346 ruxruntime:180] [32m  [PA:0x40080000, PA:0x400fd000) .text (READ | EXECUTE | RESERVED)[m
+[m[37m[1724667218.004746 ruxruntime:180] [32m  [PA:0x400fd000, PA:0x4010e000) .rodata (READ | RESERVED)[m
+[m[37m[1724667218.004950 ruxruntime:180] [32m  [PA:0x4010e000, PA:0x40112000) .data .tdata .tbss .percpu (READ | WRITE | RESERVED)[m
+[m[37m[1724667218.005209 ruxruntime:180] [32m  [PA:0x40112000, PA:0x40312000) boot stack (READ | WRITE | RESERVED)[m
+[m[37m[1724667218.005399 ruxruntime:180] [32m  [PA:0x40312000, PA:0x4033b000) .bss (READ | WRITE | RESERVED)[m
+[m[37m[1724667218.005515 ruxruntime:180] [32m  [PA:0x4033b000, PA:0xc0000000) free memory (READ | WRITE | EXECUTE | FREE)[m
+[m[37m[1724667218.005894 ruxruntime:180] [32m  [PA:0x9000000, PA:0x9001000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1724667218.006088 ruxruntime:180] [32m  [PA:0x8000000, PA:0x8020000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1724667218.006235 ruxruntime:180] [32m  [PA:0xa000000, PA:0xa004000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1724667218.006343 ruxruntime:180] [32m  [PA:0x10000000, PA:0x3eff0000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1724667218.006485 ruxruntime:180] [32m  [PA:0x4010000000, PA:0x4020000000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1724667218.006590 ruxruntime:180] [32m  [PA:0x9010000, PA:0x9011000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1724667218.006779 ruxruntime:371] [32mInitialize global memory allocator...[m
+[m[37m[1724667218.007036 ruxruntime:372] [32m  use slab allocator.[m
+[m[37m[1724667218.008941 ruxruntime:194] [32mInitialize kernel page table...[m
+[m[37m[1724667218.010597 ruxruntime:201] [32mInitialize platform devices...[m
+[m[37m[1724667218.010883 ruxhal::platform::aarch64_common::gic:60] [32mInitialize GICv2...[m
+[m[37m[1724667218.011789 ruxhal::platform::aarch64_common::pl031:23] [32mInitialize pl031 rtc...[m
+[m[37m[1724667218.013603 ruxtask::api:77] [32mInitialize scheduling...[m
+[m[37m[1724667218.015367 ruxtask::api:85] [32m  use Round-robin scheduler.[m
+[m[37m[1724667218.015647 ruxdriver:168] [32mInitialize device drivers...[m
+[m[37m[1724667218.015772 ruxdriver:169] [32m  device model: dyn[m
+[m[37m[1724667218.016895 ruxdriver:138] [32mregistered a new Net device: "loopback"[m
+[m[37m[1724667218.017883 virtio_drivers::device::v9p:30] [32mdevice features: VIRTIO_9P_F_MOUNT_TAG[m
+[m[37m[1724667218.019520 ruxdriver::bus::mmio:20] [32mregistered a new _9P device at [PA:0xa003c00, PA:0xa003e00): "virtio-9p"[m
+[m[37m[1724667218.020060 virtio_drivers::device::net::dev_raw:31] [32mDevice features CTRL_GUEST_OFFLOADS | MAC | GSO | MRG_RXBUF | STATUS | CTRL_VQ | CTRL_RX | CTRL_VLAN | CTRL_RX_EXTRA | GUEST_ANNOUNCE | CTL_MAC_ADDR | RING_INDIRECT_DESC | RING_EVENT_IDX[m
+[m[37m[1724667218.023608 ruxdriver::bus::mmio:20] [32mregistered a new Net device at [PA:0xa003e00, PA:0xa004000): "virtio-net"[m
+[m[37m[1724667218.024143 ruxnet:64] [32mInitialize network subsystem...[m
+[m[37m[1724667218.024376 ruxnet:70] [32m  net stack: smoltcp[m
+[m[37m[1724667218.026958 ruxnet:78] [32m  use NIC: "loopback"[m
+[m[37m[1724667218.027631 ruxnet::smoltcp_impl:366] [32mcreated net interface "loopback":[m
+[m[37m[1724667218.027782 ruxnet::smoltcp_impl:367] [32m  ether:    00-00-00-00-00-00[m
+[m[37m[1724667218.028066 ruxnet::smoltcp_impl:368] [32m  ip:       127.0.0.1/24[m
+[m[37m[1724667218.028410 ruxnet:78] [32m  use NIC: "virtio-net"[m
+[m[37m[1724667218.028742 ruxnet::smoltcp_impl:380] [32mcreated net interface "eth0":[m
+[m[37m[1724667218.029018 ruxnet::smoltcp_impl:381] [32m  ether:    52-54-00-12-34-56[m
+[m[37m[1724667218.029262 ruxnet::smoltcp_impl:382] [32m  ip:       10.0.2.15/24[m
+[m[37m[1724667218.029683 ruxnet::smoltcp_impl:383] [32m  gateway:  10.0.2.2[m
+[m[37m[1724667218.029876 rux9p:51] [32mInitialize virtio 9pfs...[m
+[m[37m[1724667218.030125 rux9p:54] [32m  use 9pfs device 0: "virtio-9p"[m
+[m[37m[1724667218.030394 rux9p::drv:45] [32m9p dev init success[m
+[m[37m[1724667218.031432 rux9p::fs:49] [32m9pfs server's protocol: 9P2000.L[m
+[m[37m[1724667218.035908 axfs_ramfs::dir:55] [31mAlreadyExists sys[m
+[m[37m[1724667218.037522 ruxfs::root:176] [32mmounting /dev[m
+[m[37m[1724667218.041752 ruxfs::root:176] [32mmounting /tmp[m
+[m[37m[1724667218.043043 ruxfs::root:176] [32mmounting /proc[m
+[m[37m[1724667218.044150 ruxfs::root:176] [32mmounting /sys[m
+[m[37m[1724667218.045585 ruxfs::root:176] [32mmounting /etc[m
+[m[37m[1724667218.047656 ruxhal::platform::aarch64_common::psci:122] [32mStarting CPU 1 ON ...[m
+[m[37m[1724667218.048574 ruxhal::platform::aarch64_common::psci:122] [32mStarting CPU 2 ON ...[m
+[m[37m[1724667218.048623 ruxruntime::mp:44] [32mSecondary CPU 1 started.[m
+[m[37m[1724667218.048944 ruxruntime::mp:44] [32mSecondary CPU 2 started.[m
+[m[37m[1724667218.049063 ruxhal::platform::aarch64_common::psci:122] [32mStarting CPU 3 ON ...[m
+[m[37m[1724667218.050278 ruxruntime::mp:44] [32mSecondary CPU 3 started.[m
+[m[37m[1724667218.050423 ruxruntime:265] [32mInitialize interrupt handlers...[m
+[m[37m[1724667218.050838 ruxruntime::mp:57] [32mSecondary CPU 2 init OK.[m
+[m[37m[1724667218.050837 ruxruntime::mp:57] [32mSecondary CPU 3 init OK.[m
+[m[37m[1724667218.050742 ruxruntime::mp:57] [32mSecondary CPU 1 init OK.[m
+[m[37m[1724667218.052091 ruxruntime:275] [32mPrimary CPU 0 init OK.[m
+[m[37m[1724667219.435324 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[1724667219.435775 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[1724667219.523691 0:2 ruxos_posix_api::imp::fs:592] [32msys_readlinkat => Err(EINVAL)[m
+[m[37m[1724667219.526554 0:2 ruxos_posix_api::imp::fs:220] [32msys_openat => Err(ENOENT)[m
+[m[37m[1724667219.528715 0:2 ruxos_posix_api::imp::fs:220] [32msys_openat => Err(ENOENT)[m
+[m[37m[1724667219.529810 0:2 ruxos_posix_api::imp::fs:220] [32msys_openat => Err(ENOENT)[m
+[m[37m[1724667219.531052 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667219.564642 0:2 ruxos_posix_api::imp::mmap::api:79] [31mmmap failed because start:0x0 is not aligned or len:0x0 == 0[m
+[m[37m[1724667219.564867 0:2 ruxos_posix_api::imp::mmap::api:46] [32msys_mmap => Err(EINVAL)[m
+[m[37m[1724667219.570190 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667219.576511 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667219.844702 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667219.847660 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667219.851107 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667219.866437 0:2 ruxos_posix_api::imp::fd_ops:278] [33munsupported fcntl parameters: cmd 1[m
+[m[37m[1724667219.044611 0:2 ruxos_posix_api::imp::fd_ops:278] [33munsupported fcntl parameters: cmd 1[m
+[m[37m[1724667219.045241 0:2 ruxos_posix_api::imp::fs:291] [32msys_lseek => Err(EINVAL)[m
+[m[37m[1724667219.046487 0:2 ruxos_posix_api::imp::fd_ops:278] [33munsupported fcntl parameters: cmd 1[m
+[m[37m[1724667219.046869 0:2 ruxos_posix_api::imp::fs:291] [32msys_lseek => Err(EINVAL)[m
+[m[37m[1724667219.047260 0:2 ruxos_posix_api::imp::fd_ops:278] [33munsupported fcntl parameters: cmd 1[m
+[m[37m[1724667219.047443 0:2 ruxos_posix_api::imp::fs:291] [32msys_lseek => Err(EINVAL)[m
+[m[37m[1724667219.079536 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667219.080355 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667219.084860 0:2 ruxos_posix_api::imp::net:250] [32msys_socket => Err(EINVAL)[m
+[m[37m[1724667219.085306 0:2 ruxos_posix_api::imp::net:250] [32msys_socket => Err(EINVAL)[m
+[m[37m[1724667219.086701 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667220.414453 0:2 ruxos_posix_api::imp::fs:592] [32msys_readlinkat => Err(EINVAL)[m
+[m[37m[1724667220.414751 0:2 ruxos_posix_api::imp::fs:592] [32msys_readlinkat => Err(EINVAL)[m
+[m[37m[1724667220.414966 0:2 ruxos_posix_api::imp::fs:592] [32msys_readlinkat => Err(EINVAL)[m
+[m[37m[1724667220.415072 0:2 ruxos_posix_api::imp::fs:592] [32msys_readlinkat => Err(EINVAL)[m
+[m[37m[1724667220.415157 0:2 ruxos_posix_api::imp::fs:592] [32msys_readlinkat => Err(EINVAL)[m
+[m[37m[1724667221.019944 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667221.021556 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667221.023709 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667221.047761 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667221.050841 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667221.053558 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.116570 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.118827 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.120762 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.315840 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.318286 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.320521 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.727815 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.729570 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.731178 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.880801 0:2 ruxos_posix_api::imp::net:250] [32msys_socket => Err(EINVAL)[m
+[m[37m[1724667222.881023 0:2 ruxos_posix_api::imp::net:250] [32msys_socket => Err(EINVAL)[m
+[m[37m[1724667222.886340 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.888162 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.898960 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.901359 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667222.904423 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667223.345668 0:2 ruxos_posix_api::imp::net:250] [32msys_socket => Err(EINVAL)[m
+[m[37m[1724667223.345826 0:2 ruxos_posix_api::imp::net:250] [32msys_socket => Err(EINVAL)[m
+[m[37m[1724667223.629201 0:2 ruxos_posix_api::imp::net:250] [32msys_socket => Err(EINVAL)[m
+[m[37m[1724667223.629408 0:2 ruxos_posix_api::imp::net:250] [32msys_socket => Err(EINVAL)[m
+[m[37m[1724667223.629644 0:2 ruxos_posix_api::imp::net:250] [32msys_socket => Err(EINVAL)[m
+[m[37m[1724667223.683821 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667223.685190 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667223.686528 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667223.739493 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667223.741234 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667223.742923 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667223.761083 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667223.763160 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667223.765756 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667223.810512 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667223.812198 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667223.813325 0:2 ruxos_posix_api::imp::fs:427] [32msys_newfstatat => Err(ENOENT)[m
+[m[37m[1724667224.712738 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[1724667224.716471 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.742497 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.777316 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.783870 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.806272 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.816393 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.836147 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.848036 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.867915 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.875720 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.888459 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.895629 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.913828 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.923784 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.938527 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.948169 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.964314 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.970383 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.987195 1:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.996414 1:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.009513 1:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.017353 1:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE.[37m[1724667224.057489 1:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.065825 1:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667224.083474 1:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.093682 1:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.109992 1:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.118371 1:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.134105 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.143191 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.157564 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.165142 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.181653 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.189826 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.209325 1:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.221152 1:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.237315 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.246937 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.262093 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.270489 0:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.285226 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.291294 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.308479 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE[37m[1724667225.316389 2:2 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[mE..
+======================================================================
+ERROR: test_close_when_done (__main__.TestAsynchat.test_close_when_done)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 221, in test_close_when_done
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_close_when_done (__main__.TestAsynchat.test_close_when_done)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_empty_line (__main__.TestAsynchat.test_empty_line)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 210, in test_empty_line
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_empty_line (__main__.TestAsynchat.test_empty_line)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_line_terminator1 (__main__.TestAsynchat.test_line_terminator1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 142, in test_line_terminator1
+    self.line_terminator_check(b'\n', l)
+  File "/lib/python3.11/test/test_asynchat.py", line 124, in line_terminator_check
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_line_terminator1 (__main__.TestAsynchat.test_line_terminator1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_line_terminator2 (__main__.TestAsynchat.test_line_terminator2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 147, in test_line_terminator2
+    self.line_terminator_check(b'\r\n', l)
+  File "/lib/python3.11/test/test_asynchat.py", line 124, in line_terminator_check
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_line_terminator2 (__main__.TestAsynchat.test_line_terminator2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_line_terminator3 (__main__.TestAsynchat.test_line_terminator3)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 152, in test_line_terminator3
+    self.line_terminator_check(b'qqq', l)
+  File "/lib/python3.11/test/test_asynchat.py", line 124, in line_terminator_check
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_line_terminator3 (__main__.TestAsynchat.test_line_terminator3)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_none_terminator (__main__.TestAsynchat.test_none_terminator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 176, in test_none_terminator
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_none_terminator (__main__.TestAsynchat.test_none_terminator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_numeric_terminator1 (__main__.TestAsynchat.test_numeric_terminator1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 169, in test_numeric_terminator1
+    self.numeric_terminator_check(1)
+  File "/lib/python3.11/test/test_asynchat.py", line 156, in numeric_terminator_check
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_numeric_terminator1 (__main__.TestAsynchat.test_numeric_terminator1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_numeric_terminator2 (__main__.TestAsynchat.test_numeric_terminator2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 172, in test_numeric_terminator2
+    self.numeric_terminator_check(6)
+  File "/lib/python3.11/test/test_asynchat.py", line 156, in numeric_terminator_check
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_numeric_terminator2 (__main__.TestAsynchat.test_numeric_terminator2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_push (__main__.TestAsynchat.test_push)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 245, in test_push
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_push (__main__.TestAsynchat.test_push)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_simple_producer (__main__.TestAsynchat.test_simple_producer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 188, in test_simple_producer
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_simple_producer (__main__.TestAsynchat.test_simple_producer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_string_producer (__main__.TestAsynchat.test_string_producer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 199, in test_string_producer
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_string_producer (__main__.TestAsynchat.test_string_producer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_close_when_done (__main__.TestAsynchat_WithPoll.test_close_when_done)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 221, in test_close_when_done
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_close_when_done (__main__.TestAsynchat_WithPoll.test_close_when_done)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_empty_line (__main__.TestAsynchat_WithPoll.test_empty_line)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 210, in test_empty_line
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_empty_line (__main__.TestAsynchat_WithPoll.test_empty_line)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_line_terminator1 (__main__.TestAsynchat_WithPoll.test_line_terminator1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 142, in test_line_terminator1
+    self.line_terminator_check(b'\n', l)
+  File "/lib/python3.11/test/test_asynchat.py", line 124, in line_terminator_check
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_line_terminator1 (__main__.TestAsynchat_WithPoll.test_line_terminator1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_line_terminator2 (__main__.TestAsynchat_WithPoll.test_line_terminator2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 147, in test_line_terminator2
+    self.line_terminator_check(b'\r\n', l)
+  File "/lib/python3.11/test/test_asynchat.py", line 124, in line_terminator_check
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_line_terminator2 (__main__.TestAsynchat_WithPoll.test_line_terminator2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_line_terminator3 (__main__.TestAsynchat_WithPoll.test_line_terminator3)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 152, in test_line_terminator3
+    self.line_terminator_check(b'qqq', l)
+  File "/lib/python3.11/test/test_asynchat.py", line 124, in line_terminator_check
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_line_terminator3 (__main__.TestAsynchat_WithPoll.test_line_terminator3)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_none_terminator (__main__.TestAsynchat_WithPoll.test_none_terminator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 176, in test_none_terminator
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_none_terminator (__main__.TestAsynchat_WithPoll.test_none_terminator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_numeric_terminator1 (__main__.TestAsynchat_WithPoll.test_numeric_terminator1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 169, in test_numeric_terminator1
+    self.numeric_terminator_check(1)
+  File "/lib/python3.11/test/test_asynchat.py", line 156, in numeric_terminator_check
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_numeric_terminator1 (__main__.TestAsynchat_WithPoll.test_numeric_terminator1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_numeric_terminator2 (__main__.TestAsynchat_WithPoll.test_numeric_terminator2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 172, in test_numeric_terminator2
+    self.numeric_terminator_check(6)
+  File "/lib/python3.11/test/test_asynchat.py", line 156, in numeric_terminator_check
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_numeric_terminator2 (__main__.TestAsynchat_WithPoll.test_numeric_terminator2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_push (__main__.TestAsynchat_WithPoll.test_push)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 245, in test_push
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_push (__main__.TestAsynchat_WithPoll.test_push)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_simple_producer (__main__.TestAsynchat_WithPoll.test_simple_producer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 188, in test_simple_producer
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_simple_producer (__main__.TestAsynchat_WithPoll.test_simple_producer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_string_producer (__main__.TestAsynchat_WithPoll.test_string_producer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 199, in test_string_producer
+    s, event = start_echo_server()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/lib/python3.11/test/test_asynchat.py", line 104, in start_echo_server
+    time.sleep(0.01)   # Give server time to start accepting.
+    ^^^^^^^^^^^^^^^^
+OSError: [Errno 38] Function not implemented
+
+======================================================================
+ERROR: test_string_producer (__main__.TestAsynchat_WithPoll.test_string_producer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/lib/python3.11/test/test_asynchat.py", line 115, in tearDown
+    threading_helper.threading_cleanup(*self._threads)
+  File "/lib/python3.11/test/support/threading_helper.py", line 32, in threading_cleanup
+    for _ in support.sleeping_retry(timeout, error=False):
+  File "/lib/python3.11/test/support/__init__.py", line 2202, in sleeping_retry
+    time.sleep(delay)
+OSError: [Errno 38] Function not implemented
+
+----------------------------------------------------------------------
+Ran 25 tests in 0.624s
+
+FAILED (errors=44)
+QEMU: Terminated
+

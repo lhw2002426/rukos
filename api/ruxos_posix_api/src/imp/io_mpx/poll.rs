@@ -20,6 +20,7 @@ fn poll_all(fds: &mut [ctypes::pollfd]) -> LinuxResult<usize> {
         let intfd = pollfd_item.fd;
         let events = pollfd_item.events;
         let revents = &mut pollfd_item.revents;
+        info!("revents {:b}",*revents);
         match get_file_like(intfd as c_int)?.poll() {
             Err(_) => {
                 if (events & ctypes::EPOLLERR as i16) != 0 {
@@ -39,7 +40,10 @@ fn poll_all(fds: &mut [ctypes::pollfd]) -> LinuxResult<usize> {
                 }
             }
         }
+        info!("lhw debug in poll poll all each fd: {} {:b} {:b}",intfd, events, *revents);
     }
+    info!("lhw debug in poll poll all {}",events_num);
+
     Ok(events_num)
 }
 
@@ -62,7 +66,7 @@ pub unsafe fn sys_ppoll(
 
 /// Used to monitor multiple file descriptors for events
 pub unsafe fn sys_poll(fds: *mut ctypes::pollfd, nfds: ctypes::nfds_t, timeout: c_int) -> c_int {
-    debug!("sys_poll <= nfds: {} timeout: {} ms", nfds, timeout);
+    info!("sys_poll <= nfds: {} timeout: {} ms", nfds, timeout);
 
     syscall_body!(sys_poll, {
         if nfds == 0 {
@@ -71,6 +75,11 @@ pub unsafe fn sys_poll(fds: *mut ctypes::pollfd, nfds: ctypes::nfds_t, timeout: 
         let fds = core::slice::from_raw_parts_mut(fds, nfds as usize);
         let deadline = (!timeout.is_negative())
             .then(|| current_time() + Duration::from_millis(timeout as u64));
+        for pollfd_item in fds.iter_mut() {
+            let revents = &mut pollfd_item.revents;
+            *revents &= 0;
+            info!("lhw debug in sys_poll fd: {} event:{:b} revents {:b}",intfd, events,*revents);
+        }
         loop {
             #[cfg(feature = "net")]
             ruxnet::poll_interfaces();

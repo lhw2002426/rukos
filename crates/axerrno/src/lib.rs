@@ -52,6 +52,8 @@ pub enum AxError {
     ConnectionReset,
     /// A non-empty directory was specified where an empty directory was expected.
     DirectoryNotEmpty,
+    /// The requested protocol or socket option is not available.
+    NoProtoOpt,
     /// Data not valid for the operation were encountered.
     ///
     /// Unlike [`InvalidInput`], this typically means that the operation
@@ -232,6 +234,7 @@ impl AxError {
             ConnectionRefused => "Connection refused",
             ConnectionReset => "Connection reset",
             DirectoryNotEmpty => "Directory not empty",
+            NoProtoOpt => "Protocol not available",
             InvalidData => "Invalid data",
             InvalidInput => "Invalid input parameter",
             Io => "I/O error",
@@ -286,6 +289,7 @@ impl From<AxError> for LinuxError {
             ConnectionRefused => LinuxError::ECONNREFUSED,
             ConnectionReset => LinuxError::ECONNRESET,
             DirectoryNotEmpty => LinuxError::ENOTEMPTY,
+            NoProtoOpt => LinuxError::ENOPROTOOPT,
             InvalidInput | InvalidData => LinuxError::EINVAL,
             Io => LinuxError::EIO,
             IsADirectory => LinuxError::EISDIR,

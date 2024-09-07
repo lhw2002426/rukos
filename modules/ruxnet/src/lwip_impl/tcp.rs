@@ -145,6 +145,12 @@ impl TcpSocket {
         socket
     }
 
+    /// Returens if this socket is listening
+    #[inline]
+    pub fn is_listening(&self) -> bool {
+        (*self.pcb.get()).state == tcp_state_LISTEN
+    }
+
     /// Returns the local address and port, or
     /// [`Err(NotConnected)`](AxError::NotConnected) if not connected.
     pub fn local_addr(&self) -> AxResult<core::net::SocketAddr> {

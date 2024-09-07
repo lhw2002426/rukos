@@ -127,6 +127,12 @@ impl TcpSocket {
         self.nonblock.store(nonblocking, Ordering::Release);
     }
 
+    /// Returens if this socket is listening
+    #[inline]
+    pub fn is_listening(&self) -> bool {
+        self.get_state() == STATE_LISTENING
+    }
+
     /// Connects to the given address and port.
     ///
     /// The local port is generated automatically.
@@ -182,14 +188,17 @@ impl TcpSocket {
             if !writable {
                 // When set to non_blocking, directly return inporgress
                 if self.is_nonblocking() {
+                    warn!("lhw debug tcp connect error inprogress 1 {}",self.is_nonblocking());
                     return Err(AxError::InProgress);
                 }
                 Err(AxError::WouldBlock)
             } else if self.get_state() == STATE_CONNECTED {
+                warn!("lhw debug tcp connect normal {}",self.is_nonblocking());
                 Ok(())
             } else {
                 // When set to non_blocking, directly return inporgress
                 if self.is_nonblocking() {
+                    debug!("lhw debug tcp connect error inprogress 2");
                     return Err(AxError::InProgress);
                 }
                 ax_err!(ConnectionRefused, "socket connect() failed")
@@ -228,6 +237,7 @@ impl TcpSocket {
     /// It's must be called after [`bind`](Self::bind) and before
     /// [`accept`](Self::accept).
     pub fn listen(&self) -> AxResult {
+        info!("lhw debug in tcp listen");
         self.update_state(STATE_BUSY, STATE_LISTENING, || {
             let bound_endpoint = self.bound_endpoint()?;
             unsafe {
@@ -262,6 +272,7 @@ impl TcpSocket {
 
     /// Close the connection.
     pub fn shutdown(&self) -> AxResult {
+        info!("lhw debug in tcp shutdown");
         // stream
         self.update_state(STATE_CONNECTED, STATE_CLOSED, || {
             // SAFETY: `self.handle` should be initialized in a connected socket, and
@@ -300,11 +311,12 @@ impl TcpSocket {
         } else if !self.is_connected() {
             return ax_err!(NotConnected, "socket recv() failed");
         }
-
+        info!("lhw debug in tcp recv");
         // SAFETY: `self.handle` should be initialized in a connected socket.
         let handle = unsafe { self.handle.get().read().unwrap() };
         self.block_on(|| {
             SOCKET_SET.with_socket_mut::<tcp::Socket, _, _>(handle, |socket| {
+                info!("lhw debug tcp recv block {} {}",socket.recv_queue(), socket.is_active());
                 if !socket.is_active() {
                     // not open
                     ax_err!(ConnectionRefused, "socket recv() failed")
@@ -315,6 +327,7 @@ impl TcpSocket {
                     // data available
                     // TODO: use socket.recv(|buf| {...})
                     if flags & MSG_DONTWAIT != 0 {
+                        warn!("lhw debug in recv set nonblocking");
                         self.set_nonblocking(true);
                     }
                     if flags & MSG_PEEK != 0 {
@@ -326,6 +339,7 @@ impl TcpSocket {
                         let len = socket
                             .recv_slice(buf)
                             .map_err(|_| ax_err_type!(BadState, "socket recv() failed"))?;
+                        info!("lhw debug recv suc {}",len);
                         Ok(len)
                     }
                 } else {
@@ -339,6 +353,7 @@ impl TcpSocket {
     /// Transmits data in the given buffer.
     /// TODO: impl send flags
     pub fn send(&self, buf: &[u8]) -> AxResult<usize> {
+        info!("lhw debug in tcp send {:X?}",buf);
         if self.is_connecting() {
             return Err(AxError::WouldBlock);
         } else if !self.is_connected() {
@@ -348,9 +363,9 @@ impl TcpSocket {
         // SAFETY: `self.handle` should be initialized in a connected socket.
         let handle = unsafe { self.handle.get().read().unwrap() };
         self.block_on(|| {
+            info!("lhw debug tcp send block on");
             SOCKET_SET.with_socket_mut::<tcp::Socket, _, _>(handle, |socket| {
                 if !socket.is_active() || !socket.may_send() {
-                    // closed by remote
                     ax_err!(ConnectionReset, "socket send() failed")
                 } else if socket.can_send() {
                     // connected, and the tx buffer is not full
@@ -358,6 +373,7 @@ impl TcpSocket {
                     let len = socket
                         .send_slice(buf)
                         .map_err(|_| ax_err_type!(BadState, "socket send() failed"))?;
+                    info!("lhw debug tcp send ok");
                     Ok(len)
                 } else {
                     // tx buffer is full
@@ -432,11 +448,6 @@ impl TcpSocket {
         self.get_state() == STATE_CONNECTED
     }
 
-    #[inline]
-    fn is_listening(&self) -> bool {
-        self.get_state() == STATE_LISTENING
-    }
-
     fn bound_endpoint(&self) -> AxResult<IpListenEndpoint> {
         // SAFETY: no other threads can read or write `self.local_addr`.
         let local_addr = unsafe { self.local_addr.get().read() };
@@ -459,7 +470,10 @@ impl TcpSocket {
         let handle = unsafe { self.handle.get().read().unwrap() };
         let writable =
             SOCKET_SET.with_socket::<tcp::Socket, _, _>(handle, |socket| match socket.state() {
-                State::SynSent => false, // wait for connection
+                State::SynSent => {
+                    info!("lhw debug in poll connect synsent");
+                    false
+                }, // wait for connection
                 State::Established => {
                     self.set_state(STATE_CONNECTED); // connected
                     debug!(
@@ -514,6 +528,7 @@ impl TcpSocket {
         F: FnMut() -> AxResult<T>,
     {
         if self.is_nonblocking() {
+            info!("lhw debug block on nonblocking");
             f()
         } else {
             loop {
@@ -530,6 +545,9 @@ impl TcpSocket {
 
 impl Drop for TcpSocket {
     fn drop(&mut self) {
+        info!("lhw debug in tcp drop");
+        SOCKET_SET.poll_interfaces();
+        //ruxtask::sleep(core::time::Duration::new(1, 0));
         self.shutdown().ok();
         // Safe because we have mut reference to `self`.
         if let Some(handle) = unsafe { self.handle.get().read() } {

@@ -94,13 +94,19 @@ pub unsafe fn sys_rt_sigaction(
     _sigsetsize: ctypes::size_t,
 ) -> c_int {
     debug!("sys_rt_sigaction <= sig: {}", sig);
+    /*syscall_body!(sys_rt_sigaction, Ok(0))*/
     syscall_body!(sys_rt_sigaction, {
-        let sa = unsafe { *sa };
-        let old = unsafe { *old };
-        let sa = k_sigaction::from(sa);
-        let mut old_sa = k_sigaction::from(old);
-        sys_sigaction(sig as _, Some(&sa), Some(&mut old_sa));
-        Ok(0)
+        if sa as u64 == 0 || old as u64 == 0 {
+            Err(LinuxError::EFAULT)
+        } else {
+            let sa = unsafe { *sa };
+            let old = unsafe { *old };
+            let sa = k_sigaction::from(sa);
+            let mut old_sa = k_sigaction::from(old);
+            sys_sigaction(sig as _, Some(&sa), Some(&mut old_sa));
+            Ok(0)
+        }
+        
     })
 }
 
