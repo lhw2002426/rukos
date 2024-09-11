@@ -8,6 +8,7 @@
  */
 
 use alloc::{sync::Arc, vec, vec::Vec};
+use core::sync::atomic::AtomicIsize;
 use core::ffi::{c_char, c_int, c_void};
 use core::mem::size_of;
 use core::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4};
@@ -15,7 +16,7 @@ use core::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4};
 use axerrno::{LinuxError, LinuxResult};
 use axio::PollState;
 use axsync::Mutex;
-use ruxfdtable::{FileLike, RuxStat};
+use ruxfdtable::{FileLike, RuxStat, RUX_FILE_LIMIT};
 use ruxnet::{TcpSocket, UdpSocket};
 
 use crate::ctypes;
@@ -24,6 +25,160 @@ use crate::utils::char_ptr_to_str;
 pub enum Socket {
     Udp(Mutex<UdpSocket>),
     Tcp(Mutex<TcpSocket>),
+    Unix(Mutex<UnixSocket>),
+}
+
+// lhw debug : why musl is 14?
+const SOCK_ADDR_UN_PATH_LEN: usize = 108;
+const UNIX_SOCKET_BUFFER_SIZE: usize = 4096;
+
+struct SockaddrUn {
+    sun_family: ctypes::sa_family_t, /* AF_UNIX */
+    /// if socket is unnamed, use `sun_path[0]` to save fd
+    sun_path: [c_char; SOCK_ADDR_UN_PATH_LEN], /* Pathname */
+}
+
+impl From<ctypes::sockaddr_un> for SockaddrUn {
+    fn from(addr: ctypes::sockaddr_un) -> Self {
+        Self {
+            sun_family: addr.sun_family,
+            sun_path: addr.sun_path,
+        }
+    }
+}
+
+/// unix domain socket.
+pub struct UnixSocket {
+    addr: Mutex<SockaddrUn>,
+    buf: [u8; UNIX_SOCKET_BUFFER_SIZE],
+    peer_fd: AtomicIsize,
+    status: UnixSocketStatus,
+}
+
+#[derive(Debug)]
+pub enum UnixSocketType {
+    SockStream,
+    SockDgram,
+    SockSeqpacket,
+}
+
+pub enum UnixSocketStatus {
+    Connected,
+    UnConnected,
+}
+
+impl UnixSocket {
+    /// create a new socket
+    /// only support sock_stream
+    pub fn new(_type: UnixSocketType) -> Self {
+        info!("lhw debug in unixsocket new {:?}",_type);
+        match _type {
+            UnixSocketType::SockDgram | UnixSocketType::SockSeqpacket => unimplemented!(),
+            UnixSocketType::SockStream => Self {
+                addr: Mutex::new(SockaddrUn {
+                    sun_family: ctypes::AF_UNIX as _,
+                    sun_path: [0; SOCK_ADDR_UN_PATH_LEN],
+                }),
+                buf: [0; UNIX_SOCKET_BUFFER_SIZE],
+                peer_fd: AtomicIsize::new(-1),
+                status: UnixSocketStatus::UnConnected,
+            },
+        }
+    }
+
+    pub fn bind(&self, addr: *const ctypes::sockaddr_un) -> LinuxResult {
+        info!("lhw debug in unixsocket bind ");
+        let mid = unsafe { *addr };
+        let addr: SockaddrUn = mid.into();
+        let mut selfaddr = self.addr.lock();
+        selfaddr.sun_path = addr.sun_path;
+        Ok(())
+    }
+
+    pub fn send(&self, buf: &[u8]) -> LinuxResult<usize> {
+        unimplemented!()
+    }
+    pub fn recv(&self, buf: &mut [u8], flags: i32) -> LinuxResult<usize> {
+        unimplemented!()
+    }
+    pub fn poll(&self) -> LinuxResult<PollState> {
+        unimplemented!()
+    }
+
+    pub fn local_addr(&self) -> LinuxResult<SocketAddr> {
+        unimplemented!()
+    }
+
+    fn fd(&self) -> c_int {
+        self.addr.lock().sun_path[0] as _
+    }
+
+    pub fn peer_addr(&self) -> LinuxResult<SocketAddr> {
+        unimplemented!()
+    }
+
+    pub fn connect(&self, addr: *const ctypes::sockaddr_un) -> LinuxResult {
+        let mid = unsafe { *addr };
+        let addr: SockaddrUn = mid.into();
+        let mut fd: i32 = -1;
+        let mut now_file_fd: i32 = 3;
+        while now_file_fd < RUX_FILE_LIMIT.try_into().unwrap() {
+            match Socket::from_fd(now_file_fd) {
+                Ok(socket) => {
+                    if let Ok(socket) = Arc::try_unwrap(socket) {
+                        match socket  {
+                            Socket::Unix(unixsocket) => {
+                                if unixsocket.lock().addr.lock().sun_path == addr.sun_path {
+                                    fd = now_file_fd;
+                                    break;
+                                } else {
+                                    now_file_fd += 1;
+                                }
+                            }
+                            _ => {
+                                now_file_fd += 1;
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    now_file_fd += 1;
+                }
+            }
+        }
+        if fd == -1 {
+            Err(LinuxError::ENOENT)
+        }
+        else {
+            self.peer_fd
+            .store(fd as _, core::sync::atomic::Ordering::Relaxed);
+            Ok(())
+        }
+    }
+
+    pub fn sendto(&self, buf: &[u8], addr: *const ctypes::sockaddr_un) -> LinuxResult<usize> {
+        unimplemented!()
+    }
+
+    pub fn recvfrom(&self, buf: &mut [u8]) -> LinuxResult<(usize, Option<SocketAddr>)> {
+        unimplemented!()
+    }
+
+    pub fn listen(&self) -> LinuxResult {
+        unimplemented!()
+    }
+
+    pub fn accept(&self) -> LinuxResult<usize> {
+        unimplemented!()
+    }
+
+    pub fn shutdown(&self) -> LinuxResult {
+        unimplemented!()
+    }
+
+    pub fn set_nonblocking(&self, nonblocking: bool) {
+        unimplemented!()
+    }
 }
 
 impl Socket {
@@ -42,6 +197,7 @@ impl Socket {
         match self {
             Socket::Udp(udpsocket) => Ok(udpsocket.lock().send(buf)?),
             Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().send(buf)?),
+            Socket::Unix(socket) => Ok(socket.lock().send(buf)?),
         }
     }
 
@@ -49,6 +205,7 @@ impl Socket {
         match self {
             Socket::Udp(udpsocket) => Ok(udpsocket.lock().recv_from(buf).map(|e| e.0)?),
             Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().recv(buf, flags)?),
+            Socket::Unix(socket) => Ok(socket.lock().recv(buf, flags)?),
         }
     }
 
@@ -56,6 +213,7 @@ impl Socket {
         match self {
             Socket::Udp(udpsocket) => Ok(udpsocket.lock().poll()?),
             Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().poll()?),
+            Socket::Unix(socket) => Ok(socket.lock().poll()?),
         }
     }
 
@@ -63,6 +221,7 @@ impl Socket {
         match self {
             Socket::Udp(udpsocket) => Ok(udpsocket.lock().local_addr()?),
             Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().local_addr()?),
+            Socket::Unix(_) => Err(LinuxError::EOPNOTSUPP),
         }
     }
 
@@ -70,20 +229,52 @@ impl Socket {
         match self {
             Socket::Udp(udpsocket) => Ok(udpsocket.lock().peer_addr()?),
             Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().peer_addr()?),
+            Socket::Unix(socket) => Ok(socket.lock().peer_addr()?),
         }
     }
 
-    fn bind(&self, addr: SocketAddr) -> LinuxResult {
+    fn bind(&self, socket_addr: *const ctypes::sockaddr, addrlen: ctypes::socklen_t) -> LinuxResult {
         match self {
-            Socket::Udp(udpsocket) => Ok(udpsocket.lock().bind(addr)?),
-            Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().bind(addr)?),
+            Socket::Udp(udpsocket) => {
+                let addr = from_sockaddr(socket_addr, addrlen)?;
+                Ok(udpsocket.lock().bind(addr)?)
+            },
+            Socket::Tcp(tcpsocket) => {
+                let addr = from_sockaddr(socket_addr, addrlen)?;
+                Ok(tcpsocket.lock().bind(addr)?)
+            },
+            Socket::Unix(socket) => {
+                if socket_addr.is_null() {
+                    return Err(LinuxError::EFAULT);
+                }
+                if addrlen != size_of::<ctypes::sockaddr_un>() as _ {
+                    info!("lhw debug before unix bind addrlen {} {}",addrlen, size_of::<ctypes::sockaddr_un>() as usize);
+                    return Err(LinuxError::EINVAL);
+                }
+                Ok(socket.lock().bind(socket_addr as *const ctypes::sockaddr_un)?)
+            },
         }
     }
 
-    fn connect(&self, addr: SocketAddr) -> LinuxResult {
+    fn connect(&self, socket_addr: *const ctypes::sockaddr, addrlen: ctypes::socklen_t) -> LinuxResult {
         match self {
-            Socket::Udp(udpsocket) => Ok(udpsocket.lock().connect(addr)?),
-            Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().connect(addr)?),
+            Socket::Udp(udpsocket) => {
+                let addr = from_sockaddr(socket_addr, addrlen)?;
+                Ok(udpsocket.lock().connect(addr)?)
+            },
+            Socket::Tcp(tcpsocket) => {
+                let addr = from_sockaddr(socket_addr, addrlen)?;
+                Ok(tcpsocket.lock().connect(addr)?)
+            },
+            Socket::Unix(socket) => {
+                if socket_addr.is_null() {
+                    return Err(LinuxError::EFAULT);
+                }
+                if addrlen != size_of::<ctypes::sockaddr>() as _ {
+                    return Err(LinuxError::EINVAL);
+                }
+                Ok(socket.lock().connect(socket_addr as *const ctypes::sockaddr_un)?)
+            },
         }
     }
 
@@ -92,6 +283,7 @@ impl Socket {
             // diff: must bind before sendto
             Socket::Udp(udpsocket) => Ok(udpsocket.lock().send_to(buf, addr)?),
             Socket::Tcp(_) => Err(LinuxError::EISCONN),
+            Socket::Unix(_) => Err(LinuxError::EISCONN),
         }
     }
 
@@ -103,6 +295,7 @@ impl Socket {
                 .recv_from(buf)
                 .map(|res| (res.0, Some(res.1)))?),
             Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().recv(buf, 0).map(|res| (res, None))?),
+            Socket::Unix(socket) => Ok(socket.lock().recv(buf, 0).map(|res| (res, None))?),
         }
     }
 
@@ -110,6 +303,7 @@ impl Socket {
         match self {
             Socket::Udp(_) => Err(LinuxError::EOPNOTSUPP),
             Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().listen()?),
+            Socket::Unix(socket) => Ok(socket.lock().listen()?),
         }
     }
 
@@ -117,6 +311,7 @@ impl Socket {
         match self {
             Socket::Udp(_) => Err(LinuxError::EOPNOTSUPP),
             Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().accept()?),
+            Socket::Unix(socket) => panic!(),
         }
     }
 
@@ -133,6 +328,12 @@ impl Socket {
                 let tcpsocket = tcpsocket.lock();
                 tcpsocket.peer_addr()?;
                 tcpsocket.shutdown()?;
+                Ok(())
+            }
+            Socket::Unix(socket) => {
+                let socket = socket.lock();
+                socket.peer_addr()?;
+                socket.shutdown()?;
                 Ok(())
             }
         }
@@ -179,6 +380,7 @@ impl FileLike for Socket {
         match self {
             Socket::Udp(udpsocket) => udpsocket.lock().set_nonblocking(nonblock),
             Socket::Tcp(tcpsocket) => tcpsocket.lock().set_nonblocking(nonblock),
+            Socket::Unix(unixsocket) => unixsocket.lock().set_nonblocking(nonblock),
         }
         Ok(())
     }
@@ -244,7 +446,7 @@ fn from_sockaddr(
 ///
 /// Return the socket file descriptor.
 pub fn sys_socket(domain: c_int, socktype: c_int, protocol: c_int) -> c_int {
-    debug!("sys_socket <= {} {} {}", domain, socktype, protocol);
+    info!("sys_socket <= {} {} {}", domain, socktype, protocol);
     let (domain, socktype, protocol) = (domain as u32, socktype as u32, protocol as u32);
     pub const _SOCK_STREAM_NONBLOCK: u32 = ctypes::SOCK_STREAM | ctypes::SOCK_NONBLOCK;
     syscall_body!(sys_socket, {
@@ -261,6 +463,10 @@ pub fn sys_socket(domain: c_int, socktype: c_int, protocol: c_int) -> c_int {
                 let tcp_socket = TcpSocket::new();
                 tcp_socket.set_nonblocking(true);
                 Socket::Tcp(Mutex::new(tcp_socket)).add_to_fd_table()
+            }
+            (ctypes::AF_UNIX, ctypes::SOCK_STREAM, 0) => {
+                Socket::Unix(Mutex::new(UnixSocket::new(UnixSocketType::SockStream)))
+                    .add_to_fd_table()
             }
             _ => Err(LinuxError::EINVAL),
         }
@@ -297,8 +503,7 @@ pub fn sys_bind(
         socket_fd, socket_addr as usize, addrlen
     );
     syscall_body!(sys_bind, {
-        let addr = from_sockaddr(socket_addr, addrlen)?;
-        Socket::from_fd(socket_fd)?.bind(addr)?;
+        Socket::from_fd(socket_fd)?.bind(socket_addr, addrlen)?;
         Ok(0)
     })
 }
@@ -316,8 +521,7 @@ pub fn sys_connect(
         socket_fd, socket_addr as usize, addrlen
     );
     syscall_body!(sys_connect, {
-        let addr = from_sockaddr(socket_addr, addrlen)?;
-        Socket::from_fd(socket_fd)?.connect(addr)?;
+        Socket::from_fd(socket_fd)?.connect(socket_addr, addrlen)?;
         Ok(0)
     })
 }
@@ -438,7 +642,7 @@ pub fn sys_listen(
     socket_fd: c_int,
     backlog: c_int, // currently not used
 ) -> c_int {
-    debug!("sys_listen <= {} {}", socket_fd, backlog);
+    info!("sys_listen <= {} {}", socket_fd, backlog);
     syscall_body!(sys_listen, {
         Socket::from_fd(socket_fd)?.listen()?;
         Ok(0)
@@ -479,7 +683,7 @@ pub fn sys_shutdown(
     socket_fd: c_int,
     flag: c_int, // currently not used
 ) -> c_int {
-    debug!("sys_shutdown <= {} {}", socket_fd, flag);
+    info!("sys_shutdown <= {} {}", socket_fd, flag);
     syscall_body!(sys_shutdown, {
         Socket::from_fd(socket_fd)?.shutdown()?;
         Ok(0)
@@ -500,7 +704,7 @@ pub unsafe fn sys_getaddrinfo(
 ) -> c_int {
     let name = char_ptr_to_str(nodename);
     let port = char_ptr_to_str(servname);
-    debug!("sys_getaddrinfo <= {:?} {:?}", name, port);
+    info!("sys_getaddrinfo <= {:?} {:?}", name, port);
     syscall_body!(sys_getaddrinfo, {
         if nodename.is_null() && servname.is_null() {
             return Ok(0);
@@ -634,7 +838,7 @@ pub unsafe fn sys_sendmsg(
     msg: *const ctypes::msghdr,
     flags: c_int,
 ) -> ctypes::ssize_t {
-    debug!("sys_sendmsg <= {} {:#x} {}", socket_fd, msg as usize, flags);
+    info!("sys_sendmsg <= {} {:#x} {}", socket_fd, msg as usize, flags);
     syscall_body!(sys_sendmsg, {
         if msg.is_null() {
             return Err(LinuxError::EFAULT);
@@ -658,6 +862,10 @@ pub unsafe fn sys_sendmsg(
                     from_sockaddr(msg.msg_name as *const ctypes::sockaddr, msg.msg_namelen)?,
                 )?,
                 Socket::Tcp(tcpsocket) => tcpsocket.lock().send(buf)?,
+                Socket::Unix(unixsocket) => unixsocket.lock().sendto(
+                    buf,
+                    msg.msg_name as *const ctypes::sockaddr_un,
+                )?,
             };
         }
         Ok(ret)
