@@ -51,6 +51,8 @@ impl From<ctypes::sockaddr_un> for SockaddrUn {
 pub struct UnixSocket {
     addr: Mutex<SockaddrUn>,
     buf: [u8; UNIX_SOCKET_BUFFER_SIZE],
+    listen: Mutex<Vec<i32>>,
+    socket_fd: i32,
     peer_fd: AtomicIsize,
     status: UnixSocketStatus,
 }
@@ -62,9 +64,18 @@ pub enum UnixSocketType {
     SockSeqpacket,
 }
 
+// State transitions:
+// CLOSED -(connect)-> BUSY -> CONNECTING -> CONNECTED -(shutdown)-> BUSY -> CLOSED
+//       |
+//       |-(listen)-> BUSY -> LISTENING -(shutdown)-> BUSY -> CLOSED
+//       |
+//        -(bind)-> BUSY -> CLOSED
 pub enum UnixSocketStatus {
+    Closed,
+    Busy,
+    Connecting,
     Connected,
-    UnConnected,
+    Listening,
 }
 
 impl UnixSocket {
@@ -81,18 +92,36 @@ impl UnixSocket {
                 }),
                 buf: [0; UNIX_SOCKET_BUFFER_SIZE],
                 peer_fd: AtomicIsize::new(-1),
-                status: UnixSocketStatus::UnConnected,
+                status: UnixSocketStatus::Closed,
             },
         }
     }
 
-    pub fn bind(&self, addr: *const ctypes::sockaddr_un) -> LinuxResult {
+    pub fn set_socket_fd(&mut self, fd: i32) {
+        self.socket_fd = fd;
+    }
+
+    pub fn get_socket_fd(&self) -> i32 {
+        self.socket_fd
+    }
+
+    // TODO: bind to file system
+    pub fn bind(&mut self, addr: *const ctypes::sockaddr_un) -> LinuxResult {
         info!("lhw debug in unixsocket bind ");
-        let mid = unsafe { *addr };
-        let addr: SockaddrUn = mid.into();
-        let mut selfaddr = self.addr.lock();
-        selfaddr.sun_path = addr.sun_path;
-        Ok(())
+        match &self.status {
+            UnixSocketStatus::Closed => {
+                let mid = unsafe { *addr };
+                let addr: SockaddrUn = mid.into();
+                let mut selfaddr = self.addr.lock();
+                selfaddr.sun_path = addr.sun_path;
+                self.status = UnixSocketStatus::Busy;
+                Ok(())
+            }
+            _ => {
+                Err(LinuxError::EINVAL)
+            }
+        }
+        
     }
 
     pub fn send(&self, buf: &[u8]) -> LinuxResult<usize> {
@@ -117,6 +146,7 @@ impl UnixSocket {
         unimplemented!()
     }
 
+    // TODO: check file system
     pub fn connect(&self, addr: *const ctypes::sockaddr_un) -> LinuxResult {
         let mid = unsafe { *addr };
         let addr: SockaddrUn = mid.into();
@@ -130,6 +160,7 @@ impl UnixSocket {
                             Socket::Unix(unixsocket) => {
                                 if unixsocket.lock().addr.lock().sun_path == addr.sun_path {
                                     fd = now_file_fd;
+                                    unixsocket.listen.lock().push(self.get_socket_fd());
                                     break;
                                 } else {
                                     now_file_fd += 1;
@@ -164,8 +195,17 @@ impl UnixSocket {
         unimplemented!()
     }
 
-    pub fn listen(&self) -> LinuxResult {
-        unimplemented!()
+    // TODO: check file system
+    pub fn listen(&mut self) -> LinuxResult {
+        match &self.status {
+            UnixSocketStatus::Busy => {
+                self.status = UnixSocketStatus::Listening;
+                Ok(())
+            }
+            _ => {
+                Ok(())//ignore simultaneous `listen`s.
+            }
+        }
     }
 
     pub fn accept(&self) -> LinuxResult<usize> {
@@ -311,7 +351,7 @@ impl Socket {
         match self {
             Socket::Udp(_) => Err(LinuxError::EOPNOTSUPP),
             Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().accept()?),
-            Socket::Unix(socket) => panic!(),
+            Socket::Unix(unixsocket) => Ok(unixsocket.lock().accept()?),
         }
     }
 
@@ -465,8 +505,10 @@ pub fn sys_socket(domain: c_int, socktype: c_int, protocol: c_int) -> c_int {
                 Socket::Tcp(Mutex::new(tcp_socket)).add_to_fd_table()
             }
             (ctypes::AF_UNIX, ctypes::SOCK_STREAM, 0) => {
-                Socket::Unix(Mutex::new(UnixSocket::new(UnixSocketType::SockStream)))
-                    .add_to_fd_table()
+                let unix_socket = Socket::Unix(Mutex::new(UnixSocket::new(UnixSocketType::SockStream)));
+                let socket_fd = unix_socket.add_to_fd_table();
+                unix_socket.lock().set_socket_fd(socket_fd);
+                unix_socket
             }
             _ => Err(LinuxError::EINVAL),
         }
