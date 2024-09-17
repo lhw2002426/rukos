@@ -1743,6 +1743,7 @@ dependencies = [
  "cfg-if",
  "cty",
  "driver_net",
+ "flatten_objects",
  "lazy_init",
  "log",
  "lwip_rust",

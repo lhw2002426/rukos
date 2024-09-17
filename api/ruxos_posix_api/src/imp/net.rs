@@ -17,10 +17,19 @@ use axerrno::{LinuxError, LinuxResult};
 use axio::PollState;
 use axsync::Mutex;
 use ruxfdtable::{FileLike, RuxStat, RUX_FILE_LIMIT};
-use ruxnet::{TcpSocket, UdpSocket};
+use ruxnet::{TcpSocket, UdpSocket, UnixSocket, SockaddrUn};
 
 use crate::ctypes;
 use crate::utils::char_ptr_to_str;
+
+impl From<ctypes::sockaddr_un> for SockaddrUn {
+    fn from(addr: ctypes::sockaddr_un) -> Self {
+        Self {
+            sun_family: addr.sun_family,
+            sun_path: addr.sun_path,
+        }
+    }
+}
 
 pub enum Socket {
     Udp(Mutex<UdpSocket>),
@@ -28,8 +37,7 @@ pub enum Socket {
     Unix(Mutex<UnixSocket>),
 }
 
-// lhw debug : why musl is 14?
-const SOCK_ADDR_UN_PATH_LEN: usize = 108;
+/*const SOCK_ADDR_UN_PATH_LEN: usize = 108;
 const UNIX_SOCKET_BUFFER_SIZE: usize = 4096;
 
 struct SockaddrUn {
@@ -51,11 +59,12 @@ impl From<ctypes::sockaddr_un> for SockaddrUn {
 pub struct UnixSocket {
     addr: Mutex<SockaddrUn>,
     buf: [u8; UNIX_SOCKET_BUFFER_SIZE],
-    listen: Mutex<Vec<i32>>,
     socket_fd: i32,
-    peer_fd: AtomicIsize,
+    peer_socket: Option<Mutex<Arc<UnixSocket>>>,
     status: UnixSocketStatus,
 }
+
+static UNIX_TABLE: Mutex<Vec<Arc<UnixSocket>>> = Mutex::new(Vec::new());
 
 #[derive(Debug)]
 pub enum UnixSocketType {
@@ -85,14 +94,17 @@ impl UnixSocket {
         info!("lhw debug in unixsocket new {:?}",_type);
         match _type {
             UnixSocketType::SockDgram | UnixSocketType::SockSeqpacket => unimplemented!(),
-            UnixSocketType::SockStream => Self {
-                addr: Mutex::new(SockaddrUn {
-                    sun_family: ctypes::AF_UNIX as _,
-                    sun_path: [0; SOCK_ADDR_UN_PATH_LEN],
-                }),
-                buf: [0; UNIX_SOCKET_BUFFER_SIZE],
-                peer_fd: AtomicIsize::new(-1),
-                status: UnixSocketStatus::Closed,
+            UnixSocketType::SockStream => {
+                    let unixsocket = Self {
+                    addr: Mutex::new(SockaddrUn {
+                        sun_family: ctypes::AF_UNIX as _,
+                        sun_path: [0; SOCK_ADDR_UN_PATH_LEN],
+                    }),
+                    buf: [0; UNIX_SOCKET_BUFFER_SIZE],
+                    peer_fd: AtomicIsize::new(-1),
+                    status: UnixSocketStatus::Closed,
+                };
+                unixsocket
             },
         }
     }
@@ -150,41 +162,15 @@ impl UnixSocket {
     pub fn connect(&self, addr: *const ctypes::sockaddr_un) -> LinuxResult {
         let mid = unsafe { *addr };
         let addr: SockaddrUn = mid.into();
-        let mut fd: i32 = -1;
-        let mut now_file_fd: i32 = 3;
-        while now_file_fd < RUX_FILE_LIMIT.try_into().unwrap() {
-            match Socket::from_fd(now_file_fd) {
-                Ok(socket) => {
-                    if let Ok(socket) = Arc::try_unwrap(socket) {
-                        match socket  {
-                            Socket::Unix(unixsocket) => {
-                                if unixsocket.lock().addr.lock().sun_path == addr.sun_path {
-                                    fd = now_file_fd;
-                                    unixsocket.listen.lock().push(self.get_socket_fd());
-                                    break;
-                                } else {
-                                    now_file_fd += 1;
-                                }
-                            }
-                            _ => {
-                                now_file_fd += 1;
-                            }
-                        }
-                    }
-                }
-                _ => {
-                    now_file_fd += 1;
-                }
-            }
-        }
-        if fd == -1 {
-            Err(LinuxError::ENOENT)
-        }
-        else {
-            self.peer_fd
-            .store(fd as _, core::sync::atomic::Ordering::Relaxed);
-            Ok(())
-        }
+        let remote_socket = UNIX_TABLE.lock().iter().find(|socket| socket.addr.lock().sun_path == addr.sun_path).unwarp();
+        let unix_socket = Socket::Unix(Mutex::new(UnixSocket::new(UnixSocketType::SockStream)));
+        let socket_fd = unix_socket.add_to_fd_table();
+        unix_socket.lock().set_socket_fd(socket_fd);
+        let arc_unixsocket = Arc::new(unix_socket.lock());
+        UNIX_TABLE.lock().add(arc_unixsocket);
+        self.peer_socket = Some(Mutex::new(arc_unixsocket));
+        remote_socket
+        Ok(())
     }
 
     pub fn sendto(&self, buf: &[u8], addr: *const ctypes::sockaddr_un) -> LinuxResult<usize> {
@@ -219,7 +205,7 @@ impl UnixSocket {
     pub fn set_nonblocking(&self, nonblocking: bool) {
         unimplemented!()
     }
-}
+}*/
 
 impl Socket {
     fn add_to_fd_table(self) -> LinuxResult<c_int> {
@@ -508,6 +494,7 @@ pub fn sys_socket(domain: c_int, socktype: c_int, protocol: c_int) -> c_int {
                 let unix_socket = Socket::Unix(Mutex::new(UnixSocket::new(UnixSocketType::SockStream)));
                 let socket_fd = unix_socket.add_to_fd_table();
                 unix_socket.lock().set_socket_fd(socket_fd);
+                UNIX_TABLE.lock().add(Arc::new(unix_socket.lock()));
                 unix_socket
             }
             _ => Err(LinuxError::EINVAL),
