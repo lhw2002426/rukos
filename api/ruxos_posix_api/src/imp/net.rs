@@ -17,18 +17,31 @@ use axerrno::{LinuxError, LinuxResult};
 use axio::PollState;
 use axsync::Mutex;
 use ruxfdtable::{FileLike, RuxStat, RUX_FILE_LIMIT};
-use ruxnet::{TcpSocket, UdpSocket, UnixSocket, SockaddrUn};
+use ruxnet::{TcpSocket, UdpSocket, unix::UnixSocket, unix::SockaddrUn, unix::UnixSocketType};
 
 use crate::ctypes;
 use crate::utils::char_ptr_to_str;
 
-impl From<ctypes::sockaddr_un> for SockaddrUn {
-    fn from(addr: ctypes::sockaddr_un) -> Self {
+/*impl From<*const ctypes::sockaddr_un> for SockaddrUn {
+    fn from(addr: *const ctypes::sockaddr_un) -> Self {
         Self {
             sun_family: addr.sun_family,
             sun_path: addr.sun_path,
         }
     }
+}*/
+fn addrun_convert(addr: *const ctypes::sockaddr_un) -> SockaddrUn {
+    unsafe {
+        SockaddrUn {
+            sun_family: (*addr).sun_family,
+            sun_path: (*addr).sun_path,
+        }
+    }
+}
+
+pub enum Sockaddr {
+    Net(SocketAddr),
+    Unix(SockaddrUn),
 }
 
 pub enum Socket {
@@ -251,11 +264,11 @@ impl Socket {
         }
     }
 
-    fn peer_addr(&self) -> LinuxResult<SocketAddr> {
+    fn peer_addr(&self) -> LinuxResult<Sockaddr> {
         match self {
-            Socket::Udp(udpsocket) => Ok(udpsocket.lock().peer_addr()?),
-            Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().peer_addr()?),
-            Socket::Unix(socket) => Ok(socket.lock().peer_addr()?),
+            Socket::Udp(udpsocket) => Ok(Sockaddr::Net(udpsocket.lock().peer_addr()?)),
+            Socket::Tcp(tcpsocket) => Ok(Sockaddr::Net(tcpsocket.lock().peer_addr()?)),
+            Socket::Unix(unixsocket) => Ok(Sockaddr::Unix(unixsocket.lock().peer_addr()?)),
         }
     }
 
@@ -277,7 +290,7 @@ impl Socket {
                     info!("lhw debug before unix bind addrlen {} {}",addrlen, size_of::<ctypes::sockaddr_un>() as usize);
                     return Err(LinuxError::EINVAL);
                 }
-                Ok(socket.lock().bind(socket_addr as *const ctypes::sockaddr_un)?)
+                Ok(socket.lock().bind(addrun_convert(socket_addr as *const ctypes::sockaddr_un))?)
             },
         }
     }
@@ -293,13 +306,14 @@ impl Socket {
                 Ok(tcpsocket.lock().connect(addr)?)
             },
             Socket::Unix(socket) => {
+                unsafe{info!("lhw debug in connect {} {:?}",addrlen, (*(socket_addr as *const ctypes::sockaddr_un)).sun_path);}
                 if socket_addr.is_null() {
                     return Err(LinuxError::EFAULT);
                 }
-                if addrlen != size_of::<ctypes::sockaddr>() as _ {
+                if addrlen != size_of::<ctypes::sockaddr_un>() as _ {
                     return Err(LinuxError::EINVAL);
                 }
-                Ok(socket.lock().connect(socket_addr as *const ctypes::sockaddr_un)?)
+                Ok(socket.lock().connect(addrun_convert(socket_addr as *const ctypes::sockaddr_un))?)
             },
         }
     }
@@ -333,11 +347,11 @@ impl Socket {
         }
     }
 
-    fn accept(&self) -> LinuxResult<TcpSocket> {
+    fn accept(&self) -> LinuxResult<Socket> {
         match self {
             Socket::Udp(_) => Err(LinuxError::EOPNOTSUPP),
-            Socket::Tcp(tcpsocket) => Ok(tcpsocket.lock().accept()?),
-            Socket::Unix(unixsocket) => Ok(unixsocket.lock().accept()?),
+            Socket::Tcp(tcpsocket) => Ok(Socket::Tcp(Mutex::new(tcpsocket.lock().accept()?))),
+            Socket::Unix(unixsocket) => Ok(Socket::Unix(Mutex::new(unixsocket.lock().accept()?))),
         }
     }
 
@@ -427,6 +441,15 @@ impl From<SocketAddrV4> for ctypes::sockaddr_in {
     }
 }
 
+impl From<SockaddrUn> for ctypes::sockaddr_un {
+    fn from(addr: SockaddrUn) -> ctypes::sockaddr_un {
+        ctypes::sockaddr_un {
+            sun_family: addr.sun_family,
+            sun_path: addr.sun_path,
+        }
+    }
+}
+
 impl From<ctypes::sockaddr_in> for SocketAddrV4 {
     fn from(addr: ctypes::sockaddr_in) -> SocketAddrV4 {
         SocketAddrV4::new(
@@ -434,6 +457,12 @@ impl From<ctypes::sockaddr_in> for SocketAddrV4 {
             u16::from_be(addr.sin_port),
         )
     }
+}
+
+fn un_into_sockaddr(addr: SockaddrUn) -> (ctypes::sockaddr, ctypes::socklen_t) {
+    debug!("    Sockaddr: {:?}", addr);
+    (unsafe { *(&ctypes::sockaddr_un::from(addr) as *const _ as *const ctypes::sockaddr) },
+    size_of::<ctypes::sockaddr>() as _,)
 }
 
 fn into_sockaddr(addr: SocketAddr) -> (ctypes::sockaddr, ctypes::socklen_t) {
@@ -491,11 +520,7 @@ pub fn sys_socket(domain: c_int, socktype: c_int, protocol: c_int) -> c_int {
                 Socket::Tcp(Mutex::new(tcp_socket)).add_to_fd_table()
             }
             (ctypes::AF_UNIX, ctypes::SOCK_STREAM, 0) => {
-                let unix_socket = Socket::Unix(Mutex::new(UnixSocket::new(UnixSocketType::SockStream)));
-                let socket_fd = unix_socket.add_to_fd_table();
-                unix_socket.lock().set_socket_fd(socket_fd);
-                UNIX_TABLE.lock().add(Arc::new(unix_socket.lock()));
-                unix_socket
+                Socket::Unix(Mutex::new(UnixSocket::new(UnixSocketType::SockStream))).add_to_fd_table()
             }
             _ => Err(LinuxError::EINVAL),
         }
@@ -545,7 +570,7 @@ pub fn sys_connect(
     socket_addr: *const ctypes::sockaddr,
     addrlen: ctypes::socklen_t,
 ) -> c_int {
-    debug!(
+    info!(
         "sys_connect <= {} {:#x} {}",
         socket_fd, socket_addr as usize, addrlen
     );
@@ -697,11 +722,39 @@ pub unsafe fn sys_accept(
         let socket = Socket::from_fd(socket_fd)?;
         let new_socket = socket.accept()?;
         let addr = new_socket.peer_addr()?;
-        let new_fd = Socket::add_to_fd_table(Socket::Tcp(Mutex::new(new_socket)))?;
-        unsafe {
-            (*socket_addr, *socket_len) = into_sockaddr(addr);
+        let new_fd = Socket::add_to_fd_table(new_socket)?;
+        match addr {
+            Sockaddr::Net(addr) => unsafe {
+                (*socket_addr, *socket_len) = into_sockaddr(addr);
+            }
+            Sockaddr::Unix(addr) => unsafe {
+                (*socket_addr, *socket_len) = un_into_sockaddr(addr);
+            }
         }
+        
         Ok(new_fd)
+        /*let socket = Socket::from_fd(socket_fd)?;
+        match socket {
+            Socket::Tcp(tcpsocket) => {
+                let new_socket = tcpsocket.lock().accept()?;
+                let addr = new_socket.peer_addr()?;
+                let new_fd = Socket::add_to_fd_table(new_socket)?;
+                unsafe {
+                    (*socket_addr, *socket_len) = into_sockaddr(addr);
+                }
+                Ok(new_fd)
+            },
+            Socket::Unix(unixsocket) => {
+                let new_socket = unixsocket.lock().accept()?;
+                let addr = new_socket.peer_addr()?;
+                let new_fd = Socket::add_to_fd_table(new_socket)?;
+                unsafe {
+                    (*socket_addr, *socket_len) = un_into_sockaddr(addr);
+                }
+                Ok(new_fd)
+            },
+            _ => Err(LinuxError::EOPNOTSUPP)
+        }*/
     })
 }
 
@@ -851,8 +904,14 @@ pub unsafe fn sys_getpeername(
         if unsafe { *addrlen } < size_of::<ctypes::sockaddr>() as u32 {
             return Err(LinuxError::EINVAL);
         }
-        unsafe {
-            (*addr, *addrlen) = into_sockaddr(Socket::from_fd(sock_fd)?.peer_addr()?);
+        let sockaddr = Socket::from_fd(sock_fd)?.peer_addr()?;
+        match sockaddr {
+            Sockaddr::Net(netaddr) => unsafe {
+                (*addr, *addrlen) = into_sockaddr(netaddr);
+            }
+            Sockaddr::Unix(unixaddr) => unsafe {
+                (*addr, *addrlen) = un_into_sockaddr(unixaddr);
+            }
         }
         Ok(0)
     })
@@ -893,7 +952,7 @@ pub unsafe fn sys_sendmsg(
                 Socket::Tcp(tcpsocket) => tcpsocket.lock().send(buf)?,
                 Socket::Unix(unixsocket) => unixsocket.lock().sendto(
                     buf,
-                    msg.msg_name as *const ctypes::sockaddr_un,
+                    addrun_convert(msg.msg_name as *const ctypes::sockaddr_un),
                 )?,
             };
         }
