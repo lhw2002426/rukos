@@ -269,6 +269,11 @@ impl UnixSocket {
                             yield_now();
                         }
                         UnixSocketStatus::Connected => {
+                            {
+                                if UNIX_TABLE.read().get(self.get_sockethandle()).unwrap().lock().buf.is_empty() {
+                                    yield_now();
+                                }
+                            }
                             return Ok(UNIX_TABLE.read().get(self.get_sockethandle()).unwrap().lock().buf.dequeue_slice(buf));
                         },
                         _ => { return Err(LinuxError::ENOTCONN); },
