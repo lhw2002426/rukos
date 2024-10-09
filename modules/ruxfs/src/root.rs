@@ -28,7 +28,7 @@ pub struct MountPoint {
     fs: Arc<dyn VfsOps>,
 }
 
-struct RootDirectory {
+pub struct RootDirectory {
     main_fs: Arc<dyn VfsOps>,
     mounts: Vec<MountPoint>,
 }
@@ -177,6 +177,7 @@ pub(crate) fn init_rootfs(mount_points: Vec<MountPoint>) {
         root_dir.mount(path, vfsops).expect(&message);
     }
 
+    info!("lhw debug in init rootfs");
     ROOT_DIR.init_by(Arc::new(root_dir));
     CURRENT_DIR.init_by(Mutex::new(ROOT_DIR.clone()));
     *CURRENT_DIR_PATH.lock() = "/".into();
@@ -184,8 +185,10 @@ pub(crate) fn init_rootfs(mount_points: Vec<MountPoint>) {
 
 fn parent_node_of(dir: Option<&VfsNodeRef>, path: &str) -> VfsNodeRef {
     if path.starts_with('/') {
+        info!("lhw debug parent is rootdir {}",path);
         ROOT_DIR.clone()
     } else {
+        info!("lhw debug parent is otherdir {}",path);
         dir.cloned().unwrap_or_else(|| CURRENT_DIR.lock().clone())
     }
 }
@@ -199,7 +202,7 @@ pub(crate) fn absolute_path(path: &str) -> AxResult<String> {
     }
 }
 
-pub(crate) fn lookup(dir: Option<&VfsNodeRef>, path: &str) -> AxResult<VfsNodeRef> {
+pub fn lookup(dir: Option<&VfsNodeRef>, path: &str) -> AxResult<VfsNodeRef> {
     if path.is_empty() {
         return ax_err!(NotFound);
     }
@@ -211,13 +214,18 @@ pub(crate) fn lookup(dir: Option<&VfsNodeRef>, path: &str) -> AxResult<VfsNodeRe
     }
 }
 
-pub(crate) fn create_file(dir: Option<&VfsNodeRef>, path: &str) -> AxResult<VfsNodeRef> {
+pub fn create_file(dir: Option<&VfsNodeRef>, path: &str) -> AxResult<VfsNodeRef> {
     if path.is_empty() {
         return ax_err!(NotFound);
     } else if path.ends_with('/') {
         return ax_err!(NotADirectory);
     }
     let parent = parent_node_of(dir, path);
+    let lhw_debug_dir = match dir {
+        Some(_) => 1,
+        None => 0,
+    };
+    info!("lhw debug in ruxfs create_file {} {}",lhw_debug_dir, path);
     parent.create(path, VfsNodeType::File)?;
     parent.lookup(path)
 }

@@ -16,6 +16,8 @@ use crate::{AxRunQueue, AxTaskRef, CurrentTask, RUN_QUEUE};
 type ItemType<Meta> = (AxTaskRef, Meta);
 type QueueType<Meta> = VecDeque<ItemType<Meta>>;
 
+use log::debug;
+
 /// A queue to store sleeping tasks, each with its metadata.
 ///
 /// # Examples

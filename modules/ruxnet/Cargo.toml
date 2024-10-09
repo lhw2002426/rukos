@@ -26,10 +26,12 @@ lazy_static = { version = "1.4", features = ["spin_no_std"] }
 lwip_rust = { path = "../../crates/lwip_rust", optional = true }
 printf-compat = { version = "0.1", default-features = false, optional = true }
 axerrno = { path = "../../crates/axerrno" }
+axfs_vfs = { path = "../../crates/axfs_vfs" }
 ruxhal = { path = "../ruxhal" }
 axsync = { path = "../axsync" }
 axlog = { path = "../axlog" }
 ruxtask = { path = "../ruxtask" }
+ruxfs = { path = "../ruxfs" }
 ruxdriver = { path = "../ruxdriver", features = ["net"] }
 cty = { version = "0.2.2", optional = true }
 axio = { path = "../../crates/axio" }

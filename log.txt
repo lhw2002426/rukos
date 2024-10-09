@@ -1,3 +1,676 @@
 [37mmkdir[0m [90m-p apps/c/unixsocket[0m
     [92;1mBuilding[0m App: unixsocket, Arch: aarch64, Platform: aarch64-qemu-virt, App type: c
-[37mcargo build[0m [90m--target aarch64-unknown-none-softfloat --target-dir /root/rux/rukos/target --release  -p ruxmusl --features "ruxfeat/log-level-info ruxfeat/tls ruxmusl/alloc ruxmusl/paging ruxmusl/net ruxmusl/multitask ruxmusl/fd ruxmusl/musl ruxmusl/fp_simd ruxmusl/fd ruxmusl/sched_rr"[0m
+[37mcargo build[0m [90m--target aarch64-unknown-none-softfloat --target-dir /home/lhw/unix/rukos/target --release  -p ruxmusl --features "ruxfeat/log-level-debug ruxfeat/rtc ruxfeat/virtio-9p ruxfeat/tls ruxmusl/paging ruxmusl/alloc ruxmusl/musl ruxmusl/multitask ruxmusl/fs ruxmusl/pipe ruxmusl/poll ruxmusl/signal ruxmusl/fd ruxmusl/musl ruxmusl/fp_simd ruxmusl/fd ruxmusl/sched_rr"[0m
+[37maarch64-linux-musl-gcc[0m [90m-nostdinc -fno-builtin -ffreestanding -Wall -isystem/home/lhw/unix/rukos/ulib/ruxmusl/install_aarch64_release/include -O3   -c -o apps/c/unixsocket/unixsocket.o apps/c/unixsocket/unixsocket.c[0m
+    [96;1mLinking[0m apps/c/unixsocket/unixsocket_aarch64-qemu-virt.elf
+[37mrust-lld -flavor gnu[0m [90m-nostdlib -static -no-pie --gc-sections -T/home/lhw/unix/rukos/modules/ruxhal/linker_aarch64-qemu-virt.lds ulib/ruxmusl/install_aarch64_release/lib/libc.a target/aarch64-unknown-none-softfloat/release/libruxmusl.a  apps/c/unixsocket/unixsocket.o -o apps/c/unixsocket/unixsocket_aarch64-qemu-virt.elf[0m
+[37mrust-objcopy --binary-architecture=aarch64[0m [90mapps/c/unixsocket/unixsocket_aarch64-qemu-virt.elf --strip-all -O binary apps/c/unixsocket/unixsocket_aarch64-qemu-virt.bin[0m
+    [96;1mRunning[0m on qemu...
+[37mqemu-system-aarch64[0m [90m-m 2G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/c/unixsocket/unixsocket_aarch64-qemu-virt.bin -append ";;" -device virtio-blk-device,drive=disk0 -drive id=disk0,if=none,format=raw,file=disk.img -device virtio-net-device,netdev=net0 -fsdev local,id=myid,path=./apps/c/unixsocket/rootfs,security_model=none -device virtio-9p-device,fsdev=myid,mount_tag=rootfs -netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555,hostfwd=tcp::5556-:5556,hostfwd=udp::5556-:5556,hostfwd=tcp::5557-:5557,hostfwd=udp::5557-:5557,hostfwd=tcp::5558-:5558,hostfwd=udp::5558-:5558,hostfwd=tcp::5559-:5559,hostfwd=udp::5559-:5559, -nographic[0m
+
+8888888b.                     .d88888b.   .d8888b.  
+888   Y88b                   d88P" "Y88b d88P  Y88b 
+888    888                   888     888 Y88b.      
+888   d88P 888  888 888  888 888     888  "Y888b.   
+8888888P"  888  888 `Y8bd8P' 888     888     "Y88b. 
+888 T88b   888  888   X88K   888     888       "888 
+888  T88b  Y88b 888 .d8""8b. Y88b. .d88P Y88b  d88P 
+888   T88b  "Y88888 888  888  "Y88888P"   "Y8888P" 
+
+arch = aarch64
+platform = aarch64-qemu-virt
+target = aarch64-unknown-none-softfloat
+smp = 1
+build_mode = release
+log_level = debug
+
+[37m[1728182595.001585 0 ruxruntime:175] [32mLogging is enabled.[m
+[m[37m[1728182595.002573 0 ruxruntime:176] [32mPrimary CPU 0 started, dtb = 0x48000000.[m
+[m[37m[1728182595.002840 0 ruxruntime:178] [32mFound physcial memory regions:[m
+[m[37m[1728182595.003096 0 ruxruntime:180] [32m  [PA:0x40080000, PA:0x400e9000) .text (READ | EXECUTE | RESERVED)[m
+[m[37m[1728182595.003423 0 ruxruntime:180] [32m  [PA:0x400e9000, PA:0x400f9000) .rodata (READ | RESERVED)[m
+[m[37m[1728182595.003544 0 ruxruntime:180] [32m  [PA:0x400f9000, PA:0x400fd000) .data .tdata .tbss .percpu (READ | WRITE | RESERVED)[m
+[m[37m[1728182595.003662 0 ruxruntime:180] [32m  [PA:0x400fd000, PA:0x4017d000) boot stack (READ | WRITE | RESERVED)[m
+[m[37m[1728182595.003749 0 ruxruntime:180] [32m  [PA:0x4017d000, PA:0x401a7000) .bss (READ | WRITE | RESERVED)[m
+[m[37m[1728182595.003858 0 ruxruntime:180] [32m  [PA:0x401a7000, PA:0xc0000000) free memory (READ | WRITE | EXECUTE | FREE)[m
+[m[37m[1728182595.004046 0 ruxruntime:180] [32m  [PA:0x9000000, PA:0x9001000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1728182595.004154 0 ruxruntime:180] [32m  [PA:0x8000000, PA:0x8020000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1728182595.004232 0 ruxruntime:180] [32m  [PA:0xa000000, PA:0xa004000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1728182595.004311 0 ruxruntime:180] [32m  [PA:0x10000000, PA:0x3eff0000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1728182595.004392 0 ruxruntime:180] [32m  [PA:0x4010000000, PA:0x4020000000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1728182595.004473 0 ruxruntime:180] [32m  [PA:0x9010000, PA:0x9011000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[1728182595.004608 0 ruxruntime:371] [32mInitialize global memory allocator...[m
+[m[37m[1728182595.004755 0 ruxruntime:372] [32m  use slab allocator.[m
+[m[37m[1728182595.005344 0 axalloc:221] [36minitialize global allocator at: [0xffff0000401a7000, 0xffff0000c0000000)[m
+[m[37m[1728182595.007033 0 ruxruntime:194] [32mInitialize kernel page table...[m
+[m[37m[1728182595.008958 0 ruxruntime:201] [32mInitialize platform devices...[m
+[m[37m[1728182595.009117 0 ruxhal::platform::aarch64_common::gic:60] [32mInitialize GICv2...[m
+[m[37m[1728182595.009493 0 ruxhal::platform::aarch64_common::pl031:23] [32mInitialize pl031 rtc...[m
+[m[37m[1728182595.009649 0 ruxhal::platform::aarch64_common::pl031:25] [36m1728182595[m
+[m[37m[1728182595.009970 0 ruxtask::api:79] [32mInitialize scheduling...[m
+[m[37m[1728182595.010688 0 ruxtask::task:267] [36mnew task: Task(1, "idle")[m
+[m[37m[1728182595.011097 0 ruxtask::task:467] [36mtaskStack::layout = Layout { size: 4096, align: 8 (1 << 3) }[m
+[m[37m[1728182595.012163 0 axalloc:127] [36mexpand heap memory: [0xffff0000401b9000, 0xffff0000401c9000)[m
+[m[37m[1728182595.012345 0 axalloc:127] [36mexpand heap memory: [0xffff0000401c9000, 0xffff0000401e9000)[m
+[m[37m[1728182595.012426 0 axalloc:127] [36mexpand heap memory: [0xffff0000401e9000, 0xffff000040229000)[m
+[m[37m[1728182595.012864 0 axalloc:127] [36mexpand heap memory: [0xffff000040229000, 0xffff0000402a9000)[m
+[m[37m[1728182595.013770 0 ruxtask::task:267] [36mnew task: Task(3, "gc")[m
+[m[37m[1728182595.013886 0 ruxtask::task:467] [36mtaskStack::layout = Layout { size: 524288, align: 8 (1 << 3) }[m
+[m[37m[1728182595.014210 0 axalloc:127] [36mexpand heap memory: [0xffff0000402a9000, 0xffff0000404a9000)[m
+[m[37m[1728182595.015141 0 ruxtask::api:87] [32m  use Round-robin scheduler.[m
+[m[37m[1728182595.015450 0 ruxdriver:168] [32mInitialize device drivers...[m
+[m[37m[1728182595.015589 0 ruxdriver:169] [32m  device model: static[m
+[m[37m[1728182595.015876 0 virtio_drivers::device::v9p:30] [32mdevice features: VIRTIO_9P_F_MOUNT_TAG[m
+[m[37m[1728182595.016442 0 ruxdriver::bus::mmio:20] [32mregistered a new _9P device at [PA:0xa003a00, PA:0xa003c00): "virtio-9p"[m
+[m[37m[1728182595.017043 0 ruxdriver:184] [36mnumber of block devices: 0[m
+[m[37m[1728182595.017222 0 ruxdriver:200] [36mnumber of 9p devices: 1[m
+[m[37m[1728182595.017494 0 ruxdriver:203] [36m  9p device 0: "virtio-9p"[m
+[m[37m[1728182595.017907 0 rux9p:51] [32mInitialize virtio 9pfs...[m
+[m[37m[1728182595.018148 0 rux9p:54] [32m  use 9pfs device 0: "virtio-9p"[m
+[m[37m[1728182595.018367 0 rux9p::drv:45] [32m9p dev init success[m
+[m[37m[1728182595.019824 0 rux9p::fs:49] [32m9pfs server's protocol: 9P2000.L[m
+[m[37m[1728182595.021616 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: cpuinfo[m
+[m[37m[1728182595.023013 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: meminfo[m
+[m[37m[1728182595.023668 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: sys[m
+[m[37m[1728182595.023808 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: sys/net[m
+[m[37m[1728182595.023965 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: net[m
+[m[37m[1728182595.024054 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: sys/net/core[m
+[m[37m[1728182595.024119 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: net/core[m
+[m[37m[1728182595.024180 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: core[m
+[m[37m[1728182595.024258 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: sys/net/core/somaxconn[m
+[m[37m[1728182595.024407 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: net/core/somaxconn[m
+[m[37m[1728182595.024481 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: core/somaxconn[m
+[m[37m[1728182595.024545 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: somaxconn[m
+[m[37m[1728182595.024681 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: sys[m
+[m[37m[1728182595.024821 0 axfs_ramfs::dir:55] [31mAlreadyExists sys[m
+[m[37m[1728182595.024910 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: sys/vm[m
+[m[37m[1728182595.024978 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: vm[m
+[m[37m[1728182595.025051 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: sys/vm/overcommit_memory[m
+[m[37m[1728182595.025161 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: vm/overcommit_memory[m
+[m[37m[1728182595.025262 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: overcommit_memory[m
+[m[37m[1728182595.025422 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: self[m
+[m[37m[1728182595.025530 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: self/stat[m
+[m[37m[1728182595.025587 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: stat[m
+[m[37m[1728182595.025801 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: kernel[m
+[m[37m[1728182595.025864 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: kernel/mm[m
+[m[37m[1728182595.025905 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: mm[m
+[m[37m[1728182595.025944 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: kernel/mm/transparent_hugepage[m
+[m[37m[1728182595.025995 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: mm/transparent_hugepage[m
+[m[37m[1728182595.026051 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: transparent_hugepage[m
+[m[37m[1728182595.026114 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: kernel/mm/transparent_hugepage/enabled[m
+[m[37m[1728182595.026186 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: mm/transparent_hugepage/enabled[m
+[m[37m[1728182595.026248 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: transparent_hugepage/enabled[m
+[m[37m[1728182595.026314 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: enabled[m
+[m[37m[1728182595.026431 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: devices[m
+[m[37m[1728182595.026491 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: devices/system[m
+[m[37m[1728182595.026534 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: system[m
+[m[37m[1728182595.026574 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: devices/system/clocksource[m
+[m[37m[1728182595.026621 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: system/clocksource[m
+[m[37m[1728182595.026682 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: clocksource[m
+[m[37m[1728182595.026739 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: devices/system/clocksource/clocksource0[m
+[m[37m[1728182595.026809 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: system/clocksource/clocksource0[m
+[m[37m[1728182595.026875 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: clocksource/clocksource0[m
+[m[37m[1728182595.026939 0 axfs_ramfs::dir:130] [36mcreate Dir at ramfs: clocksource0[m
+[m[37m[1728182595.026999 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: devices/system/clocksource/clocksource0/current_clocksource[m
+[m[37m[1728182595.027086 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: system/clocksource/clocksource0/current_clocksource[m
+[m[37m[1728182595.027170 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: clocksource/clocksource0/current_clocksource[m
+[m[37m[1728182595.027250 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: clocksource0/current_clocksource[m
+[m[37m[1728182595.027324 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: current_clocksource[m
+[m[37m[1728182595.027636 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: passwd[m
+[m[37m[1728182595.027741 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: group[m
+[m[37m[1728182595.027828 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: localtime[m
+[m[37m[1728182595.027901 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: hosts[m
+[m[37m[1728182595.028072 0 axfs_ramfs::dir:130] [36mcreate File at ramfs: resolv.conf[m
+[m[37m[1728182595.028375 0 ruxfs::root:176] [32mmounting /dev[m
+[m[37m[1728182595.028583 0 rux9p::fs:446] [36mlookup 9pfs: /dev[m
+[m[37m[1728182595.030575 0 rux9p::fs:446] [36mlookup 9pfs: /dev[m
+[m[37m[1728182595.031767 0 ruxfs::root:176] [32mmounting /tmp[m
+[m[37m[1728182595.031956 0 rux9p::fs:446] [36mlookup 9pfs: /tmp[m
+[m[37m[1728182595.032722 0 rux9p::fs:446] [36mlookup 9pfs: /tmp[m
+[m[37m[1728182595.033632 0 ruxfs::root:176] [32mmounting /proc[m
+[m[37m[1728182595.033679 0 rux9p::fs:446] [36mlookup 9pfs: /proc[m
+[m[37m[1728182595.034466 0 rux9p::fs:446] [36mlookup 9pfs: /proc[m
+[m[37m[1728182595.035255 0 ruxfs::root:176] [32mmounting /sys[m
+[m[37m[1728182595.035308 0 rux9p::fs:446] [36mlookup 9pfs: /sys[m
+[m[37m[1728182595.036181 0 rux9p::fs:446] [36mlookup 9pfs: /sys[m
+[m[37m[1728182595.036802 0 ruxfs::root:176] [32mmounting /etc[m
+[m[37m[1728182595.036848 0 rux9p::fs:446] [36mlookup 9pfs: /etc[m
+[m[37m[1728182595.037255 0 rux9p::fs:446] [36mlookup 9pfs: /etc[m
+[m[37m[1728182595.038098 0 ruxfs::root:180] [32mlhw debug in init rootfs[m
+[m[37m[1728182595.038478 0 ruxruntime:265] [32mInitialize interrupt handlers...[m
+[m[37m[1728182595.039035 0 ruxruntime:275] [32mPrimary CPU 0 init OK.[m
+[m[37m[1728182595.040361 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 96[m
+[m[37m[1728182595.040620 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: SET_TID_ADDRESS[m
+[m[37m[1728182595.040785 0:2 ruxos_posix_api::imp::pthread:362] [36mset_tid_address <= addr: 0xffff00004017d868[m
+[m[37m[1728182595.040943 0:2 ruxos_posix_api::imp::pthread:361] [36msys_set_tid_address => Ok(2)[m
+[m[37m[1728182595.041548 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[1728182595.041634 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: RT_SIGPROCMASK[m
+[m[37m[1728182595.041774 0:2 ruxos_posix_api::imp::rt_sig:60] [36msys_rt_sigprocmask <= flag: 1, sigsetsize: 8[m
+[m[37m[1728182595.041928 0:2 ruxos_posix_api::imp::rt_sig:65] [36msys_rt_sigprocmask => Ok(0)[m
+[m[37m[1728182595.042152 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 222[m
+[m[37m[1728182595.042210 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MMAP[m
+[m[37m[1728182595.042368 0:2 ruxos_posix_api::imp::mmap::api:42] [36msys_mmap <= start: 0x0, len: 0x23000, prot:0x0, flags:0x22, fd: -1[m
+[m[37m[1728182595.042911 0:2 ruxos_posix_api::imp::mmap::api:46] [36msys_mmap => Ok(0xffff800000000000)[m
+[m[37m[1728182595.043237 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 226[m
+[m[37m[1728182595.043302 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MPROTECT[m
+[m[37m[1728182595.043437 0:2 ruxos_posix_api::imp::mmap::api:194] [36msys_mprotect <= addr: 0xffff800000002000, len: 0x21000, prot: 3[m
+[m[37m[1728182595.044183 0:2 ruxos_posix_api::imp::mmap::api:199] [36msys_mprotect => Ok(0)[m
+[m[37m[1728182595.044609 0:2 axalloc:127] [36mexpand heap memory: [0xffff0000404ab000, 0xffff0000408ab000)[m
+[m[37m[1728182595.046703 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[1728182595.046799 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: RT_SIGPROCMASK[m
+[m[37m[1728182595.046856 0:2 ruxos_posix_api::imp::rt_sig:60] [36msys_rt_sigprocmask <= flag: 0, sigsetsize: 8[m
+[m[37m[1728182595.046948 0:2 ruxos_posix_api::imp::rt_sig:65] [36msys_rt_sigprocmask => Ok(0)[m
+[m[37m[1728182595.047107 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 220[m
+[m[37m[1728182595.047181 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: CLONE[m
+[m[37m[1728182595.047320 0:2 ruxos_posix_api::imp::pthread:260] [36msys_clone <= flags: 7d0f00, stack: 0xffff800000022ef0, ctid: ffff00004017d868[m
+[m[37m[1728182595.047647 0:2 ruxtask::task:244] [36mnew task: Task(4, "")[m
+[m[37m[1728182595.047759 0:2 ruxtask::task:467] [36mtaskStack::layout = Layout { size: 524288, align: 8 (1 << 3) }[m
+[m[37m[1728182595.048280 0:2 ruxtask::run_queue:53] [36mtask spawn: Task(4, "")[m
+[m[37m[1728182595.048468 0:2 ruxos_posix_api::imp::pthread:265] [36msys_clone => Ok(4)[m
+[m[37m[1728182595.048821 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[1728182595.049262 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: RT_SIGPROCMASK[m
+[m[37m[1728182595.049323 0:2 ruxos_posix_api::imp::rt_sig:60] [36msys_rt_sigprocmask <= flag: 2, sigsetsize: 8[m
+[m[37m[1728182595.049421 0:2 ruxos_posix_api::imp::rt_sig:65] [36msys_rt_sigprocmask => Ok(0)[m
+[m[37m[1728182595.049542 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 222[m
+[m[37m[1728182595.049614 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MMAP[m
+[m[37m[1728182595.049666 0:2 ruxos_posix_api::imp::mmap::api:42] [36msys_mmap <= start: 0x0, len: 0x23000, prot:0x0, flags:0x22, fd: -1[m
+[m[37m[1728182595.049794 0:2 ruxos_posix_api::imp::mmap::api:46] [36msys_mmap => Ok(0xffff800000024000)[m
+[m[37m[1728182595.049874 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 226[m
+[m[37m[1728182595.049931 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: MPROTECT[m
+[m[37m[1728182595.049984 0:2 ruxos_posix_api::imp::mmap::api:194] [36msys_mprotect <= addr: 0xffff800000026000, len: 0x21000, prot: 3[m
+[m[37m[1728182595.050171 0:2 ruxos_posix_api::imp::mmap::api:199] [36msys_mprotect => Ok(0)[m
+[m[37m[1728182595.050366 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[1728182595.050431 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: RT_SIGPROCMASK[m
+[m[37m[1728182595.050492 0:2 ruxos_posix_api::imp::rt_sig:60] [36msys_rt_sigprocmask <= flag: 0, sigsetsize: 8[m
+[m[37m[1728182595.050558 0:2 ruxos_posix_api::imp::rt_sig:65] [36msys_rt_sigprocmask => Ok(0)[m
+[m[37m[1728182595.050641 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 220[m
+[m[37m[1728182595.050716 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: CLONE[m
+[m[37m[1728182595.050772 0:2 ruxos_posix_api::imp::pthread:260] [36msys_clone <= flags: 7d0f00, stack: 0xffff800000046ef0, ctid: ffff00004017d868[m
+[m[37m[1728182595.050870 0:2 ruxtask::task:244] [36mnew task: Task(5, "")[m
+[m[37m[1728182595.050921 0:2 ruxtask::task:467] [36mtaskStack::layout = Layout { size: 524288, align: 8 (1 << 3) }[m
+[m[37m[1728182595.051041 0:2 ruxtask::run_queue:53] [36mtask spawn: Task(5, "")[m
+[m[37m[1728182595.051097 0:2 ruxos_posix_api::imp::pthread:265] [36msys_clone => Ok(5)[m
+[m[37m[1728182595.051147 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[1728182595.051205 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: RT_SIGPROCMASK[m
+[m[37m[1728182595.051264 0:2 ruxos_posix_api::imp::rt_sig:60] [36msys_rt_sigprocmask <= flag: 2, sigsetsize: 8[m
+[m[37m[1728182595.051333 0:2 ruxos_posix_api::imp::rt_sig:65] [36msys_rt_sigprocmask => Ok(0)[m
+[m[37m[1728182595.051499 0:2 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 98[m
+[m[37m[1728182595.051564 0:2 ruxmusl::aarch64:8] [36msyscall <= syscall_name: FUTEX[m
+[m[37m[1728182595.051754 0:2 ruxos_posix_api::imp::pthread::futex:114] [36msys_futex <= addr: 0xffff800000022f48, op: FUTEX_WAIT, val: 2, to: None[m
+[m[37m[1728182595.052019 0:2 ruxfutex::api:105] [36mfutex_wait addr: 0xffff800000022f48, val: 2, timeout: None[m
+[m[37m[1728182595.052310 0:2 ruxtask::run_queue:128] [36mtask block: Task(2, "main")[m
+[m[37m[1728182595.053368 0:3 ruxtask::run_queue:128] [36mtask block: Task(3, "gc")[m
+[m[37m[1728182595.053617 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[1728182595.053678 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: RT_SIGPROCMASK[m
+[m[37m[1728182595.053735 0:4 ruxos_posix_api::imp::rt_sig:60] [36msys_rt_sigprocmask <= flag: 2, sigsetsize: 8[m
+[m[37m[1728182595.053806 0:4 ruxos_posix_api::imp::rt_sig:65] [36msys_rt_sigprocmask => Ok(0)[m
+[m[37m[1728182595.053915 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 198[m
+[m[37m[1728182595.053998 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[1728182595.054143 0:4 ruxos_posix_api::imp:47] [36msys_invalid <= id: 999[m
+[m[37m[1728182595.054287 0:4 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[1728182595.054766 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 35[m
+[m[37m[1728182595.054841 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: UNLINKAT[m
+[m[37m[1728182595.055151 0:4 ruxos_posix_api::imp::fs:524] [36msys_unlinkat <= fd: -100, pathname: Ok("/v9pfs/tmp/unix_socket"), flags: 0[m
+[m[37m[1728182595.055658 0:4 ruxos_posix_api::imp::fs:516] [36msys_unlink <= path: "/v9pfs/tmp/unix_socket"[m
+[m[37m[1728182595.055933 0:4 ruxfs::root:188] [32mlhw debug parent is rootdir /v9pfs/tmp/unix_socket[m
+[m[37m[1728182595.056125 0:4 ruxfs::root:95] [36mlookup at root: /v9pfs/tmp/unix_socket[m
+[m[37m[1728182595.056378 0:4 rux9p::fs:446] [36mlookup 9pfs: v9pfs/tmp/unix_socket[m
+[m[37m[1728182595.057157 0:4 rux9p::drv:70] [36m9pfs request(110) occurs a error, errcode: 2[m
+[m[37m[1728182595.057383 0:4 rux9p::fs:284] [36mtry_get failed "unix_socket"==unix_socket+None[m
+[m[37m[1728182595.058030 0:4 ruxos_posix_api::imp::fs:514] [32msys_unlink => Err(ENOENT)[m
+[m[37m[1728182595.058281 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 200[m
+[m[37m[1728182595.058354 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[1728182595.058410 0:4 ruxos_posix_api::imp:47] [36msys_invalid <= id: 999[m
+[m[37m[1728182595.058460 0:4 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[1728182595.058715 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[1728182595.058876 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[1728182595.059017 0:4 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 2, iocnt: 2[m
+[m[37m[1728182595.059359 0:4 ruxos_posix_api::imp::io:46] [36msys_write <= 2 0xffff00004017d850 0[m
+[m[37m[1728182595.060435 0:4 ruxos_posix_api::imp::io:47] [36msys_write => Ok(0)[m
+[m[37m[1728182595.060663 0:4 ruxos_posix_api::imp::io:46] [36msys_write <= 2 0xffff0000400e9040 11[m
+[mBind failed[37m[1728182595.060830 0:4 ruxos_posix_api::imp::io:47] [36msys_write => Ok(11)[m
+[m[37m[1728182595.060961 0:4 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(11)[m
+[m[37m[1728182595.061166 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[1728182595.061242 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[1728182595.061382 0:4 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 2, iocnt: 2[m
+[m[37m[1728182595.061447 0:4 ruxos_posix_api::imp::io:46] [36msys_write <= 2 0xffff00004017d850 0[m
+[m[37m[1728182595.061514 0:4 ruxos_posix_api::imp::io:47] [36msys_write => Ok(0)[m
+[m[37m[1728182595.061570 0:4 ruxos_posix_api::imp::io:46] [36msys_write <= 2 0xffff00004087fe5f 1[m
+[m:[37m[1728182595.061639 0:4 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[1728182595.061691 0:4 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(1)[m
+[m[37m[1728182595.061801 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[1728182595.061866 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[1728182595.061922 0:4 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 2, iocnt: 2[m
+[m[37m[1728182595.061979 0:4 ruxos_posix_api::imp::io:46] [36msys_write <= 2 0xffff00004017d850 0[m
+[m[37m[1728182595.062036 0:4 ruxos_posix_api::imp::io:47] [36msys_write => Ok(0)[m
+[m[37m[1728182595.062080 0:4 ruxos_posix_api::imp::io:46] [36msys_write <= 2 0xffff00004087fe5f 1[m
+[m [37m[1728182595.062130 0:4 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[1728182595.062171 0:4 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(1)[m
+[m[37m[1728182595.062254 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[1728182595.062321 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[1728182595.062371 0:4 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 2, iocnt: 2[m
+[m[37m[1728182595.062431 0:4 ruxos_posix_api::imp::io:46] [36msys_write <= 2 0xffff00004017d850 0[m
+[m[37m[1728182595.062496 0:4 ruxos_posix_api::imp::io:47] [36msys_write => Ok(0)[m
+[m[37m[1728182595.062544 0:4 ruxos_posix_api::imp::io:46] [36msys_write <= 2 0xffff0000400e9c6a 24[m
+[mFunction not implemented[37m[1728182595.062619 0:4 ruxos_posix_api::imp::io:47] [36msys_write => Ok(24)[m
+[m[37m[1728182595.062669 0:4 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(24)[m
+[m[37m[1728182595.062731 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 66[m
+[m[37m[1728182595.062788 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: WRITEV[m
+[m[37m[1728182595.062839 0:4 ruxos_posix_api::imp::io:68] [36msys_writev <= fd: 2, iocnt: 2[m
+[m[37m[1728182595.062893 0:4 ruxos_posix_api::imp::io:46] [36msys_write <= 2 0xffff00004017d850 0[m
+[m[37m[1728182595.062955 0:4 ruxos_posix_api::imp::io:47] [36msys_write => Ok(0)[m
+[m[37m[1728182595.063006 0:4 ruxos_posix_api::imp::io:46] [36msys_write <= 2 0xffff00004087fe5f 1[m
+[m
+[37m[1728182595.063089 0:4 ruxos_posix_api::imp::io:47] [36msys_write => Ok(1)[m
+[m[37m[1728182595.063140 0:4 ruxos_posix_api::imp::io:69] [36msys_writev => Ok(1)[m
+[m[37m[1728182595.063251 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 57[m
+[m[37m[1728182595.063316 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: CLOSE[m
+[m[37m[1728182595.063449 0:4 ruxos_posix_api::imp::fd_ops:162] [36msys_close <= -1[m
+[m[37m[1728182595.063642 0:4 ruxos_posix_api::imp::fd_ops:166] [32msys_close => Err(EBADF)[m
+[m[37m[1728182595.063988 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 94[m
+[m[37m[1728182595.064050 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[1728182595.064110 0:4 ruxos_posix_api::imp:47] [36msys_invalid <= id: 999[m
+[m[37m[1728182595.064163 0:4 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[1728182595.064227 0:4 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 93[m
+[m[37m[1728182595.064286 0:4 ruxmusl::aarch64:8] [36msyscall <= syscall_name: EXIT[m
+[m[37m[1728182595.064500 0:4 ruxos_posix_api::imp::pthread:210] [36msys_pthread_exit <= 0x1[m
+[m[37m[1728182595.064739 0:4 ruxfutex::api:180] [36mfutex_wake_bitset addr: 0xffff00004017d868, max_count: 1, bitset: 0xffffffff[m
+[m[37m[1728182595.065410 0:4 ruxos_posix_api::imp::pthread:155] [36mExit_musl, tid: 4[m
+[m[37m[1728182595.065703 0:4 ruxtask::run_queue:107] [36mtask exit: Task(4, ""), exit_code=0[m
+[m[37m[1728182595.066050 0:4 ruxtask::run_queue:142] [36mtask unblock: Task(3, "gc")[m
+[m[37m[1728182595.066208 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 135[m
+[m[37m[1728182595.066272 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: RT_SIGPROCMASK[m
+[m[37m[1728182595.066331 0:5 ruxos_posix_api::imp::rt_sig:60] [36msys_rt_sigprocmask <= flag: 2, sigsetsize: 8[m
+[m[37m[1728182595.066388 0:5 ruxos_posix_api::imp::rt_sig:65] [36msys_rt_sigprocmask => Ok(0)[m
+[m[37m[1728182595.066478 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 101[m
+[m[37m[1728182595.066537 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: NANO_SLEEP[m
+[m[37m[1728182595.066702 0:5 ruxos_posix_api::imp::time:89] [36msys_nanosleep <= 1.000000000s[m
+[m[37m[1728182595.066997 0:5 ruxtask::run_queue:156] [36mtask sleep: Task(5, ""), deadline=1728182596.066887664s[m
+[m[37m[1728182595.067802 0:3 ruxtask::task:455] [36mtask drop: Task(4, "")[m
+[m[37m[1728182595.068050 0:3 ruxtask::run_queue:128] [36mtask block: Task(3, "gc")[m
+[m[37m[1728182595.068269 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.068905 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.078944 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.088928 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.098978 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.108979 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.118972 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.128984 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.138963 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.149014 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.159044 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.168944 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.178981 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.188909 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.198924 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.208988 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.218959 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.229021 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.238971 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.248980 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.259012 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.269002 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.278945 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.288997 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.299034 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.308974 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.319027 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.329025 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.339065 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.348968 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.358963 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.368956 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.379006 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.389044 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.398922 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.409009 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.419068 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.428910 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.438992 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.448968 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.458946 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.468966 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.479081 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.489056 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.498952 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.509017 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.519027 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.528961 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.539194 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.548955 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.558976 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.569037 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.578981 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.588915 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.598996 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.608906 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.618966 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.628947 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.638974 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.648912 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.658907 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.668950 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.679006 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.688964 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.698899 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.709077 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.718913 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.729015 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.738999 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.749065 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.758986 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.768947 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.778999 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.788978 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.798926 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.808928 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.819044 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.828936 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.839043 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.849013 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182595.859100 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.869170 0:1 ruxtask::run_queue:142] [36mtask unblock: Task(5, "")[m
+[m[37m[1728182596.869396 0:1 ruxtask::run_queue:93] [36mcurrent task is to be preempted: Task(1, "idle"), allow=true[m
+[m[37m[1728182596.869695 0:5 ruxos_posix_api::imp::time:81] [36msys_nanosleep => Ok(0)[m
+[m[37m[1728182596.869918 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 198[m
+[m[37m[1728182596.870002 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: INVALID[m
+[m[37m[1728182596.870076 0:5 ruxos_posix_api::imp:47] [36msys_invalid <= id: 999[m
+[m[37m[1728182596.870150 0:5 ruxos_posix_api::imp:48] [32msys_invalid => Err(ENOSYS)[m
+[m[37m[1728182596.870271 0:5 ruxhal::arch::aarch64::trap:62] [36mHandle supervisor call 98[m
+[m[37m[1728182596.870346 0:5 ruxmusl::aarch64:8] [36msyscall <= syscall_name: FUTEX[m
+[m[37m[1728182596.870410 0:5 ruxos_posix_api::imp::pthread::futex:114] [36msys_futex <= addr: 0xffff0000400fb17c, op: FUTEX_WAIT, val: 1073741828, to: None[m
+[m[37m[1728182596.870604 0:5 ruxfutex::api:105] [36mfutex_wait addr: 0xffff0000400fb17c, val: 1073741828, timeout: None[m
+[m[37m[1728182596.870687 0:5 ruxtask::run_queue:128] [36mtask block: Task(5, "")[m
+[m[37m[1728182596.870791 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.878911 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.888963 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.898957 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.909052 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.918939 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.928911 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.938998 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.949074 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.959050 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.968976 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.978962 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.988949 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.998976 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.008973 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.019021 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.028942 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.038954 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.049038 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.058931 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.069020 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.078950 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.088976 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.098973 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.109000 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.118921 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.129007 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.138972 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.149018 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.159024 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.168914 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.178962 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.188914 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.198993 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.209029 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.219021 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.228985 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.238945 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.248977 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.258996 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.268963 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.278900 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.288918 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.298958 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.309032 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.318960 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.329023 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.338962 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.348995 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.358919 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.368927 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.378946 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.388978 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.399043 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.408962 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.418899 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.428961 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.438924 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.448937 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.458969 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.468923 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.478980 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.488964 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.498990 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.508958 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.519034 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.528917 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.538936 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.548949 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.558888 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.568935 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.578906 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.588964 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.598949 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.608901 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.618906 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.629009 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.638958 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.649042 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.658987 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.669049 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.679005 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.688960 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.698968 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.708939 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.718924 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.728914 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.738921 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.748986 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.758907 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.768892 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.779011 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.788958 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.799083 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.809020 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.818909 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.828958 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.838957 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.849035 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182596.858948 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.868938 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.878999 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.889000 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.899009 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.908924 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.918968 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.928931 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.938940 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.948931 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.958943 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.968944 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.978894 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.988971 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.998957 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.008953 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.018938 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.028970 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.039004 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.049012 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.058929 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.068924 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.079033 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.088970 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.099022 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.108922 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.118989 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.128894 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.138909 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.148934 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.158928 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.168940 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.179001 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.189010 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.199008 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.208939 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.218964 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.229030 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.238918 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.249034 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.258945 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.269014 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.278942 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.280132 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.288941 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.299034 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.308964 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.318921 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.328890 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.338967 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.348946 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.358920 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.368902 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.378975 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.388961 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.399065 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.408985 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.418947 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.429020 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.438946 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.448959 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.458931 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.468928 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.479001 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.488946 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.499018 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.508902 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.518901 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.528992 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.534165 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.538925 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.548964 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.558978 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.568944 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.578959 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.588916 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.598956 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.608990 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.618983 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.628976 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.638922 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.649047 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.658933 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.668913 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.679013 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.688941 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.699018 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.708966 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.718943 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.728996 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.738958 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.749031 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.758972 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.768923 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.778934 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.788955 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.798959 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.808987 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.819023 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.828961 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.838947 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.848942 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182597.858910 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.868959 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.879010 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.888949 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.898961 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.908939 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.919011 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.928940 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.938955 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.949022 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.959079 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.968945 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.978949 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.988924 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.998987 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.008957 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.018987 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.028902 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.038935 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.049018 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.058945 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.068983 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.078969 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.088944 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.099067 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.108943 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.118970 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.128908 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.138908 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.148937 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.158924 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.168930 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.178916 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.188967 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.198970 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.208945 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.218897 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.229027 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.238987 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.248967 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.258943 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.268938 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.278971 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.288994 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.298964 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.308933 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.319026 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.328948 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.338948 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.349002 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.358902 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.369030 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.379020 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.388940 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.398997 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.408917 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.418899 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.428906 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.438979 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.449014 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.458980 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.468932 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.478997 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.488908 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.498983 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.508917 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.518910 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.528883 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.538905 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.548925 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.558927 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.568910 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.578902 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.588932 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.599033 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.608938 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.618936 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.628925 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.638971 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.648997 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.658931 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.668922 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.678991 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.688965 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.699029 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.708915 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.719001 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.728962 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.738919 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[m[37m[1728182598.748985 0:1 ruxtask::api:216] [36midle task[1]: waiting for IRQs...[m
+[mQEMU: Terminated
+

@@ -20,6 +20,8 @@ use spinlock::{BaseSpinLock, Combine, SpinNoIrq};
 use crate::task::{CurrentTask, TaskState};
 use crate::{AxTaskRef, Scheduler, TaskInner, WaitQueue};
 
+use log::{debug, trace};
+
 pub(crate) const BACKOFF_LIMIT: u32 = 8;
 pub(crate) type DefaultStrategy = Combine<ExpRand<BACKOFF_LIMIT>, spinlock::NoOp>;
 pub(crate) type RQLock<T> = BaseSpinLock<NoPreemptIrqSave, T, DefaultStrategy>;

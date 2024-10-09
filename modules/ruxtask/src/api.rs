@@ -13,6 +13,8 @@ use alloc::{string::String, sync::Arc};
 
 pub(crate) use crate::run_queue::{AxRunQueue, RUN_QUEUE};
 
+use log::{info, debug};
+
 #[doc(cfg(feature = "multitask"))]
 pub use crate::task::{CurrentTask, TaskId, TaskInner};
 #[cfg(not(feature = "musl"))]

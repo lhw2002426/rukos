@@ -25,6 +25,8 @@ use ruxhal::arch::TaskContext;
 use crate::tsd::{DestrFunction, KEYS, TSD};
 use crate::{AxRunQueue, AxTask, AxTaskRef, WaitQueue};
 
+use log::debug;
+
 /// A unique identifier for a thread.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct TaskId(u64);

@@ -31,6 +31,8 @@ use flatten_objects::FlattenObjects;
 use hashbrown::HashMap;
 
 use ruxtask::yield_now;
+use axfs_vfs::{VfsError, VfsNodeAttr, VfsNodeOps, VfsNodeRef, VfsNodeType, VfsOps, VfsResult};
+use ruxfs::root::{lookup, create_file};
 
 const SOCK_ADDR_UN_PATH_LEN: usize = 108;
 const UNIX_SOCKET_BUFFER_SIZE: usize = 4096;
@@ -98,6 +100,38 @@ pub struct UnixSocket {
     unixsocket_type: UnixSocketType,
 }
 
+fn get_inode(addr: SockaddrUn) -> AxResult<usize>{
+    let slice = unsafe {
+        core::slice::from_raw_parts(addr.sun_path.as_ptr(), addr.sun_path.len())
+    };
+
+    let socket_path = unsafe {
+        core::ffi::CStr::from_ptr(slice.as_ptr())
+            .to_str()
+            .expect("Invalid UTF-8 string")
+    };
+    info!("lhw debug in get inode {}",socket_path);
+    let vfsnode = match lookup(None, socket_path) {
+        Ok(node) => {
+            node
+        }
+        Err(_) => {
+            // lhw TODO socket type
+            create_file(None, socket_path)?
+        }
+    };
+    info!("lhw debug in get inode vfs ");
+    let metadata = vfsnode.get_attr()?;
+    let ty = metadata.file_type() as u8;
+    let perm = metadata.perm().bits() as u32;
+    let st_mode = ((ty as u32) << 12) | perm;
+    // Inode of files, for musl dynamic linker.
+    // WARN: there will be collision for files with the same size.
+    // TODO: implement real inode.
+    let st_ino = metadata.size() + st_mode as u64;
+    Ok(st_ino as usize)
+}
+
 struct HashMapWarpper<'a> {
     inner:HashMap<usize, Arc<Mutex<UnixSocketInner<'a>>>>,
     index_allcator: usize,
@@ -117,9 +151,19 @@ impl<'a> HashMapWarpper<'a> {
     }
     
     pub fn add(&mut self, value: Arc<Mutex<UnixSocketInner<'a>>>) -> Option<usize> {
-        self.index_allcator += 1;
-        self.inner.insert(self.index_allcator, value);
+        while self.inner.contains_key(&self.index_allcator)
+        {
+            self.index_allcator += 1;
+        }
+        self.inner.insert(self.index_allcator ,value);
         Some(self.index_allcator)
+    }
+
+    pub fn replace_handle(&mut self, old: usize, new: usize) -> Option<usize> {
+        if let Some(value) = self.inner.remove(&old) {
+            self.inner.insert(new, value);
+        }
+        Some(new)
     }
 
     pub fn get(&self, id: usize) -> Option<&Arc<Mutex<UnixSocketInner<'a>>>> {
@@ -221,6 +265,11 @@ impl UnixSocket {
         let now_state = self.get_state();
         match now_state {
             UnixSocketStatus::Closed => {
+                {
+                    let inode_addr = get_inode(addr)?;
+                    UNIX_TABLE.write().replace_handle(self.get_sockethandle(), inode_addr);
+                    self.set_sockethandle(inode_addr);
+                }
                 let mut binding = UNIX_TABLE.write();
                 let mut socket_inner = binding.get_mut(self.get_sockethandle()).unwrap().lock();
                 socket_inner.addr.lock().set_addr(&addr);
@@ -307,7 +356,7 @@ impl UnixSocket {
 
     // TODO: check file system
     pub fn connect(&mut self, addr: SockaddrUn) -> LinuxResult {
-        info!("lhw debug in unix connect {:?}",addr.sun_path);
+        info!("lhw debug in unix connect to {:?}",addr.sun_path);
         //a new block is needed to free rwlock
         {
             let binding = UNIX_TABLE.write();

@@ -195,6 +195,7 @@ impl CommonNode {
         };
         match ty {
             VfsNodeType::File => {
+                info!("lhw debug in v9p create file");
                 handle_result!(
                     self.inner.write().twalk(*self.fid, fid, 0, &[]),
                     "9pfs twalk failed! error code: {}"
