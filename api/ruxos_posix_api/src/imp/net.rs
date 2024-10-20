@@ -50,176 +50,6 @@ pub enum Socket {
     Unix(Mutex<UnixSocket>),
 }
 
-/*const SOCK_ADDR_UN_PATH_LEN: usize = 108;
-const UNIX_SOCKET_BUFFER_SIZE: usize = 4096;
-
-struct SockaddrUn {
-    sun_family: ctypes::sa_family_t, /* AF_UNIX */
-    /// if socket is unnamed, use `sun_path[0]` to save fd
-    sun_path: [c_char; SOCK_ADDR_UN_PATH_LEN], /* Pathname */
-}
-
-impl From<ctypes::sockaddr_un> for SockaddrUn {
-    fn from(addr: ctypes::sockaddr_un) -> Self {
-        Self {
-            sun_family: addr.sun_family,
-            sun_path: addr.sun_path,
-        }
-    }
-}
-
-/// unix domain socket.
-pub struct UnixSocket {
-    addr: Mutex<SockaddrUn>,
-    buf: [u8; UNIX_SOCKET_BUFFER_SIZE],
-    socket_fd: i32,
-    peer_socket: Option<Mutex<Arc<UnixSocket>>>,
-    status: UnixSocketStatus,
-}
-
-static UNIX_TABLE: Mutex<Vec<Arc<UnixSocket>>> = Mutex::new(Vec::new());
-
-#[derive(Debug)]
-pub enum UnixSocketType {
-    SockStream,
-    SockDgram,
-    SockSeqpacket,
-}
-
-// State transitions:
-// CLOSED -(connect)-> BUSY -> CONNECTING -> CONNECTED -(shutdown)-> BUSY -> CLOSED
-//       |
-//       |-(listen)-> BUSY -> LISTENING -(shutdown)-> BUSY -> CLOSED
-//       |
-//        -(bind)-> BUSY -> CLOSED
-pub enum UnixSocketStatus {
-    Closed,
-    Busy,
-    Connecting,
-    Connected,
-    Listening,
-}
-
-impl UnixSocket {
-    /// create a new socket
-    /// only support sock_stream
-    pub fn new(_type: UnixSocketType) -> Self {
-        info!("lhw debug in unixsocket new {:?}",_type);
-        match _type {
-            UnixSocketType::SockDgram | UnixSocketType::SockSeqpacket => unimplemented!(),
-            UnixSocketType::SockStream => {
-                    let unixsocket = Self {
-                    addr: Mutex::new(SockaddrUn {
-                        sun_family: ctypes::AF_UNIX as _,
-                        sun_path: [0; SOCK_ADDR_UN_PATH_LEN],
-                    }),
-                    buf: [0; UNIX_SOCKET_BUFFER_SIZE],
-                    peer_fd: AtomicIsize::new(-1),
-                    status: UnixSocketStatus::Closed,
-                };
-                unixsocket
-            },
-        }
-    }
-
-    pub fn set_socket_fd(&mut self, fd: i32) {
-        self.socket_fd = fd;
-    }
-
-    pub fn get_socket_fd(&self) -> i32 {
-        self.socket_fd
-    }
-
-    // TODO: bind to file system
-    pub fn bind(&mut self, addr: *const ctypes::sockaddr_un) -> LinuxResult {
-        info!("lhw debug in unixsocket bind ");
-        match &self.status {
-            UnixSocketStatus::Closed => {
-                let mid = unsafe { *addr };
-                let addr: SockaddrUn = mid.into();
-                let mut selfaddr = self.addr.lock();
-                selfaddr.sun_path = addr.sun_path;
-                self.status = UnixSocketStatus::Busy;
-                Ok(())
-            }
-            _ => {
-                Err(LinuxError::EINVAL)
-            }
-        }
-        
-    }
-
-    pub fn send(&self, buf: &[u8]) -> LinuxResult<usize> {
-        unimplemented!()
-    }
-    pub fn recv(&self, buf: &mut [u8], flags: i32) -> LinuxResult<usize> {
-        unimplemented!()
-    }
-    pub fn poll(&self) -> LinuxResult<PollState> {
-        unimplemented!()
-    }
-
-    pub fn local_addr(&self) -> LinuxResult<SocketAddr> {
-        unimplemented!()
-    }
-
-    fn fd(&self) -> c_int {
-        self.addr.lock().sun_path[0] as _
-    }
-
-    pub fn peer_addr(&self) -> LinuxResult<SocketAddr> {
-        unimplemented!()
-    }
-
-    // TODO: check file system
-    pub fn connect(&self, addr: *const ctypes::sockaddr_un) -> LinuxResult {
-        let mid = unsafe { *addr };
-        let addr: SockaddrUn = mid.into();
-        let remote_socket = UNIX_TABLE.lock().iter().find(|socket| socket.addr.lock().sun_path == addr.sun_path).unwarp();
-        let unix_socket = Socket::Unix(Mutex::new(UnixSocket::new(UnixSocketType::SockStream)));
-        let socket_fd = unix_socket.add_to_fd_table();
-        unix_socket.lock().set_socket_fd(socket_fd);
-        let arc_unixsocket = Arc::new(unix_socket.lock());
-        UNIX_TABLE.lock().add(arc_unixsocket);
-        self.peer_socket = Some(Mutex::new(arc_unixsocket));
-        remote_socket
-        Ok(())
-    }
-
-    pub fn sendto(&self, buf: &[u8], addr: *const ctypes::sockaddr_un) -> LinuxResult<usize> {
-        unimplemented!()
-    }
-
-    pub fn recvfrom(&self, buf: &mut [u8]) -> LinuxResult<(usize, Option<SocketAddr>)> {
-        unimplemented!()
-    }
-
-    // TODO: check file system
-    pub fn listen(&mut self) -> LinuxResult {
-        match &self.status {
-            UnixSocketStatus::Busy => {
-                self.status = UnixSocketStatus::Listening;
-                Ok(())
-            }
-            _ => {
-                Ok(())//ignore simultaneous `listen`s.
-            }
-        }
-    }
-
-    pub fn accept(&self) -> LinuxResult<usize> {
-        unimplemented!()
-    }
-
-    pub fn shutdown(&self) -> LinuxResult {
-        unimplemented!()
-    }
-
-    pub fn set_nonblocking(&self, nonblocking: bool) {
-        unimplemented!()
-    }
-}*/
-
 impl Socket {
     fn add_to_fd_table(self) -> LinuxResult<c_int> {
         super::fd_ops::add_file_like(Arc::new(self))
@@ -287,7 +117,6 @@ impl Socket {
                     return Err(LinuxError::EFAULT);
                 }
                 if addrlen != size_of::<ctypes::sockaddr_un>() as _ {
-                    info!("lhw debug before unix bind addrlen {} {}",addrlen, size_of::<ctypes::sockaddr_un>() as usize);
                     return Err(LinuxError::EINVAL);
                 }
                 Ok(socket.lock().bind(addrun_convert(socket_addr as *const ctypes::sockaddr_un))?)
@@ -306,7 +135,6 @@ impl Socket {
                 Ok(tcpsocket.lock().connect(addr)?)
             },
             Socket::Unix(socket) => {
-                unsafe{info!("lhw debug in connect {} {:?}",addrlen, (*(socket_addr as *const ctypes::sockaddr_un)).sun_path);}
                 if socket_addr.is_null() {
                     return Err(LinuxError::EFAULT);
                 }

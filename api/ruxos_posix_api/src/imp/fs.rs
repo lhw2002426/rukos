@@ -65,10 +65,7 @@ impl FileLike for File {
         let perm = metadata.perm().bits() as u32;
         let st_mode = ((ty as u32) << 12) | perm;
 
-        // Inode of files, for musl dynamic linker.
-        // WARN: there will be collision for files with the same size.
-        // TODO: implement real inode.
-        let st_ino = metadata.size() + st_mode as u64;
+        let st_ino = metadata.ino();
 
         let res = RuxStat::from(ctypes::stat {
             st_ino,

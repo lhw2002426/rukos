@@ -110,7 +110,6 @@ fn get_inode(addr: SockaddrUn) -> AxResult<usize>{
             .to_str()
             .expect("Invalid UTF-8 string")
     };
-    info!("lhw debug in get inode {}",socket_path);
     let vfsnode = match lookup(None, socket_path) {
         Ok(node) => {
             node
@@ -120,15 +119,8 @@ fn get_inode(addr: SockaddrUn) -> AxResult<usize>{
             create_file(None, socket_path)?
         }
     };
-    info!("lhw debug in get inode vfs ");
     let metadata = vfsnode.get_attr()?;
-    let ty = metadata.file_type() as u8;
-    let perm = metadata.perm().bits() as u32;
-    let st_mode = ((ty as u32) << 12) | perm;
-    // Inode of files, for musl dynamic linker.
-    // WARN: there will be collision for files with the same size.
-    // TODO: implement real inode.
-    let st_ino = metadata.size() + st_mode as u64;
+    let st_ino = metadata.ino();
     Ok(st_ino as usize)
 }
 
@@ -208,7 +200,6 @@ impl UnixSocket {
     /// create a new socket
     /// only support sock_stream
     pub fn new(_type: UnixSocketType) -> Self {
-        info!("lhw debug in unixsocket new {:?}",_type);
         match _type {
             UnixSocketType::SockDgram | UnixSocketType::SockSeqpacket => unimplemented!(),
             UnixSocketType::SockStream => {
@@ -217,7 +208,6 @@ impl UnixSocket {
                     unixsocket_type: _type,
                 };
                 let handle = UNIX_TABLE.write().add(Arc::new(Mutex::new(UnixSocketInner::new()))).unwrap();
-                info!("lhw debug in unix new newhandle {}", handle);
                 unixsocket.set_sockethandle(handle);
                 unixsocket
             },
@@ -261,7 +251,6 @@ impl UnixSocket {
 
     // TODO: bind to file system
     pub fn bind(&mut self, addr: SockaddrUn) -> LinuxResult {
-        info!("lhw debug in unixsocket bind ");
         let now_state = self.get_state();
         match now_state {
             UnixSocketStatus::Closed => {
@@ -284,7 +273,6 @@ impl UnixSocket {
     }
 
     pub fn send(&self, buf: &[u8]) -> LinuxResult<usize> {
-        info!("lhw debug in unix send {}",self.get_sockethandle());
         match self.unixsocket_type {
             UnixSocketType::SockDgram | UnixSocketType::SockSeqpacket => Err(LinuxError::ENOTCONN),
             UnixSocketType::SockStream => {
@@ -295,9 +283,7 @@ impl UnixSocket {
                             yield_now();
                         }
                         UnixSocketStatus::Connected => {
-                            info!("lhw debug in unix send {}",self.get_sockethandle());
                             let peer_handle = UNIX_TABLE.read().get(self.get_sockethandle()).unwrap().lock().get_peersocket().unwrap();
-                            info!("lhw debug in unix send {}",peer_handle);
                             return Ok(UNIX_TABLE.write().get_mut(peer_handle).unwrap().lock().buf.enqueue_slice(buf));
                         },
                         _ => { return Err(LinuxError::ENOTCONN); },
@@ -307,7 +293,6 @@ impl UnixSocket {
         }
     }
     pub fn recv(&self, buf: &mut [u8], flags: i32) -> LinuxResult<usize> {
-        info!("lhw debug in unix recv {}",self.get_sockethandle());
         match self.unixsocket_type {
             UnixSocketType::SockDgram | UnixSocketType::SockSeqpacket => Err(LinuxError::ENOTCONN),
             UnixSocketType::SockStream => {
@@ -356,12 +341,10 @@ impl UnixSocket {
 
     // TODO: check file system
     pub fn connect(&mut self, addr: SockaddrUn) -> LinuxResult {
-        info!("lhw debug in unix connect to {:?}",addr.sun_path);
         //a new block is needed to free rwlock
         {
             let binding = UNIX_TABLE.write();
             let (remote_sockethandle, remote_socket) = binding.find(|socket| {
-                info!("lhw debug in unix connect {:?}", socket.lock().addr.lock().sun_path);
                 socket.lock().addr.lock().sun_path == addr.sun_path
             }).unwrap();
             //let mut remote_socket = UNIX_TABLE.read().get_mut(remote_sockethandle).unwrap();
@@ -370,13 +353,10 @@ impl UnixSocket {
                 &bytes[..]
             };*/
             let data = &self.get_sockethandle().to_ne_bytes();
-            info!("lhw debug in unix connect self handle {} remote handle {}, data {:?}",&self.get_sockethandle(), remote_sockethandle, data);
             let res = remote_socket.lock().buf.enqueue_slice(data);
-            info!("lhw debug connect enqueue res {:?}", res);
         }
         let mut binding = UNIX_TABLE.write();
         let mut socket_inner = binding.get_mut(self.get_sockethandle()).unwrap().lock();
-        info!("lhw debug unix conenct get inner");
         socket_inner.set_state(UnixSocketStatus::Connecting);
         Ok(())
     }
@@ -414,7 +394,6 @@ impl UnixSocket {
                     let data: &mut [u8] = &mut [0u8; core::mem::size_of::<usize>()];
                     let res = self.dequeue_buf(data);
                     let test_state = self.get_state();
-                    //info!("lhw debug in accept test state {:?}", test_state);
                     match res {
                         Ok(len) => {
                             let mut array = [0u8; core::mem::size_of::<usize>()];
@@ -423,9 +402,7 @@ impl UnixSocket {
                             let unix_socket = UnixSocket::new(UnixSocketType::SockStream);
                             {
                                 let mut binding = UNIX_TABLE.write();
-                                info!("lhw debug in unix accept remote handle {} {:?}", remote_handle, res);
                                 let remote_socket =  binding.get_mut(remote_handle).unwrap();
-                                info!("lhw debug in unix accept set peer for {} to {}",remote_handle, unix_socket.get_sockethandle());
                                 remote_socket.lock().set_peersocket(unix_socket.get_sockethandle());
                                 remote_socket.lock().set_state(UnixSocketStatus::Connected);
                             }
@@ -436,7 +413,6 @@ impl UnixSocket {
                             return Ok(unix_socket);
                         },
                         Err(AxError::WouldBlock) => {
-                            //info!("lhw debug accept yield");
                             yield_now();
                         }
                         Err(e) => {

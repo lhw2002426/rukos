@@ -177,7 +177,6 @@ pub(crate) fn init_rootfs(mount_points: Vec<MountPoint>) {
         root_dir.mount(path, vfsops).expect(&message);
     }
 
-    info!("lhw debug in init rootfs");
     ROOT_DIR.init_by(Arc::new(root_dir));
     CURRENT_DIR.init_by(Mutex::new(ROOT_DIR.clone()));
     *CURRENT_DIR_PATH.lock() = "/".into();
@@ -185,10 +184,8 @@ pub(crate) fn init_rootfs(mount_points: Vec<MountPoint>) {
 
 fn parent_node_of(dir: Option<&VfsNodeRef>, path: &str) -> VfsNodeRef {
     if path.starts_with('/') {
-        info!("lhw debug parent is rootdir {}",path);
         ROOT_DIR.clone()
     } else {
-        info!("lhw debug parent is otherdir {}",path);
         dir.cloned().unwrap_or_else(|| CURRENT_DIR.lock().clone())
     }
 }
@@ -225,7 +222,6 @@ pub fn create_file(dir: Option<&VfsNodeRef>, path: &str) -> AxResult<VfsNodeRef>
         Some(_) => 1,
         None => 0,
     };
-    info!("lhw debug in ruxfs create_file {} {}",lhw_debug_dir, path);
     parent.create(path, VfsNodeType::File)?;
     parent.lookup(path)
 }

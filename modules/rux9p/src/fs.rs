@@ -109,6 +109,7 @@ pub struct CommonNode {
     inner: Arc<RwLock<Drv9pOps>>,
     fid: Arc<u32>,
     protocol: Arc<String>,
+    attr: RwLock<Option<VfsNodeAttr>>,
 }
 
 impl CommonNode {
@@ -169,6 +170,7 @@ impl CommonNode {
             fid: Arc::new(fid),
             protocol,
             parent: RwLock::new(parent.unwrap_or_else(|| Weak::<Self>::new())),
+            attr: RwLock::new(None),
         })
     }
 
@@ -195,7 +197,6 @@ impl CommonNode {
         };
         match ty {
             VfsNodeType::File => {
-                info!("lhw debug in v9p create file");
                 handle_result!(
                     self.inner.write().twalk(*self.fid, fid, 0, &[]),
                     "9pfs twalk failed! error code: {}"
@@ -402,13 +403,21 @@ impl VfsNodeOps for CommonNode {
             debug!("get_attr {:?}", resp);
             match resp {
                 Ok(stat) if stat.get_ftype() == 0o4 => {
-                    let mut attr = VfsNodeAttr::new_dir(stat.get_size(), stat.get_blk_num());
+                    let mut vfsattr = self.attr.write();
+                    if vfsattr.is_none() {
+                        vfsattr.replace(VfsNodeAttr::new_dir(stat.get_size(), stat.get_blk_num(), Some(stat.get_qid().path())));
+                    }
+                    let mut attr = vfsattr.unwrap();
                     let mode = stat.get_perm() as u16 & 0o777_u16;
                     attr.set_perm(VfsNodePerm::from_bits(mode).unwrap());
                     Ok(attr)
                 }
                 Ok(stat) if stat.get_ftype() == 0o10 => {
-                    let mut attr = VfsNodeAttr::new_file(stat.get_size(), stat.get_blk_num());
+                    let mut vfsattr = self.attr.write();
+                    if vfsattr.is_none() {
+                        vfsattr.replace(VfsNodeAttr::new_file(stat.get_size(), stat.get_blk_num(), Some(stat.get_qid().path())));
+                    }
+                    let mut attr = vfsattr.unwrap();
                     let mode = stat.get_perm() as u16 & 0o777_u16;
                     attr.set_perm(VfsNodePerm::from_bits(mode).unwrap());
                     Ok(attr)
@@ -419,13 +428,21 @@ impl VfsNodeOps for CommonNode {
             let resp = self.inner.write().tstat(*self.fid);
             match resp {
                 Ok(stat) if stat.get_ftype() == 0o4 => {
-                    let mut attr = VfsNodeAttr::new_dir(stat.get_length(), stat.get_blk_num());
+                    let mut vfsattr = self.attr.write();
+                    if vfsattr.is_none() {
+                        vfsattr.replace(VfsNodeAttr::new_dir(stat.get_length(), stat.get_blk_num(), Some(stat.get_qid().path())));
+                    }
+                    let mut attr = vfsattr.unwrap();
                     let mode = stat.get_perm() as u16 & 0o777_u16;
                     attr.set_perm(VfsNodePerm::from_bits(mode).unwrap());
                     Ok(attr)
                 }
                 Ok(stat) if stat.get_ftype() == 0o10 => {
-                    let mut attr = VfsNodeAttr::new_file(stat.get_length(), stat.get_blk_num());
+                    let mut vfsattr = self.attr.write();
+                    if vfsattr.is_none() {
+                        vfsattr.replace(VfsNodeAttr::new_file(stat.get_length(), stat.get_blk_num(), Some(stat.get_qid().path())));
+                    }
+                    let mut attr = vfsattr.unwrap();
                     let mode = stat.get_perm() as u16 & 0o777_u16;
                     attr.set_perm(VfsNodePerm::from_bits(mode).unwrap());
                     Ok(attr)
