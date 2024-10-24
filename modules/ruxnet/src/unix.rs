@@ -14,6 +14,7 @@ use core::sync::atomic::AtomicIsize;
 use core::ffi::{c_char, c_int, c_void};
 use core::mem::size_of;
 use core::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4};
+use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 use axerrno::{LinuxError, LinuxResult, ax_err, ax_err_type, AxError, AxResult};
 use axio::{PollState, Result};
@@ -92,12 +93,49 @@ impl<'a> UnixSocketInner<'a> {
         self.status = state
     }
 
+    pub fn can_accept(&mut self) -> bool {
+        match self.status {
+            UnixSocketStatus::Listening => self.buf.is_empty(),
+            _ => false
+        }
+    }
+
+    pub fn may_recv(&mut self) -> bool {
+        match self.status {
+            UnixSocketStatus::Connected => true,
+            //State::FinWait1 | State::FinWait2 => true,
+            _ if !self.buf.is_empty() => true,
+            _ => false,
+        }
+    }
+
+    pub fn can_recv(&mut self) -> bool {
+        if !self.may_recv() {
+            return false;
+        }
+
+        !self.buf.is_empty()
+    }
+
+    pub fn may_send(&mut self) -> bool {
+        match self.status {
+            UnixSocketStatus::Connected => true,
+            //State::CloseWait => true,
+            _ => false,
+        }
+    }
+
+    pub fn can_send(&mut self) -> bool {
+        self.may_send()
+    }
+
 }
 
 /// unix domain socket.
 pub struct UnixSocket {
     sockethandle: Option<usize>,
     unixsocket_type: UnixSocketType,
+    nonblock: AtomicBool,
 }
 
 fn get_inode(addr: SockaddrUn) -> AxResult<usize>{
@@ -126,13 +164,13 @@ fn get_inode(addr: SockaddrUn) -> AxResult<usize>{
 
 struct HashMapWarpper<'a> {
     inner:HashMap<usize, Arc<Mutex<UnixSocketInner<'a>>>>,
-    index_allcator: usize,
+    index_allcator: Mutex<usize>,
 }
 impl<'a> HashMapWarpper<'a> {
     pub fn new() -> Self {
         Self {
             inner: HashMap::new(),
-            index_allcator:0,
+            index_allcator:Mutex::new(0),
         }
     }
     pub fn find<F>(&self, predicate: F) -> Option<(&usize, &Arc<Mutex<UnixSocketInner<'a>>>)>
@@ -143,12 +181,14 @@ impl<'a> HashMapWarpper<'a> {
     }
     
     pub fn add(&mut self, value: Arc<Mutex<UnixSocketInner<'a>>>) -> Option<usize> {
-        while self.inner.contains_key(&self.index_allcator)
+        let mut index_allcator = self.index_allcator.get_mut();
+        error!("lhw debug in heap add {}", index_allcator);
+        while self.inner.contains_key(index_allcator)
         {
-            self.index_allcator += 1;
+            *index_allcator += 1;
         }
-        self.inner.insert(self.index_allcator ,value);
-        Some(self.index_allcator)
+        self.inner.insert(*index_allcator ,value);
+        Some(*index_allcator)
     }
 
     pub fn replace_handle(&mut self, old: usize, new: usize) -> Option<usize> {
@@ -187,7 +227,7 @@ pub enum UnixSocketType {
 //       |-(listen)-> BUSY -> LISTENING -(shutdown)-> BUSY -> CLOSED
 //       |
 //        -(bind)-> BUSY -> CLOSED
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum UnixSocketStatus {
     Closed,
     Busy,
@@ -206,6 +246,7 @@ impl UnixSocket {
                 let mut unixsocket = UnixSocket {
                     sockethandle: None,
                     unixsocket_type: _type,
+                    nonblock: AtomicBool::new(false),
                 };
                 let handle = UNIX_TABLE.write().add(Arc::new(Mutex::new(UnixSocketInner::new()))).unwrap();
                 unixsocket.set_sockethandle(handle);
@@ -273,6 +314,7 @@ impl UnixSocket {
     }
 
     pub fn send(&self, buf: &[u8]) -> LinuxResult<usize> {
+        error!("lhw debug in unix send {:?}",self.sockethandle);
         match self.unixsocket_type {
             UnixSocketType::SockDgram | UnixSocketType::SockSeqpacket => Err(LinuxError::ENOTCONN),
             UnixSocketType::SockStream => {
@@ -280,10 +322,15 @@ impl UnixSocket {
                     let now_state = self.get_state();
                     match now_state {
                         UnixSocketStatus::Connecting => {
-                            yield_now();
+                            if self.is_nonblocking() {
+                                return Err(LinuxError::EINPROGRESS)
+                            } else {
+                                yield_now();
+                            }
                         }
                         UnixSocketStatus::Connected => {
                             let peer_handle = UNIX_TABLE.read().get(self.get_sockethandle()).unwrap().lock().get_peersocket().unwrap();
+                            error!("lhw debug in unix send {}",peer_handle);
                             return Ok(UNIX_TABLE.write().get_mut(peer_handle).unwrap().lock().buf.enqueue_slice(buf));
                         },
                         _ => { return Err(LinuxError::ENOTCONN); },
@@ -293,6 +340,7 @@ impl UnixSocket {
         }
     }
     pub fn recv(&self, buf: &mut [u8], flags: i32) -> LinuxResult<usize> {
+        error!("lhw debug in unix recv {:?}",self.sockethandle);
         match self.unixsocket_type {
             UnixSocketType::SockDgram | UnixSocketType::SockSeqpacket => Err(LinuxError::ENOTCONN),
             UnixSocketType::SockStream => {
@@ -300,12 +348,20 @@ impl UnixSocket {
                     let now_state = self.get_state();
                     match now_state {
                         UnixSocketStatus::Connecting => {
-                            yield_now();
+                            if self.is_nonblocking() {
+                                return Err(LinuxError::EINPROGRESS)
+                            } else {
+                                yield_now();
+                            }
                         }
                         UnixSocketStatus::Connected => {
                             {
                                 if UNIX_TABLE.read().get(self.get_sockethandle()).unwrap().lock().buf.is_empty() {
-                                    yield_now();
+                                    if self.is_nonblocking() {
+                                        return Err(LinuxError::EINPROGRESS)
+                                    } else {
+                                        yield_now();
+                                    }
                                 }
                             }
                             return Ok(UNIX_TABLE.read().get(self.get_sockethandle()).unwrap().lock().buf.dequeue_slice(buf));
@@ -316,8 +372,52 @@ impl UnixSocket {
             }
         }
     }
+
+    fn poll_connect(&self) -> LinuxResult<PollState> {
+        let writable =
+        {
+            let mut binding = UNIX_TABLE.write();
+            let mut socket_inner = binding.get_mut(self.get_sockethandle()).unwrap().lock();
+            if !socket_inner.get_peersocket().is_none() {
+                socket_inner.set_state(UnixSocketStatus::Connected);
+                true
+            }
+            else {
+                false
+            }
+        };
+        Ok(PollState {
+            readable: false,
+            writable,
+        })
+    }
+
     pub fn poll(&self) -> LinuxResult<PollState> {
-        unimplemented!()
+        error!("lhw debug in unix poll {:?}",self.sockethandle);
+        let now_state = self.get_state();
+        match now_state {
+            UnixSocketStatus::Connecting => self.poll_connect(),
+            UnixSocketStatus::Connected => {
+                let mut binding = UNIX_TABLE.write();
+                let mut socket_inner = binding.get_mut(self.get_sockethandle()).unwrap().lock();
+                Ok(PollState {
+                    readable: !socket_inner.may_recv() || socket_inner.can_recv(),
+                    writable: !socket_inner.may_send() || socket_inner.can_send(),
+                })
+            },
+            UnixSocketStatus::Listening => {
+                let mut binding = UNIX_TABLE.write();
+                let mut socket_inner = binding.get_mut(self.get_sockethandle()).unwrap().lock();
+                Ok(PollState {
+                    readable: socket_inner.can_accept(),
+                    writable: false,
+                })
+            },
+            _ => Ok(PollState {
+                readable: false,
+                writable: false,
+            }),
+        }
     }
 
     pub fn local_addr(&self) -> LinuxResult<SocketAddr> {
@@ -340,25 +440,44 @@ impl UnixSocket {
     }
 
     // TODO: check file system
+    // TODO: poll connect
     pub fn connect(&mut self, addr: SockaddrUn) -> LinuxResult {
+        error!("lhw debug in unix connect");
         //a new block is needed to free rwlock
         {
             let binding = UNIX_TABLE.write();
             let (remote_sockethandle, remote_socket) = binding.find(|socket| {
                 socket.lock().addr.lock().sun_path == addr.sun_path
             }).unwrap();
-            //let mut remote_socket = UNIX_TABLE.read().get_mut(remote_sockethandle).unwrap();
-            /*let data = unsafe {
-                let bytes = core::mem::transmute::<&usize, &[u8; core::mem::size_of::<usize>()]>(&self.get_sockethandle().into());
-                &bytes[..]
-            };*/
             let data = &self.get_sockethandle().to_ne_bytes();
             let res = remote_socket.lock().buf.enqueue_slice(data);
         }
-        let mut binding = UNIX_TABLE.write();
-        let mut socket_inner = binding.get_mut(self.get_sockethandle()).unwrap().lock();
-        socket_inner.set_state(UnixSocketStatus::Connecting);
-        Ok(())
+        {
+            let mut binding = UNIX_TABLE.write();
+            let mut socket_inner = binding.get_mut(self.get_sockethandle()).unwrap().lock();
+            socket_inner.set_state(UnixSocketStatus::Connecting);
+        }
+        
+        //return Ok(());
+        loop {
+            let PollState { writable, .. } = self.poll_connect()?;
+            if !writable {
+                // When set to non_blocking, directly return inporgress
+                if self.is_nonblocking() {
+                    return Err(LinuxError::EINPROGRESS);
+                }
+                yield_now();
+            } else if self.get_state() == UnixSocketStatus::Connected {
+                error!("lhw debug in unix connect ok");
+                return Ok(());
+            } else {
+                // When set to non_blocking, directly return inporgress
+                if self.is_nonblocking() {
+                    return Err(LinuxError::EINPROGRESS);
+                }
+                warn!("socket connect() failed")
+            }
+        }
     }
 
     pub fn sendto(&self, buf: &[u8], addr:SockaddrUn) -> LinuxResult<usize> {
@@ -404,15 +523,17 @@ impl UnixSocket {
                                 let mut binding = UNIX_TABLE.write();
                                 let remote_socket =  binding.get_mut(remote_handle).unwrap();
                                 remote_socket.lock().set_peersocket(unix_socket.get_sockethandle());
-                                remote_socket.lock().set_state(UnixSocketStatus::Connected);
+                                //remote_socket.lock().set_state(UnixSocketStatus::Connected);
                             }
                             let mut binding = UNIX_TABLE.write();
                             let mut socket_inner = binding.get_mut(unix_socket.get_sockethandle()).unwrap().lock();
                             socket_inner.set_peersocket(remote_handle);
+                            error!("lhw debug in unix accept really {:?} {} {}",self.sockethandle, remote_handle, unix_socket.get_sockethandle());
                             socket_inner.set_state(UnixSocketStatus::Connected);
                             return Ok(unix_socket);
                         },
                         Err(AxError::WouldBlock) => {
+                            //if self.is_nonblocking()
                             yield_now();
                         }
                         Err(e) => {
@@ -425,12 +546,19 @@ impl UnixSocket {
         }
     }
 
+    //TODO
     pub fn shutdown(&self) -> LinuxResult {
         unimplemented!()
     }
 
+    /// Returns whether this socket is in nonblocking mode.
+    #[inline]
+    pub fn is_nonblocking(&self) -> bool {
+        self.nonblock.load(Ordering::Acquire)
+    }
+
     pub fn set_nonblocking(&self, nonblocking: bool) {
-        unimplemented!()
+        self.nonblock.store(nonblocking, Ordering::Release);
     }
 }
 

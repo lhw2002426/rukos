@@ -559,6 +559,10 @@ pub unsafe fn sys_accept(
                 (*socket_addr, *socket_len) = un_into_sockaddr(addr);
             }
         }
+        error!(
+            "sys_accept <= {} {:#x} {:#x}",
+            new_fd, socket_addr as usize, socket_len as usize
+        );
         
         Ok(new_fd)
         /*let socket = Socket::from_fd(socket_fd)?;
