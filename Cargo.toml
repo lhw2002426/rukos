@@ -60,6 +60,7 @@ members = [
     "ulib/axstd",
     "ulib/ruxlibc",
     "ulib/ruxmusl",
+    "ulib/ruxglibc",
 
     "apps/display/basic_painting",
     "apps/display/draw_map",

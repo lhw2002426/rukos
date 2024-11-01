@@ -1,0 +1,25 @@
+/* Copyright (c) [2023] [Syswonder Community]
+ *   [Ruxos] is licensed under Mulan PSL v2.
+ *   You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *   You may obtain a copy of Mulan PSL v2 at:
+ *               http://license.coscl.org.cn/MulanPSL2
+ *   THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *   See the Mulan PSL v2 for more details.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+int main()
+{
+     // 尝试访问内核空间内存地址
+    volatile uint64_t *kernel_address = (uint64_t *)0xffff000040080000;
+
+    // 尝试读取内核地址中的值（这个行为在正常的操作系统中应当引发段错误）
+    uint64_t value = *kernel_address;
+
+    printf("Accessed kernel memory, value: %lu\n", value);
+    printf("Hello, %c app!\n", 'C');
+    return 0;
+}

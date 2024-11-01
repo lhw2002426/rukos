@@ -7,7 +7,11 @@ ifeq ($(APP_TYPE), c)
   ifeq ($(MUSL), y)
     include scripts/make/build_musl.mk
   else
-    include scripts/make/build_c.mk
+    ifeq ($(GLIBC), y)
+      include scripts/make/build_glibc.mk
+    else
+      include scripts/make/build_c.mk
+    endif
   endif
 else
   rust_package := $(shell cat $(APP)/Cargo.toml | sed -n 's/^name = "\([a-z0-9A-Z_\-]*\)"/\1/p')
@@ -44,7 +48,11 @@ else ifeq ($(APP_TYPE), c)
   ifeq ($(MUSL), y)
 		$(call cargo_build,-p ruxmusl,$(RUX_FEAT) $(LIB_FEAT))
   else
-		$(call cargo_build,-p ruxlibc,$(RUX_FEAT) $(LIB_FEAT))
+    ifeq ($(GLIBC), y)
+		  $(call cargo_build,-p ruxglibc,$(RUX_FEAT) $(LIB_FEAT))
+    else
+		  $(call cargo_build,-p ruxlibc,$(RUX_FEAT) $(LIB_FEAT))
+    endif
   endif
 endif
 

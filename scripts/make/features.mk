@@ -16,7 +16,11 @@ ifeq ($(APP_TYPE),c)
   ifeq ($(MUSL), y)
     lib_feat_prefix := ruxmusl/
   else
-    lib_feat_prefix := ruxlibc/
+    ifeq ($(GLIBC), y)
+      lib_feat_prefix := ruxglibc/
+    else
+      lib_feat_prefix := ruxlibc/
+    endif
   endif
   lib_features := fp_simd alloc irq sched_rr paging multitask fs net fd pipe select poll epoll random-hw signal
 else
@@ -28,6 +32,10 @@ endif
 ifeq ($(APP_TYPE),c)
   ifeq ($(MUSL), y)
     lib_features += musl
+  else
+    ifeq ($(GLIBC), y)
+      lib_features += musl
+    endif
   endif
 endif
 

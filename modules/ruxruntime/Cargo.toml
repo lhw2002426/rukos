@@ -60,3 +60,8 @@ lazy_init = { path = "../../crates/lazy_init", optional = true }
 dtb = { path = "../../crates/dtb", optional = true }
 
 tty = { path = "../../crates/tty", optional = true }
+
+elf = { version = "0.7", default-features = false }
+memory_addr = "0.1.0"
+page_table = { path = "../../crates/page_table" }
+axerrno = { path = "../../crates/axerrno" }

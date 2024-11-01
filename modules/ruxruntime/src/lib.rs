@@ -33,9 +33,13 @@
 
 #![cfg_attr(not(test), no_std)]
 #![feature(doc_auto_cfg)]
+#![cfg_attr(feature = "alloc", feature(btree_cursors))]
 
 #[macro_use]
 extern crate axlog;
+
+//#[cfg(feature = "alloc")]
+pub mod execve;
 
 #[cfg(all(target_os = "none", not(test)))]
 mod lang_items;
@@ -63,6 +67,8 @@ pub use self::env::{argv, environ, environ_iter, RUX_ENVIRON};
 #[cfg(feature = "alloc")]
 use self::env::{boot_add_environ, init_argv};
 use core::ffi::{c_char, c_int};
+
+use core::arch::asm;
 
 const LOGO: &str = r#"
 8888888b.                     .d88888b.   .d8888b.  
@@ -287,7 +293,11 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         #[cfg(not(feature = "musl"))]
         main(argc, argv);
         #[cfg(feature = "musl")]
-        __libc_start_main(main, argc, argv, init_dummy, fini_dummy, ldso_dummy);
+        {
+            let args_ptr: *mut *mut c_char = argv;
+            let first_arg: *mut c_char = *args_ptr;
+            execve::cus_execve(first_arg, argv as usize, environ as usize);
+        }
     }
 
     #[cfg(not(feature = "alloc"))]
@@ -306,6 +316,125 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         )
     };
 
+    
+    /*#[cfg(feature = "multitask")]
+    {
+        let task_ref = ruxtask::fork_task();
+        if let Some(task_ref) = ruxtask::fork_task() {
+            warn!("fork_task success, pid: {}", task_ref.id().as_u64());
+            let pid = task_ref.id().as_u64();
+            //wait4
+            loop {
+                let mut process_map = ruxtask::task::PROCESS_MAP.lock();
+                if let Some(task) = process_map.get(&(pid as u64)) {
+                    if task.state() == ruxtask::task::TaskState::Exited {
+                        process_map.remove(&(pid as u64));
+                        warn!("task exit {}",pid);
+                        break;
+                    }
+                } else {
+                   error!("no such process"); // No such process
+                   break;
+                }
+                // drop lock before yielding to other tasks
+                drop(process_map);
+                // for single-cpu system, we must yield to other tasks instead of dead-looping here.
+                ruxtask::yield_now();
+            }
+        } else {
+            // environ variables and Command line parameters initialization
+            #[cfg(feature = "alloc")]
+            unsafe {
+                let mut argc: c_int = 0;
+                init_cmdline(&mut argc);
+                #[cfg(not(feature = "musl"))]
+                main(argc, argv);
+                #[cfg(feature = "musl")]
+                {
+                    __libc_start_main(main, argc, argv, init_dummy, fini_dummy, ldso_dummy);
+                    /*let args_ptr: *mut *mut c_char = argv;
+                    let first_arg: *mut c_char = *args_ptr;
+                    info!("lhw debug before user {:X} {:X}",__libc_start_main as usize, first_arg as usize);
+                    execve::cus_execve(first_arg, argv as usize, environ as usize);
+                    let user_stack_top = 0x7FFF_FFFF_0000 as usize;
+                    let spsr: usize = 0b0000;
+                    asm!(
+                        //"mov sp, {stack}",
+                
+                        "mov x0, {libc_start_main}",
+                        "str x0, [sp, #256]",
+                        "mov x1, {spsr}",
+                        "str x1, [sp, #264]",
+                
+                        "str {main}, [sp]",
+                        "str {argc}, [sp, #8]",
+                        "str {argv}, [sp, #16]",
+                        "str {init}, [sp, #24]",
+                        "str {fini}, [sp, #32]",
+                        "str {ldso}, [sp, #40]",
+                        "b       .Lexception_return",
+                
+                        //stack = in(reg) user_stack_top,
+                        options(nostack),
+                        main = in(reg) main as usize,
+                        argc = in(reg) argc,
+                        argv = in(reg) argv,
+                        init = in(reg) init_dummy as usize,
+                        fini = in(reg) fini_dummy as usize,
+                        ldso = in(reg) ldso_dummy as usize,
+                        libc_start_main = in(reg)  __libc_start_main as usize,
+                        spsr = in(reg) spsr,
+                    );*/
+                    
+                }
+            }
+            #[cfg(not(feature = "alloc"))]
+            unsafe {
+                #[cfg(not(feature = "musl"))]
+                main(0, core::ptr::null_mut());
+
+                #[cfg(feature = "musl")]
+                __libc_start_main(
+                    main,
+                    0,
+                    core::ptr::null_mut(),
+                    init_dummy,
+                    fini_dummy,
+                    ldso_dummy,
+                )
+            };
+        }
+    }
+
+    #[cfg(not(feature = "multitask"))]
+    {
+        // environ variables and Command line parameters initialization
+        #[cfg(feature = "alloc")]
+        unsafe {
+            let mut argc: c_int = 0;
+            init_cmdline(&mut argc);
+            #[cfg(not(feature = "musl"))]
+            main(argc, argv);
+            #[cfg(feature = "musl")]
+            __libc_start_main(main, argc, argv, init_dummy, fini_dummy, ldso_dummy);
+        }
+        #[cfg(not(feature = "alloc"))]
+        unsafe {
+            #[cfg(not(feature = "musl"))]
+            main(0, core::ptr::null_mut());
+
+            #[cfg(feature = "musl")]
+            __libc_start_main(
+                main,
+                0,
+                core::ptr::null_mut(),
+                init_dummy,
+                fini_dummy,
+                ldso_dummy,
+            )
+        };
+    }*/
+    
     #[cfg(feature = "multitask")]
     ruxtask::exit(0);
     #[cfg(not(feature = "multitask"))]
