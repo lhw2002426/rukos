@@ -241,17 +241,23 @@ pub(crate) fn iunique(ino: Option<u64>) -> u64 {
                 now_inode += 1;
             }
             inodes.0.push(now_inode);
-            inodes.1 = now_inode+1;
+            inodes.1 = now_inode + 1;
             now_inode
         }
-    }   
+    }
 }
 
 impl VfsNodeAttr {
     /// Creates a new `VfsNodeAttr` with the given permission mode, type, size
     /// inode number and number of blocks.
     /// if node number is none, means fs do not have inode then vfs will allocate it
-    pub fn new(mode: VfsNodePerm, ty: VfsNodeType, size: u64, blocks: u64, ino: Option<u64>) -> Self {
+    pub fn new(
+        mode: VfsNodePerm,
+        ty: VfsNodeType,
+        size: u64,
+        blocks: u64,
+        ino: Option<u64>,
+    ) -> Self {
         Self {
             mode,
             ty,

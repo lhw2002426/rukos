@@ -405,7 +405,11 @@ impl VfsNodeOps for CommonNode {
                 Ok(stat) if stat.get_ftype() == 0o4 => {
                     let mut vfsattr = self.attr.write();
                     if vfsattr.is_none() {
-                        vfsattr.replace(VfsNodeAttr::new_dir(stat.get_size(), stat.get_blk_num(), Some(stat.get_qid().path())));
+                        vfsattr.replace(VfsNodeAttr::new_dir(
+                            stat.get_size(),
+                            stat.get_blk_num(),
+                            Some(stat.get_qid().path()),
+                        ));
                     }
                     let mut attr = vfsattr.unwrap();
                     let mode = stat.get_perm() as u16 & 0o777_u16;
@@ -415,7 +419,11 @@ impl VfsNodeOps for CommonNode {
                 Ok(stat) if stat.get_ftype() == 0o10 => {
                     let mut vfsattr = self.attr.write();
                     if vfsattr.is_none() {
-                        vfsattr.replace(VfsNodeAttr::new_file(stat.get_size(), stat.get_blk_num(), Some(stat.get_qid().path())));
+                        vfsattr.replace(VfsNodeAttr::new_file(
+                            stat.get_size(),
+                            stat.get_blk_num(),
+                            Some(stat.get_qid().path()),
+                        ));
                     }
                     let mut attr = vfsattr.unwrap();
                     let mode = stat.get_perm() as u16 & 0o777_u16;
@@ -430,7 +438,11 @@ impl VfsNodeOps for CommonNode {
                 Ok(stat) if stat.get_ftype() == 0o4 => {
                     let mut vfsattr = self.attr.write();
                     if vfsattr.is_none() {
-                        vfsattr.replace(VfsNodeAttr::new_dir(stat.get_length(), stat.get_blk_num(), Some(stat.get_qid().path())));
+                        vfsattr.replace(VfsNodeAttr::new_dir(
+                            stat.get_length(),
+                            stat.get_blk_num(),
+                            Some(stat.get_qid().path()),
+                        ));
                     }
                     let mut attr = vfsattr.unwrap();
                     let mode = stat.get_perm() as u16 & 0o777_u16;
@@ -440,7 +452,11 @@ impl VfsNodeOps for CommonNode {
                 Ok(stat) if stat.get_ftype() == 0o10 => {
                     let mut vfsattr = self.attr.write();
                     if vfsattr.is_none() {
-                        vfsattr.replace(VfsNodeAttr::new_file(stat.get_length(), stat.get_blk_num(), Some(stat.get_qid().path())));
+                        vfsattr.replace(VfsNodeAttr::new_file(
+                            stat.get_length(),
+                            stat.get_blk_num(),
+                            Some(stat.get_qid().path()),
+                        ));
                     }
                     let mut attr = vfsattr.unwrap();
                     let mode = stat.get_perm() as u16 & 0o777_u16;

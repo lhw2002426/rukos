@@ -10,12 +10,12 @@
 use alloc::sync::Arc;
 use core::cell::UnsafeCell;
 
+use crate::dev::Disk;
 use axfs_vfs::{VfsDirEntry, VfsError, VfsNodePerm, VfsResult};
 use axfs_vfs::{VfsNodeAttr, VfsNodeOps, VfsNodeRef, VfsNodeType, VfsOps};
 use axsync::Mutex;
 use fatfs::{Dir, File, LossyOemCpConverter, NullTimeProvider, Read, Seek, SeekFrom, Write};
 use spin::rwlock::RwLock;
-use crate::dev::Disk;
 
 const BLOCK_SIZE: usize = 512;
 
@@ -24,8 +24,14 @@ pub struct FatFileSystem {
     root_dir: UnsafeCell<Option<VfsNodeRef>>,
 }
 
-pub struct FileWrapper<'a>(Mutex<File<'a, Disk, NullTimeProvider, LossyOemCpConverter>>, RwLock<Option<VfsNodeAttr>>);
-pub struct DirWrapper<'a>(Dir<'a, Disk, NullTimeProvider, LossyOemCpConverter>, RwLock<Option<VfsNodeAttr>>);
+pub struct FileWrapper<'a>(
+    Mutex<File<'a, Disk, NullTimeProvider, LossyOemCpConverter>>,
+    RwLock<Option<VfsNodeAttr>>,
+);
+pub struct DirWrapper<'a>(
+    Dir<'a, Disk, NullTimeProvider, LossyOemCpConverter>,
+    RwLock<Option<VfsNodeAttr>>,
+);
 
 unsafe impl Sync for FatFileSystem {}
 unsafe impl Send for FatFileSystem {}
@@ -85,7 +91,13 @@ impl VfsNodeOps for FileWrapper<'static> {
         let perm = VfsNodePerm::from_bits_truncate(0o755);
         let mut vfsattr = self.1.write();
         if vfsattr.is_none() {
-            vfsattr.replace(VfsNodeAttr::new(perm, VfsNodeType::File, size, blocks, None));
+            vfsattr.replace(VfsNodeAttr::new(
+                perm,
+                VfsNodeType::File,
+                size,
+                blocks,
+                None,
+            ));
         }
         Ok(vfsattr.unwrap())
     }

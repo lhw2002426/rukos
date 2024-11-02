@@ -253,7 +253,6 @@ impl TcpSocket {
         self.block_on(|| {
             let (handle, (local_addr, peer_addr)) = LISTEN_TABLE.accept(local_port)?;
             debug!("TCP socket accepted a new connection {}", peer_addr);
-            error!("lhw debug in tcp accept really {}",handle);
             Ok(TcpSocket::new_connected(handle, local_addr, peer_addr))
         })
     }
@@ -293,7 +292,6 @@ impl TcpSocket {
 
     /// Receives data from the socket, stores it in the given buffer.
     pub fn recv(&self, buf: &mut [u8], flags: i32) -> AxResult<usize> {
-        unsafe { error!("lhw debug in unix recv {}",self.handle.get().read().unwrap()); }
         if self.is_connecting() {
             return Err(AxError::WouldBlock);
         } else if !self.is_connected() {
@@ -368,11 +366,7 @@ impl TcpSocket {
 
     /// Whether the socket is readable or writable.
     pub fn poll(&self) -> AxResult<PollState> {
-        unsafe { 
-            if !self.handle.get().read().is_none() {
-                error!("lhw debug in unix poll {:?}",self.handle.get().read());
-            }
-        }
+        unsafe { if !self.handle.get().read().is_none() {} }
         match self.get_state() {
             STATE_CONNECTING => self.poll_connect(),
             STATE_CONNECTED => self.poll_stream(),

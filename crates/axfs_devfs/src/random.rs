@@ -35,7 +35,7 @@ impl VfsNodeOps for RandomDev {
             0,
             0,
             Some(2),
-            ))
+        ))
     }
 
     fn read_at(&self, _offset: u64, buf: &mut [u8]) -> VfsResult<usize> {

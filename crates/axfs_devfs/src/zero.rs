@@ -22,7 +22,7 @@ impl VfsNodeOps for ZeroDev {
             0,
             0,
             Some(3),
-            ))
+        ))
     }
 
     fn read_at(&self, _offset: u64, buf: &mut [u8]) -> VfsResult<usize> {

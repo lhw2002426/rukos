@@ -8,32 +8,31 @@
 */
 
 use alloc::{sync::Arc, vec, vec::Vec};
-use smoltcp::socket::tcp::{SendError, RecvError};
-use spin::RwLock;
-use core::sync::atomic::AtomicIsize;
+use axerrno::{ax_err, ax_err_type, AxError, AxResult, LinuxError, LinuxResult};
+use axio::{PollState, Result};
+use axsync::Mutex;
 use core::ffi::{c_char, c_int, c_void};
 use core::mem::size_of;
 use core::net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4};
+use core::sync::atomic::AtomicIsize;
 use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-
-use axerrno::{LinuxError, LinuxResult, ax_err, ax_err_type, AxError, AxResult};
-use axio::{PollState, Result};
-use axsync::Mutex;
+use smoltcp::socket::tcp::{RecvError, SendError};
+use spin::RwLock;
 
 use lazy_init::LazyInit;
 
 use smoltcp::iface::{Config, Interface, SocketHandle, SocketSet};
 use smoltcp::phy::{Device, DeviceCapabilities, Medium, RxToken, TxToken};
-use smoltcp::socket::{self, AnySocket, tcp::SocketBuffer};
+use smoltcp::socket::{self, tcp::SocketBuffer, AnySocket};
 use smoltcp::time::Instant;
 use smoltcp::wire::{EthernetAddress, HardwareAddress, IpAddress, IpCidr};
 
 use flatten_objects::FlattenObjects;
 use hashbrown::HashMap;
 
-use ruxtask::yield_now;
 use axfs_vfs::{VfsError, VfsNodeAttr, VfsNodeOps, VfsNodeRef, VfsNodeType, VfsOps, VfsResult};
-use ruxfs::root::{lookup, create_file};
+use ruxfs::root::{create_file, lookup};
+use ruxtask::yield_now;
 
 const SOCK_ADDR_UN_PATH_LEN: usize = 108;
 const UNIX_SOCKET_BUFFER_SIZE: usize = 4096;
@@ -46,7 +45,7 @@ pub struct SockaddrUn {
 }
 
 impl SockaddrUn {
-    pub fn set_addr(&mut self, new_addr :&SockaddrUn) {
+    pub fn set_addr(&mut self, new_addr: &SockaddrUn) {
         self.sun_family = new_addr.sun_family;
         self.sun_path = new_addr.sun_path;
     }
@@ -67,7 +66,7 @@ impl<'a> UnixSocketInner<'a> {
                 sun_family: 1, //AF_UNIX
                 sun_path: [0; SOCK_ADDR_UN_PATH_LEN],
             }),
-            buf: SocketBuffer::new(vec![0; 64*1024]),
+            buf: SocketBuffer::new(vec![0; 64 * 1024]),
             peer_socket: None,
             status: UnixSocketStatus::Closed,
         }
@@ -85,18 +84,18 @@ impl<'a> UnixSocketInner<'a> {
         self.peer_socket = Some(peer)
     }
 
-    pub fn get_state(&self) -> UnixSocketStatus{
+    pub fn get_state(&self) -> UnixSocketStatus {
         self.status
     }
 
-    pub fn set_state(&mut self, state:UnixSocketStatus) {
+    pub fn set_state(&mut self, state: UnixSocketStatus) {
         self.status = state
     }
 
     pub fn can_accept(&mut self) -> bool {
         match self.status {
-            UnixSocketStatus::Listening => self.buf.is_empty(),
-            _ => false
+            UnixSocketStatus::Listening => !self.buf.is_empty(),
+            _ => false,
         }
     }
 
@@ -128,7 +127,6 @@ impl<'a> UnixSocketInner<'a> {
     pub fn can_send(&mut self) -> bool {
         self.may_send()
     }
-
 }
 
 /// unix domain socket.
@@ -138,10 +136,8 @@ pub struct UnixSocket {
     nonblock: AtomicBool,
 }
 
-fn get_inode(addr: SockaddrUn) -> AxResult<usize>{
-    let slice = unsafe {
-        core::slice::from_raw_parts(addr.sun_path.as_ptr(), addr.sun_path.len())
-    };
+fn get_inode(addr: SockaddrUn) -> AxResult<usize> {
+    let slice = unsafe { core::slice::from_raw_parts(addr.sun_path.as_ptr(), addr.sun_path.len()) };
 
     let socket_path = unsafe {
         core::ffi::CStr::from_ptr(slice.as_ptr())
@@ -149,11 +145,9 @@ fn get_inode(addr: SockaddrUn) -> AxResult<usize>{
             .expect("Invalid UTF-8 string")
     };
     let vfsnode = match lookup(None, socket_path) {
-        Ok(node) => {
-            node
-        }
+        Ok(node) => node,
         Err(_) => {
-            // lhw TODO socket type
+            // TODO: socket type, not file type
             create_file(None, socket_path)?
         }
     };
@@ -163,31 +157,29 @@ fn get_inode(addr: SockaddrUn) -> AxResult<usize>{
 }
 
 struct HashMapWarpper<'a> {
-    inner:HashMap<usize, Arc<Mutex<UnixSocketInner<'a>>>>,
+    inner: HashMap<usize, Arc<Mutex<UnixSocketInner<'a>>>>,
     index_allcator: Mutex<usize>,
 }
 impl<'a> HashMapWarpper<'a> {
     pub fn new() -> Self {
         Self {
             inner: HashMap::new(),
-            index_allcator:Mutex::new(0),
+            index_allcator: Mutex::new(0),
         }
     }
     pub fn find<F>(&self, predicate: F) -> Option<(&usize, &Arc<Mutex<UnixSocketInner<'a>>>)>
     where
         F: Fn(&Arc<Mutex<UnixSocketInner<'_>>>) -> bool,
     {
-        self.inner.iter().find(|(_k,v)|{predicate(v)})
+        self.inner.iter().find(|(_k, v)| predicate(v))
     }
-    
+
     pub fn add(&mut self, value: Arc<Mutex<UnixSocketInner<'a>>>) -> Option<usize> {
         let mut index_allcator = self.index_allcator.get_mut();
-        error!("lhw debug in heap add {}", index_allcator);
-        while self.inner.contains_key(index_allcator)
-        {
+        while self.inner.contains_key(index_allcator) {
             *index_allcator += 1;
         }
-        self.inner.insert(*index_allcator ,value);
+        self.inner.insert(*index_allcator, value);
         Some(*index_allcator)
     }
 
@@ -214,7 +206,7 @@ static UNIX_TABLE: LazyInit<RwLock<HashMapWarpper>> = LazyInit::new();
     };
 }*/
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum UnixSocketType {
     SockStream,
     SockDgram,
@@ -248,10 +240,13 @@ impl UnixSocket {
                     unixsocket_type: _type,
                     nonblock: AtomicBool::new(false),
                 };
-                let handle = UNIX_TABLE.write().add(Arc::new(Mutex::new(UnixSocketInner::new()))).unwrap();
+                let handle = UNIX_TABLE
+                    .write()
+                    .add(Arc::new(Mutex::new(UnixSocketInner::new())))
+                    .unwrap();
                 unixsocket.set_sockethandle(handle);
                 unixsocket
-            },
+            }
         }
     }
 
@@ -264,17 +259,33 @@ impl UnixSocket {
     }
 
     pub fn get_peerhandle(&self) -> Option<usize> {
-        UNIX_TABLE.read().get(self.get_sockethandle()).unwrap().lock().get_peersocket()
+        UNIX_TABLE
+            .read()
+            .get(self.get_sockethandle())
+            .unwrap()
+            .lock()
+            .get_peersocket()
     }
 
     pub fn get_state(&self) -> UnixSocketStatus {
-        UNIX_TABLE.read().get(self.get_sockethandle()).unwrap().lock().status
+        UNIX_TABLE
+            .read()
+            .get(self.get_sockethandle())
+            .unwrap()
+            .lock()
+            .status
     }
 
     pub fn enqueue_buf(&mut self, data: &[u8]) -> AxResult<usize> {
         match self.get_state() {
             UnixSocketStatus::Closed => Err(AxError::BadState),
-            _ => Ok(UNIX_TABLE.write().get_mut(self.get_sockethandle()).unwrap().lock().buf.enqueue_slice(data))
+            _ => Ok(UNIX_TABLE
+                .write()
+                .get_mut(self.get_sockethandle())
+                .unwrap()
+                .lock()
+                .buf
+                .enqueue_slice(data)),
         }
     }
 
@@ -282,10 +293,23 @@ impl UnixSocket {
         match self.get_state() {
             UnixSocketStatus::Closed => Err(AxError::BadState),
             _ => {
-                if UNIX_TABLE.write().get_mut(self.get_sockethandle()).unwrap().lock().buf.is_empty() {
+                if UNIX_TABLE
+                    .write()
+                    .get_mut(self.get_sockethandle())
+                    .unwrap()
+                    .lock()
+                    .buf
+                    .is_empty()
+                {
                     return Err(AxError::WouldBlock);
                 }
-                Ok(UNIX_TABLE.write().get_mut(self.get_sockethandle()).unwrap().lock().buf.dequeue_slice(data))
+                Ok(UNIX_TABLE
+                    .write()
+                    .get_mut(self.get_sockethandle())
+                    .unwrap()
+                    .lock()
+                    .buf
+                    .dequeue_slice(data))
             }
         }
     }
@@ -297,7 +321,9 @@ impl UnixSocket {
             UnixSocketStatus::Closed => {
                 {
                     let inode_addr = get_inode(addr)?;
-                    UNIX_TABLE.write().replace_handle(self.get_sockethandle(), inode_addr);
+                    UNIX_TABLE
+                        .write()
+                        .replace_handle(self.get_sockethandle(), inode_addr);
                     self.set_sockethandle(inode_addr);
                 }
                 let mut binding = UNIX_TABLE.write();
@@ -306,83 +332,99 @@ impl UnixSocket {
                 socket_inner.set_state(UnixSocketStatus::Busy);
                 Ok(())
             }
-            _ => {
-                Err(LinuxError::EINVAL)
-            }
+            _ => Err(LinuxError::EINVAL),
         }
-        
     }
 
     pub fn send(&self, buf: &[u8]) -> LinuxResult<usize> {
-        error!("lhw debug in unix send {:?}",self.sockethandle);
         match self.unixsocket_type {
             UnixSocketType::SockDgram | UnixSocketType::SockSeqpacket => Err(LinuxError::ENOTCONN),
-            UnixSocketType::SockStream => {
-                loop {
-                    let now_state = self.get_state();
-                    match now_state {
-                        UnixSocketStatus::Connecting => {
-                            if self.is_nonblocking() {
-                                return Err(LinuxError::EINPROGRESS)
-                            } else {
-                                yield_now();
-                            }
+            UnixSocketType::SockStream => loop {
+                let now_state = self.get_state();
+                match now_state {
+                    UnixSocketStatus::Connecting => {
+                        if self.is_nonblocking() {
+                            return Err(LinuxError::EINPROGRESS);
+                        } else {
+                            yield_now();
                         }
-                        UnixSocketStatus::Connected => {
-                            let peer_handle = UNIX_TABLE.read().get(self.get_sockethandle()).unwrap().lock().get_peersocket().unwrap();
-                            error!("lhw debug in unix send {}",peer_handle);
-                            return Ok(UNIX_TABLE.write().get_mut(peer_handle).unwrap().lock().buf.enqueue_slice(buf));
-                        },
-                        _ => { return Err(LinuxError::ENOTCONN); },
                     }
-                } 
-            }
+                    UnixSocketStatus::Connected => {
+                        let peer_handle = UNIX_TABLE
+                            .read()
+                            .get(self.get_sockethandle())
+                            .unwrap()
+                            .lock()
+                            .get_peersocket()
+                            .unwrap();
+                        return Ok(UNIX_TABLE
+                            .write()
+                            .get_mut(peer_handle)
+                            .unwrap()
+                            .lock()
+                            .buf
+                            .enqueue_slice(buf));
+                    }
+                    _ => {
+                        return Err(LinuxError::ENOTCONN);
+                    }
+                }
+            },
         }
     }
     pub fn recv(&self, buf: &mut [u8], flags: i32) -> LinuxResult<usize> {
-        error!("lhw debug in unix recv {:?}",self.sockethandle);
         match self.unixsocket_type {
             UnixSocketType::SockDgram | UnixSocketType::SockSeqpacket => Err(LinuxError::ENOTCONN),
-            UnixSocketType::SockStream => {
-                loop {
-                    let now_state = self.get_state();
-                    match now_state {
-                        UnixSocketStatus::Connecting => {
+            UnixSocketType::SockStream => loop {
+                let now_state = self.get_state();
+                match now_state {
+                    UnixSocketStatus::Connecting => {
+                        if self.is_nonblocking() {
+                            return Err(LinuxError::EAGAIN);
+                        } else {
+                            yield_now();
+                        }
+                    }
+                    UnixSocketStatus::Connected => {
+                        if UNIX_TABLE
+                            .read()
+                            .get(self.get_sockethandle())
+                            .unwrap()
+                            .lock()
+                            .buf
+                            .is_empty()
+                        {
                             if self.is_nonblocking() {
-                                return Err(LinuxError::EINPROGRESS)
+                                return Err(LinuxError::EAGAIN);
                             } else {
                                 yield_now();
                             }
+                        } else {
+                            return Ok(UNIX_TABLE
+                                .read()
+                                .get(self.get_sockethandle())
+                                .unwrap()
+                                .lock()
+                                .buf
+                                .dequeue_slice(buf));
                         }
-                        UnixSocketStatus::Connected => {
-                            {
-                                if UNIX_TABLE.read().get(self.get_sockethandle()).unwrap().lock().buf.is_empty() {
-                                    if self.is_nonblocking() {
-                                        return Err(LinuxError::EINPROGRESS)
-                                    } else {
-                                        yield_now();
-                                    }
-                                }
-                            }
-                            return Ok(UNIX_TABLE.read().get(self.get_sockethandle()).unwrap().lock().buf.dequeue_slice(buf));
-                        },
-                        _ => { return Err(LinuxError::ENOTCONN); },
+                    }
+                    _ => {
+                        return Err(LinuxError::ENOTCONN);
                     }
                 }
-            }
+            },
         }
     }
 
     fn poll_connect(&self) -> LinuxResult<PollState> {
-        let writable =
-        {
+        let writable = {
             let mut binding = UNIX_TABLE.write();
             let mut socket_inner = binding.get_mut(self.get_sockethandle()).unwrap().lock();
             if !socket_inner.get_peersocket().is_none() {
                 socket_inner.set_state(UnixSocketStatus::Connected);
                 true
-            }
-            else {
+            } else {
                 false
             }
         };
@@ -393,7 +435,6 @@ impl UnixSocket {
     }
 
     pub fn poll(&self) -> LinuxResult<PollState> {
-        error!("lhw debug in unix poll {:?}",self.sockethandle);
         let now_state = self.get_state();
         match now_state {
             UnixSocketStatus::Connecting => self.poll_connect(),
@@ -404,7 +445,7 @@ impl UnixSocket {
                     readable: !socket_inner.may_recv() || socket_inner.can_recv(),
                     writable: !socket_inner.may_send() || socket_inner.can_send(),
                 })
-            },
+            }
             UnixSocketStatus::Listening => {
                 let mut binding = UNIX_TABLE.write();
                 let mut socket_inner = binding.get_mut(self.get_sockethandle()).unwrap().lock();
@@ -412,7 +453,7 @@ impl UnixSocket {
                     readable: socket_inner.can_accept(),
                     writable: false,
                 })
-            },
+            }
             _ => Ok(PollState {
                 readable: false,
                 writable: false,
@@ -425,7 +466,14 @@ impl UnixSocket {
     }
 
     fn fd(&self) -> c_int {
-        UNIX_TABLE.write().get_mut(self.get_sockethandle()).unwrap().lock().addr.lock().sun_path[0] as _
+        UNIX_TABLE
+            .write()
+            .get_mut(self.get_sockethandle())
+            .unwrap()
+            .lock()
+            .addr
+            .lock()
+            .sun_path[0] as _
     }
 
     pub fn peer_addr(&self) -> AxResult<SockaddrUn> {
@@ -433,7 +481,12 @@ impl UnixSocket {
         match now_state {
             UnixSocketStatus::Connected | UnixSocketStatus::Listening => {
                 let peer_sockethandle = self.get_peerhandle().unwrap();
-                Ok(UNIX_TABLE.read().get(peer_sockethandle).unwrap().lock().get_addr())
+                Ok(UNIX_TABLE
+                    .read()
+                    .get(peer_sockethandle)
+                    .unwrap()
+                    .lock()
+                    .get_addr())
             }
             _ => Err(AxError::NotConnected),
         }
@@ -442,33 +495,33 @@ impl UnixSocket {
     // TODO: check file system
     // TODO: poll connect
     pub fn connect(&mut self, addr: SockaddrUn) -> LinuxResult {
-        error!("lhw debug in unix connect");
-        //a new block is needed to free rwlock
-        {
-            let binding = UNIX_TABLE.write();
-            let (remote_sockethandle, remote_socket) = binding.find(|socket| {
-                socket.lock().addr.lock().sun_path == addr.sun_path
-            }).unwrap();
-            let data = &self.get_sockethandle().to_ne_bytes();
-            let res = remote_socket.lock().buf.enqueue_slice(data);
+        let now_state = self.get_state();
+        if now_state != UnixSocketStatus::Connecting && now_state != UnixSocketStatus::Connected {
+            //a new block is needed to free rwlock
+            {
+                let binding = UNIX_TABLE.write();
+                let inode_addr = get_inode(addr)?;
+                let remote_socket = binding.get(inode_addr).unwrap();
+                let data = &self.get_sockethandle().to_ne_bytes();
+                let res = remote_socket.lock().buf.enqueue_slice(data);
+            }
+            {
+                let mut binding = UNIX_TABLE.write();
+                let mut socket_inner = binding.get_mut(self.get_sockethandle()).unwrap().lock();
+                socket_inner.set_state(UnixSocketStatus::Connecting);
+            }
         }
-        {
-            let mut binding = UNIX_TABLE.write();
-            let mut socket_inner = binding.get_mut(self.get_sockethandle()).unwrap().lock();
-            socket_inner.set_state(UnixSocketStatus::Connecting);
-        }
-        
-        //return Ok(());
+
         loop {
             let PollState { writable, .. } = self.poll_connect()?;
             if !writable {
                 // When set to non_blocking, directly return inporgress
                 if self.is_nonblocking() {
                     return Err(LinuxError::EINPROGRESS);
+                } else {
+                    yield_now();
                 }
-                yield_now();
             } else if self.get_state() == UnixSocketStatus::Connected {
-                error!("lhw debug in unix connect ok");
                 return Ok(());
             } else {
                 // When set to non_blocking, directly return inporgress
@@ -480,7 +533,7 @@ impl UnixSocket {
         }
     }
 
-    pub fn sendto(&self, buf: &[u8], addr:SockaddrUn) -> LinuxResult<usize> {
+    pub fn sendto(&self, buf: &[u8], addr: SockaddrUn) -> LinuxResult<usize> {
         unimplemented!()
     }
 
@@ -499,7 +552,7 @@ impl UnixSocket {
                 Ok(())
             }
             _ => {
-                Ok(())//ignore simultaneous `listen`s.
+                Ok(()) //ignore simultaneous `listen`s.
             }
         }
     }
@@ -521,28 +574,34 @@ impl UnixSocket {
                             let unix_socket = UnixSocket::new(UnixSocketType::SockStream);
                             {
                                 let mut binding = UNIX_TABLE.write();
-                                let remote_socket =  binding.get_mut(remote_handle).unwrap();
-                                remote_socket.lock().set_peersocket(unix_socket.get_sockethandle());
-                                //remote_socket.lock().set_state(UnixSocketStatus::Connected);
+                                let remote_socket = binding.get_mut(remote_handle).unwrap();
+                                remote_socket
+                                    .lock()
+                                    .set_peersocket(unix_socket.get_sockethandle());
                             }
                             let mut binding = UNIX_TABLE.write();
-                            let mut socket_inner = binding.get_mut(unix_socket.get_sockethandle()).unwrap().lock();
+                            let mut socket_inner = binding
+                                .get_mut(unix_socket.get_sockethandle())
+                                .unwrap()
+                                .lock();
                             socket_inner.set_peersocket(remote_handle);
-                            error!("lhw debug in unix accept really {:?} {} {}",self.sockethandle, remote_handle, unix_socket.get_sockethandle());
                             socket_inner.set_state(UnixSocketStatus::Connected);
                             return Ok(unix_socket);
-                        },
+                        }
                         Err(AxError::WouldBlock) => {
-                            //if self.is_nonblocking()
-                            yield_now();
+                            if self.is_nonblocking() {
+                                return Err(AxError::WouldBlock);
+                            } else {
+                                yield_now();
+                            }
                         }
                         Err(e) => {
                             return Err(e);
                         }
                     }
                 }
-            },
-            _ => ax_err!(InvalidInput, "socket accept() failed: not listen")
+            }
+            _ => ax_err!(InvalidInput, "socket accept() failed: not listen"),
         }
     }
 
@@ -560,46 +619,20 @@ impl UnixSocket {
     pub fn set_nonblocking(&self, nonblocking: bool) {
         self.nonblock.store(nonblocking, Ordering::Release);
     }
+
+    pub fn is_listening(&self) -> bool {
+        let now_state = self.get_state();
+        match now_state {
+            UnixSocketStatus::Listening => true,
+            _ => false,
+        }
+    }
+
+    pub fn get_sockettype(&self) -> UnixSocketType {
+        self.unixsocket_type
+    }
 }
 
 pub(crate) fn init_unix() {
     UNIX_TABLE.init_by(RwLock::new(HashMapWarpper::new()));
 }
-
-/*
-let mut fd: i32 = -1;
-        let mut now_file_fd: i32 = 3;
-        while now_file_fd < RUX_FILE_LIMIT.try_into().unwrap() {
-            match Socket::from_fd(now_file_fd) {
-                Ok(socket) => {
-                    if let Ok(socket) = Arc::try_unwrap(socket) {
-                        match socket  {
-                            Socket::Unix(unixsocket) => {
-                                if unixsocket.lock().addr.lock().sun_path == addr.sun_path {
-                                    fd = now_file_fd;
-                                    unixsocket.listen.lock().push(self.get_socket_fd());
-                                    break;
-                                } else {
-                                    now_file_fd += 1;
-                                }
-                            }
-                            _ => {
-                                now_file_fd += 1;
-                            }
-                        }
-                    }
-                }
-                _ => {
-                    now_file_fd += 1;
-                }
-            }
-        }
-        if fd == -1 {
-            Err(LinuxError::ENOENT)
-        }
-        else {
-            self.peer_fd
-            .store(fd as _, core::sync::atomic::Ordering::Relaxed);
-            Ok(())
-        }
-*/

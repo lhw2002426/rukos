@@ -32,7 +32,11 @@ impl VfsNodeOps for FileNode {
     fn get_attr(&self) -> VfsResult<VfsNodeAttr> {
         let mut vfsattr = self.attr.write();
         if vfsattr.is_none() {
-            vfsattr.replace(VfsNodeAttr::new_file(self.content.read().len() as _, 0, None));
+            vfsattr.replace(VfsNodeAttr::new_file(
+                self.content.read().len() as _,
+                0,
+                None,
+            ));
         }
         Ok(vfsattr.unwrap())
     }
