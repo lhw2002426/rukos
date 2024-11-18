@@ -10,10 +10,12 @@
 use crate::ctypes;
 use alloc::vec::Vec;
 use axerrno::LinuxError;
+use axsync::Mutex;
 use core::{
     ffi::{c_int, c_void},
     ops::Bound,
 };
+use lazy_static::lazy_static;
 use memory_addr::PAGE_SIZE_4K;
 use ruxhal::mem::VirtAddr;
 use ruxmm::paging::pte_update_page;
@@ -31,6 +33,86 @@ use {
     alloc::sync::Arc,
 };
 
+lazy_static! {
+    static ref HEAP_TOP: Mutex<usize> = Mutex::new(0);
+}
+
+pub fn set_heap_top(addr: usize) {
+    let mut heap_top = HEAP_TOP.lock();
+    *heap_top = addr;
+}
+
+pub fn get_heap_top() -> usize {
+    let heap_top = HEAP_TOP.lock();
+    *heap_top
+}
+
+pub fn sys_brk(brk: *mut c_void) -> *mut c_void {
+    info!("sys_brk <= brk: {:p}",brk);
+    syscall_body!(sys_mmap, {
+        match brk as usize {
+            0 => {
+                if get_heap_top() == 0
+                {
+                    //mmap 1M region as fake heap
+                    let len: usize = 1024 * 1024;
+                    //all the process share the fake heap
+                    let mut new = Vma::new(-1, 0, ctypes::PROT_READ | ctypes::PROT_WRITE, ctypes::MAP_SHARED | ctypes::MAP_ANONYMOUS);
+                    let binding_task = current();
+                    let mut vma_map = binding_task.mm.vma_map.lock();
+                    
+                    let try_addr = find_free_region(&vma_map, None, len);
+
+                    match try_addr {
+                        Some(vaddr) => {
+                            info!("lhw debug create heap suc {:x} {:x}",vaddr, (vaddr + len));
+                            new.start_addr = vaddr;
+                            new.end_addr = vaddr + len;
+                            vma_map.insert(vaddr, new);
+                            let res = vaddr + len;
+                            set_heap_top(res);
+                            return Ok(res as *mut c_void);
+                        }
+                        _ => {
+                            info!("lhw debug create heap err");
+                            return Err(LinuxError::ENOMEM); 
+                        },
+                    }
+                }
+                else
+                {
+                    return Ok(get_heap_top() as *mut c_void);
+                }
+            }
+            _ => {
+                return Ok(get_heap_top() as *mut c_void);
+                /*let heap_top = get_heap_top();
+                if brk as usize <= heap_top {
+                    //shrink heap, do nothing
+                    return Ok(brk);
+                }
+                let len = brk as usize - heap_top;
+                let mut new = Vma::new(-1, 0, ctypes::PROT_READ | ctypes::PROT_WRITE, ctypes::MAP_SHARED | ctypes::MAP_ANONYMOUS);
+                let binding_task = current();
+                let mut vma_map = binding_task.mm.vma_map.lock();
+                //find mem after heap top to expand heap top
+                let try_addr = snatch_fixed_region(&mut vma_map, heap_top, len);
+                match try_addr {
+                    Some(vaddr) => {
+                        new.start_addr = vaddr;
+                        new.end_addr = vaddr + len;
+                        vma_map.insert(vaddr, new);
+                        let res = vaddr;
+                        set_heap_top(res);
+                        return Ok(res as *mut c_void);
+                    }
+                    _ => { return Err(LinuxError::ENOMEM); },
+                }*/
+            }
+        }
+    })
+}
+
 /// Creates a new mapping in the virtual address space of the calling process.
 ///
 /// Note: support flags `MAP_PRIVATE`, `MAP_SHARED`, `MAP_ANONYMOUS`, `MAP_FILE`, `MAP_FIXED`.
@@ -42,7 +124,7 @@ pub fn sys_mmap(
     fd: c_int,
     off: ctypes::off_t,
 ) -> *mut c_void {
-    debug!(
+    info!(
         "sys_mmap <= start: {:p}, len: 0x{:x}, prot:0x{:x?}, flags:0x{:x?}, fd: {}",
         start, len, prot, flags, fd
     );
@@ -94,6 +176,7 @@ pub fn sys_mmap(
                 new.start_addr = vaddr;
                 new.end_addr = vaddr + len;
                 vma_map.insert(vaddr, new);
+                info!("lhw debug in sys_mmap normal return {:x}",vaddr);
                 Ok(vaddr as *mut c_void)
             }
             _ => Err(LinuxError::ENOMEM),

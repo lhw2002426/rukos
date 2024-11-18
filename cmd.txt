@@ -1,0 +1,2 @@
+make ARCH=aarch64 A=apps/c/helloworld V9P=y GLIBC=y LOG=info CROSS_COMPILE=aarch64-linux-gnu-gcc run
+make ARCH=aarch64 A=apps/c/helloworld V9P=y GLIBC=y LOG=info CROSS_COMPILE=aarch64-linux-gnu-gcc FEATURES=virtio-9p,fs,alloc run

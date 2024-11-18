@@ -83,7 +83,7 @@ pub use imp::io_mpx::{sys_pselect6, sys_select};
 #[cfg(feature = "fd")]
 pub use imp::ioctl::sys_ioctl;
 #[cfg(feature = "alloc")]
-pub use imp::mmap::{sys_madvise, sys_mmap, sys_mprotect, sys_mremap, sys_msync, sys_munmap};
+pub use imp::mmap::{sys_brk, sys_madvise, sys_mmap, sys_mprotect, sys_mremap, sys_msync, sys_munmap};
 #[cfg(feature = "net")]
 pub use imp::net::{
     sys_accept, sys_bind, sys_connect, sys_freeaddrinfo, sys_getaddrinfo, sys_getpeername,

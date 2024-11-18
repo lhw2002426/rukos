@@ -130,17 +130,18 @@ pub fn cus_execve(pathname: *const c_char, argv: usize, envp: usize) -> ! {
 
     // try run
     debug!(
-        "sys_execve: sp is 0x{sp:x}, run at 0x{entry:x}, then jump to 0x{:x} ",
+        "cus_execve: sp is 0x{sp:x}, run at 0x{entry:x}, then jump to 0x{:x} ",
         prog.entry
     );
 
     // TODO: may lead to memory leaky, release stack after the change of stack
     current().set_stack_top(stack.stack_top() - stack.stack_size(), stack.stack_size());
     warn!(
-        "sys_execve: current_id_name {:?}, stack top 0x{:x}, size 0x{:x}",
+        "cus_execve: current_id_name {:?}, stack top 0x{:x}, size 0x{:x} jump to {:x}",
         current().id_name(),
         current().stack_top(),
-        stack.stack_size()
+        stack.stack_size(),
+        entry,
     );
 
     set_sp_and_jmp(sp, entry);

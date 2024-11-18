@@ -99,6 +99,7 @@ pub enum SyscallId {
     GETRLIMIT = 163,
     SETRLIMIT = 164,
     UMASK = 166,
+    GETTIMEOFDAY=169,
     #[cfg(feature = "multitask")]
     GETPID = 172,
     GETPPID = 173,
@@ -132,6 +133,8 @@ pub enum SyscallId {
     SHUTDOWN = 210,
     #[cfg(feature = "net")]
     SENDMSG = 211,
+    #[cfg(feature = "alloc")]
+    BRK = 214,
     #[cfg(feature = "alloc")]
     MUNMAP = 215,
     #[cfg(feature = "alloc")]

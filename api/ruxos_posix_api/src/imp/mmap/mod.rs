@@ -14,7 +14,7 @@ cfg_if::cfg_if! {
         mod utils;
         mod api;
         mod trap;
-        pub use self::api::{sys_madvise, sys_mmap, sys_mprotect, sys_mremap, sys_msync, sys_munmap};
+        pub use self::api::{sys_madvise, sys_mmap, sys_mprotect, sys_mremap, sys_msync, sys_munmap, sys_brk};
     }else {
         mod legacy;
         pub use self::legacy::{sys_madvise, sys_mmap, sys_mprotect, sys_mremap, sys_msync, sys_munmap};

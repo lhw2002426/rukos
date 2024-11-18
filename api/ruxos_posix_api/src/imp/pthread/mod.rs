@@ -256,7 +256,7 @@ pub unsafe fn sys_clone(
     tls: *mut c_void,
     ctid: *mut ctypes::pid_t,
 ) -> c_int {
-    debug!(
+    info!(
         "sys_clone <= flags: {:x}, stack: {:p}, ctid: {:x}",
         flags, stack, ctid as usize
     );
@@ -268,6 +268,7 @@ pub unsafe fn sys_clone(
                     (*(stack as *mut usize)) as *const (),
                 )
             };
+            unsafe { info!("lhw debug in sys_clone func {:?} stack {}",func, *(stack as *mut usize)); }
             let args = unsafe { *((stack as usize + 8) as *mut usize) } as *mut c_void;
 
             let set_tid = if (flags as u32 & ctypes::CLONE_CHILD_SETTID) != 0 {

@@ -157,6 +157,7 @@ pub(crate) fn snatch_fixed_region(
 
     // Return None if the specified address can't be used
     if start < VMA_START || end > VMA_END {
+        info!("lhw debug in snatch_fixed_region mem out of range {} {}", start, end);
         return None;
     }
 

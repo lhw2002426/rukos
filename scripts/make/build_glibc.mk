@@ -10,7 +10,7 @@ LDFLAGS += -nostdlib -static -no-pie --gc-sections -T$(LD_SCRIPT)
 ifeq ($(MODE), release)
   CFLAGS += -O3 
 else ifeq ($(MODE), reldebug)
-  CFLAGS += -O3 -g
+  CFLAGS += -Og -g
 else
   CFLAGS += -Og -g
 endif

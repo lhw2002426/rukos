@@ -1,4 +1,13 @@
-alloc
+paging
+alloc 
+irq
+
 multitask
 fs
-paging
+pipe
+poll
+rtc
+signal
+virtio-9p
+fp_simd
+net

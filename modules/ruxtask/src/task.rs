@@ -328,6 +328,7 @@ impl TaskInner {
         let tls = VirtAddr::from(0);
 
         t.entry = Some(Box::into_raw(Box::new(entry)));
+        info!("lhw debug in tesk inner new musl entry {:?}",t.entry);
         t.ctx.get_mut().init(task_entry as usize, kstack.top(), tls);
         t.kstack = SpinNoIrq::new(Arc::new(Some(kstack)));
         if t.name == "idle" {
@@ -351,6 +352,7 @@ impl TaskInner {
         let tls = VirtAddr::from(0);
 
         t.entry = Some(Box::into_raw(Box::new(entry)));
+        info!("lhw debug in teskinner new entry {:?}",t.entry);
         t.ctx.get_mut().init(task_entry as usize, kstack.top(), tls);
         t.kstack = SpinNoIrq::new(Arc::new(Some(kstack)));
         if t.name == "idle" {
@@ -881,6 +883,7 @@ extern "C" fn task_entry() -> ! {
     #[cfg(feature = "irq")]
     ruxhal::arch::enable_irqs();
     let task = crate::current();
+    info!("lhw debug in task_entry {:?}",task.entry);
     if let Some(entry) = task.entry {
         unsafe {
             let in_entry = Box::from_raw(entry);

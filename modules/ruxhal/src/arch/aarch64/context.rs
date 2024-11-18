@@ -133,6 +133,7 @@ impl TaskContext {
         unsafe {
             #[cfg(feature = "fp_simd")]
             fpstate_switch(&mut self.fp_state, &next_ctx.fp_state);
+            info!("lhw debug before arch64 switch");
             // switch to the next process's page table, stack would be unavailable before context switch finished
             context_switch(self, next_ctx, page_table_addr.as_usize() as u64);
         }

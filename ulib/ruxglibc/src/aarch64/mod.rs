@@ -269,6 +269,10 @@ pub fn syscall(syscall_id: SyscallId, args: [usize; 6]) -> isize {
                     as _
             }
             SyscallId::UMASK => ruxos_posix_api::sys_umask(args[0] as ctypes::mode_t) as _,
+            SyscallId::GETTIMEOFDAY => ruxos_posix_api::sys_gettimeofday(
+                args[0] as *mut ctypes::timespec,
+                args[1] as c_int,
+            ) as _,
             #[cfg(feature = "multitask")]
             SyscallId::GETPID => ruxos_posix_api::sys_getpid() as _,
             SyscallId::GETPPID => ruxos_posix_api::sys_getppid() as _,
@@ -350,6 +354,10 @@ pub fn syscall(syscall_id: SyscallId, args: [usize; 6]) -> isize {
                 args[0] as c_int,
                 args[1] as *const ctypes::msghdr,
                 args[2] as c_int,
+            ) as _,
+            #[cfg(feature = "alloc")]
+            SyscallId::BRK => ruxos_posix_api::sys_brk(
+                args[0] as *mut core::ffi::c_void,
             ) as _,
             #[cfg(feature = "alloc")]
             SyscallId::MUNMAP => ruxos_posix_api::sys_munmap(

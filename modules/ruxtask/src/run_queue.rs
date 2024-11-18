@@ -213,6 +213,7 @@ impl AxRunQueue {
             drop(next_page_table);
 
             CurrentTask::set_current(prev_task, next_task);
+            debug!("lhw debug before switch to next ctx ptr {:x?}, root_paddr {:x}", *next_ctx_ptr, root_paddr.as_usize());
             (*prev_ctx_ptr).switch_to(&*next_ctx_ptr, root_paddr);
         }
     }

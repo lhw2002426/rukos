@@ -1,6 +1,7 @@
 app-objs=main.o
 
-ARGS = /bin/hello
+#ARGS = /home/lhw/redis-7.0.12/src/redis-server, /home/lhw/redis.conf
+ARGS = /bin/main
 ENVS = 
 V9P_PATH=${APP}/rootfs
 

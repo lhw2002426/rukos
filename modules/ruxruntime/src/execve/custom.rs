@@ -25,7 +25,7 @@ use ruxmm::paging::pte_update_page;
 use crate::execve::utils::*;
 
 pub fn cus_open(filename: &str, flags: i32, mode: i32) -> i32 {
-    debug!("sys_open <= {:?} {:#o} {:#o}", filename, flags, mode);
+    info!("cus_open <= {:?} {:#o} {:#o}", filename, flags, mode);
     let mut options = OpenOptions::new();
     options.read(true);
     options.write(true);
