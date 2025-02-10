@@ -108,6 +108,12 @@ impl TcpSocket {
         }
     }
 
+    /// Returens if this socket is listening
+    #[inline]
+    pub fn is_listening(&self) -> bool {
+        self.get_state() == STATE_LISTENING
+    }
+
     /// Returns whether this socket is in nonblocking mode.
     #[inline]
     pub fn is_nonblocking(&self) -> bool {
@@ -161,7 +167,7 @@ impl TcpSocket {
                                 ax_err!(ConnectionRefused, "socket connect() failed")
                             }
                         })?;
-                    Ok((
+                    Ok::<(IpEndpoint, IpEndpoint), AxError>((
                         socket.local_endpoint().unwrap(),
                         socket.remote_endpoint().unwrap(),
                     ))
@@ -376,6 +382,7 @@ impl TcpSocket {
             _ => Ok(PollState {
                 readable: false,
                 writable: false,
+                pollhup: false,
             }),
         }
     }
@@ -432,11 +439,6 @@ impl TcpSocket {
         self.get_state() == STATE_CONNECTED
     }
 
-    #[inline]
-    fn is_listening(&self) -> bool {
-        self.get_state() == STATE_LISTENING
-    }
-
     fn bound_endpoint(&self) -> AxResult<IpListenEndpoint> {
         // SAFETY: no other threads can read or write `self.local_addr`.
         let local_addr = unsafe { self.local_addr.get().read() };
@@ -481,16 +483,21 @@ impl TcpSocket {
         Ok(PollState {
             readable: false,
             writable,
+            pollhup: false,
         })
     }
 
     fn poll_stream(&self) -> AxResult<PollState> {
         // SAFETY: `self.handle` should be initialized in a connected socket.
         let handle = unsafe { self.handle.get().read().unwrap() };
+        let pollhup = SOCKET_SET.with_socket_mut::<tcp::Socket, _, _>(handle, |socket| {
+            socket.state() == tcp::State::CloseWait
+        });
         SOCKET_SET.with_socket::<tcp::Socket, _, _>(handle, |socket| {
             Ok(PollState {
                 readable: !socket.may_recv() || socket.can_recv(),
                 writable: !socket.may_send() || socket.can_send(),
+                pollhup,
             })
         })
     }
@@ -501,6 +508,7 @@ impl TcpSocket {
         Ok(PollState {
             readable: LISTEN_TABLE.can_accept(local_addr.port)?,
             writable: false,
+            pollhup: false,
         })
     }
 

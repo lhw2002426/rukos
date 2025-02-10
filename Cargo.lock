@@ -48,6 +48,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "allocator-api2"
+version = "0.2.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
+
+[[package]]
 name = "android-tzdata"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -92,11 +98,13 @@ dependencies = [
  "axerrno",
  "axio",
  "axlog",
+ "crate_interface",
  "ruxconfig",
  "ruxdisplay",
  "ruxfeat",
  "ruxfs",
  "ruxhal",
+ "ruxmm",
  "ruxnet",
  "ruxruntime",
  "ruxtask",
@@ -174,7 +182,9 @@ version = "0.1.0"
 dependencies = [
  "axerrno",
  "bitflags 2.4.0",
+ "lazy_static",
  "log",
+ "spin 0.9.8",
 ]
 
 [[package]]
@@ -670,6 +680,13 @@ name = "driver_common"
 version = "0.1.0"
 
 [[package]]
+name = "driver_console"
+version = "0.1.0"
+dependencies = [
+ "driver_common",
+]
+
+[[package]]
 name = "driver_display"
 version = "0.1.0"
 dependencies = [
@@ -700,6 +717,7 @@ dependencies = [
  "driver_9p",
  "driver_block",
  "driver_common",
+ "driver_console",
  "driver_display",
  "driver_net",
  "log",
@@ -888,9 +906,13 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.14.0"
+version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c6201b9ff9fd90a5a3bac2e56a830d0caa509576f0e503818ee82c181b3437a"
+checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
+dependencies = [
+ "ahash",
+ "allocator-api2",
+]
 
 [[package]]
 name = "heapless"
@@ -1591,6 +1613,7 @@ version = "0.1.0"
 dependencies = [
  "axalloc",
  "cfg-if",
+ "crate_interface",
  "driver_9p",
  "driver_block",
  "driver_common",
@@ -1627,6 +1650,7 @@ dependencies = [
  "ruxdriver",
  "ruxfs",
  "ruxhal",
+ "ruxmm",
  "ruxnet",
  "ruxruntime",
  "ruxtask",
@@ -1643,7 +1667,6 @@ dependencies = [
  "axfs_ramfs",
  "axfs_vfs",
  "axio",
- "axsync",
  "capability",
  "cfg-if",
  "crate_interface",
@@ -1653,7 +1676,7 @@ dependencies = [
  "log",
  "memory_addr",
  "ruxdriver",
- "ruxtask",
+ "spin 0.9.8",
 ]
 
 [[package]]
@@ -1682,12 +1705,16 @@ dependencies = [
  "bitflags 2.4.0",
  "cfg-if",
  "crate_interface",
+ "driver_common",
+ "driver_console",
+ "driver_virtio",
  "dtb",
  "dw_apb_uart",
  "embedded-hal",
  "handler_table",
  "kernel_guard",
  "lazy_init",
+ "lazy_static",
  "log",
  "memory_addr",
  "page_table",
@@ -1702,20 +1729,30 @@ dependencies = [
  "static_assertions",
  "tock-registers",
  "tty",
+ "virtio-drivers",
  "x2apic",
  "x86",
  "x86_64",
 ]
 
 [[package]]
-name = "ruxlibc"
+name = "ruxmm"
 version = "0.1.0"
 dependencies = [
- "axerrno",
- "axio",
- "bindgen 0.66.1",
- "ruxfeat",
- "ruxos_posix_api",
+ "axalloc",
+ "bitflags 2.4.0",
+ "cfg-if",
+ "crate_interface",
+ "kernel_guard",
+ "log",
+ "memory_addr",
+ "page_table",
+ "page_table_entry",
+ "ruxdriver",
+ "ruxhal",
+ "ruxtask",
+ "spinlock",
+ "static_assertions",
 ]
 
 [[package]]
@@ -1737,17 +1774,22 @@ name = "ruxnet"
 version = "0.1.0"
 dependencies = [
  "axerrno",
+ "axfs_vfs",
  "axio",
  "axlog",
  "axsync",
  "cfg-if",
  "cty",
  "driver_net",
+ "flatten_objects",
+ "hashbrown",
  "lazy_init",
+ "lazy_static",
  "log",
  "lwip_rust",
  "printf-compat",
  "ruxdriver",
+ "ruxfs",
  "ruxhal",
  "ruxtask",
  "smoltcp",
@@ -1796,6 +1838,7 @@ dependencies = [
  "ruxfs",
  "ruxfutex",
  "ruxhal",
+ "ruxmm",
  "ruxnet",
  "ruxruntime",
  "ruxtask",
@@ -1821,13 +1864,18 @@ name = "ruxruntime"
 version = "0.1.0"
 dependencies = [
  "axalloc",
+ "axfs_ramfs",
+ "axfs_vfs",
+ "axio",
  "axlog",
  "axsync",
  "cfg-if",
  "crate_interface",
+ "driver_block",
  "dtb",
  "kernel_guard",
  "lazy_init",
+ "log",
  "percpu",
  "rux9p",
  "ruxconfig",
@@ -1836,6 +1884,7 @@ dependencies = [
  "ruxfs",
  "ruxfutex",
  "ruxhal",
+ "ruxmm",
  "ruxnet",
  "ruxrand",
  "ruxtask",
@@ -1846,21 +1895,29 @@ dependencies = [
 name = "ruxtask"
 version = "0.1.0"
 dependencies = [
+ "axalloc",
  "axerrno",
+ "axfs_vfs",
+ "axio",
  "cfg-if",
  "crate_interface",
+ "flatten_objects",
  "kernel_guard",
  "lazy_init",
+ "lazy_static",
  "log",
  "memory_addr",
+ "page_table",
+ "page_table_entry",
  "percpu",
  "rand",
  "ruxconfig",
  "ruxfdtable",
+ "ruxfs",
  "ruxhal",
- "ruxrand",
  "ruxtask",
  "scheduler",
+ "spin 0.9.8",
  "spinlock",
  "timer_list",
 ]

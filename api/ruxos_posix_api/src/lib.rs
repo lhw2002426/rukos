@@ -56,9 +56,12 @@ pub use imp::stat::{
 };
 pub use imp::sys::{sys_sysinfo, sys_uname};
 pub use imp::sys_invalid;
+#[cfg(feature = "multitask")]
+pub use imp::task::sys_wait4;
 pub use imp::task::{sys_exit, sys_getpid, sys_getppid, sys_gettid, sys_sched_yield};
 pub use imp::time::{
-    sys_clock_gettime, sys_clock_settime, sys_gettimeofday, sys_nanosleep, sys_times,
+    sys_clock_gettime, sys_clock_nanosleep, sys_clock_settime, sys_gettimeofday, sys_nanosleep,
+    sys_times,
 };
 
 #[cfg(all(feature = "fd", feature = "musl"))]
@@ -85,8 +88,8 @@ pub use imp::mmap::{sys_madvise, sys_mmap, sys_mprotect, sys_mremap, sys_msync, 
 #[cfg(feature = "net")]
 pub use imp::net::{
     sys_accept, sys_bind, sys_connect, sys_freeaddrinfo, sys_getaddrinfo, sys_getpeername,
-    sys_getsockname, sys_listen, sys_recv, sys_recvfrom, sys_send, sys_sendmsg, sys_sendto,
-    sys_setsockopt, sys_shutdown, sys_socket,
+    sys_getsockname, sys_getsockopt, sys_listen, sys_recv, sys_recvfrom, sys_send, sys_sendmsg,
+    sys_sendto, sys_setsockopt, sys_shutdown, sys_socket,
 };
 #[cfg(feature = "pipe")]
 pub use imp::pipe::{sys_pipe, sys_pipe2};
@@ -119,7 +122,9 @@ pub use imp::pthread::sys_clone;
 #[cfg(all(feature = "multitask", feature = "musl"))]
 pub use imp::pthread::sys_set_tid_address;
 #[cfg(feature = "multitask")]
-pub use imp::pthread::{sys_pthread_create, sys_pthread_exit, sys_pthread_join, sys_pthread_self};
+pub use imp::pthread::{
+    sys_exit_group, sys_pthread_create, sys_pthread_exit, sys_pthread_join, sys_pthread_self,
+};
 
 #[cfg(feature = "fs")]
 pub use imp::execve::sys_execve;

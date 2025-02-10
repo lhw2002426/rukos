@@ -42,7 +42,7 @@ impl LoopbackDevice {
                 None => EthernetAddress([0; 6]),
             },
             queue: VecDeque::new(),
-            buf_pool: buf_pool,
+            buf_pool,
         }
     }
 }
@@ -56,8 +56,6 @@ impl BaseDriverOps for LoopbackDevice {
         DeviceType::Net
     }
 }
-
-use log::info;
 
 impl NetDriverOps for LoopbackDevice {
     #[inline]
@@ -85,11 +83,11 @@ impl NetDriverOps for LoopbackDevice {
         self.queue.len()
     }
 
-    fn fill_rx_buffers(&mut self, buf_pool: &Arc<NetBufPool>) -> DevResult {
+    fn fill_rx_buffers(&mut self, _buf_pool: &Arc<NetBufPool>) -> DevResult {
         Ok(())
     }
 
-    fn recycle_rx_buffer(&mut self, rx_buf: NetBufPtr) -> DevResult {
+    fn recycle_rx_buffer(&mut self, _rx_buf: NetBufPtr) -> DevResult {
         Ok(())
     }
 
@@ -97,7 +95,7 @@ impl NetDriverOps for LoopbackDevice {
         Ok(())
     }
 
-    fn prepare_tx_buffer(&self, tx_buf: &mut NetBuf, pkt_len: usize) -> DevResult {
+    fn prepare_tx_buffer(&self, _tx_buf: &mut NetBuf, _pkt_len: usize) -> DevResult {
         Ok(())
     }
 

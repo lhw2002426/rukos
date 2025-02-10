@@ -87,20 +87,40 @@ pub fn sys_rt_sigprocmask(
 }
 
 /// sigaction syscall for A64 musl
+///
+/// TODO: if sa is 0, return now action
 pub unsafe fn sys_rt_sigaction(
     sig: c_int,
     sa: *const ctypes::sigaction,
     old: *mut ctypes::sigaction,
     _sigsetsize: ctypes::size_t,
 ) -> c_int {
-    debug!("sys_rt_sigaction <= sig: {}", sig);
+    debug!(
+        "sys_rt_sigaction <= sig: {} sa {:x} old {:x}",
+        sig, sa as u64, old as u64
+    );
     syscall_body!(sys_rt_sigaction, {
-        let sa = unsafe { *sa };
-        let old = unsafe { *old };
-        let sa = k_sigaction::from(sa);
-        let mut old_sa = k_sigaction::from(old);
-        sys_sigaction(sig as _, Some(&sa), Some(&mut old_sa));
-        Ok(0)
+        if sa as u64 == 0 && old as u64 == 0 {
+            sys_sigaction(sig as _, None, None);
+            Ok(0)
+        } else if sa as u64 != 0 && old as u64 == 0 {
+            let sa = unsafe { *sa };
+            let sa = k_sigaction::from(sa);
+            sys_sigaction(sig as _, Some(&sa), None);
+            Ok(0)
+        } else if sa as u64 == 0 && old as u64 != 0 {
+            let old = unsafe { *old };
+            let mut old_sa = k_sigaction::from(old);
+            sys_sigaction(sig as _, None, Some(&mut old_sa));
+            Ok(0)
+        } else {
+            let sa = unsafe { *sa };
+            let old = unsafe { *old };
+            let sa = k_sigaction::from(sa);
+            let mut old_sa = k_sigaction::from(old);
+            sys_sigaction(sig as _, Some(&sa), Some(&mut old_sa));
+            Ok(0)
+        }
     })
 }
 
