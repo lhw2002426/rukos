@@ -13,10 +13,16 @@ mod dns;
 mod listen_table;
 mod tcp;
 mod udp;
+mod netdevicewrapper;
 
-use alloc::string::{String, ToString};
+use alloc::string::String;
 use alloc::vec;
-use core::cell::RefCell;
+use alloc::boxed::Box;
+use alloc::rc::Rc;
+use core::borrow::BorrowMut;
+use core::cell::{RefCell, RefMut};
+use alloc::sync::Arc;
+use core::default;
 use core::ops::DerefMut;
 
 use axsync::Mutex;
@@ -28,13 +34,16 @@ use smoltcp::iface::{Config, Interface, SocketHandle, SocketSet};
 use smoltcp::phy::{Device, DeviceCapabilities, Medium, RxToken, TxToken};
 use smoltcp::socket::{self, AnySocket};
 use smoltcp::time::Instant;
-use smoltcp::wire::{EthernetAddress, HardwareAddress, IpAddress, IpCidr};
+use smoltcp::wire::{EthernetAddress, HardwareAddress, IpAddress, IpCidr, Ipv4Address};
 
 use self::listen_table::ListenTable;
 
 pub use self::dns::dns_query;
 pub use self::tcp::TcpSocket;
 pub use self::udp::UdpSocket;
+//pub use self::loopback::Loopback;
+pub use driver_net::loopback::LoopbackDevice;
+pub use self::netdevicewrapper::{RouteTable, NetDeviceList};
 
 macro_rules! env_or_default {
     ($key:literal) => {
@@ -62,26 +71,23 @@ const LISTEN_QUEUE_SIZE: usize = 512;
 
 static LISTEN_TABLE: LazyInit<ListenTable> = LazyInit::new();
 static SOCKET_SET: LazyInit<SocketSetWrapper> = LazyInit::new();
-static IFACE_LIST: LazyInit<Mutex<vec::Vec<InterfaceWrapper>>> = LazyInit::new();
-
-fn route_dev(addr: [u8; 4]) -> String {
-    if addr[0] == 127 {
-        "loopback".to_string()
-    } else {
-        "eth0".to_string()
-    }
-}
+//static ETH0: LazyInit<InterfaceWrapper<DeviceWrapper>> = LazyInit::new();
+//static LO: LazyInit<InterfaceWrapper<DeviceWrapper>> = LazyInit::new();//loopback net device
+static RUX_IFACE: LazyInit<InterfaceWrapper<DeviceWrapper>> = LazyInit::new();
+static default_dev: LazyInit<String> = LazyInit::new();
 
 struct SocketSetWrapper<'a>(Mutex<SocketSet<'a>>);
 
 struct DeviceWrapper {
-    inner: RefCell<AxNetDevice>, // use `RefCell` is enough since it's wrapped in `Mutex` in `InterfaceWrapper`.
+    //inner: RefCell<AxNetDevice>, // use `RefCell` is enough since it's wrapped in `Mutex` in `InterfaceWrapper`.
+    inner: Mutex<NetDeviceList>,
+    route_table: RefCell<RouteTable>,
 }
 
-struct InterfaceWrapper {
+struct InterfaceWrapper<D: Device> {
     name: &'static str,
     ether_addr: EthernetAddress,
-    dev: Mutex<DeviceWrapper>,
+    dev: Mutex<D>,
     iface: Mutex<Interface>,
 }
 
@@ -138,9 +144,7 @@ impl<'a> SocketSetWrapper<'a> {
     }
 
     pub fn poll_interfaces(&self) {
-        for iface in IFACE_LIST.lock().iter() {
-            iface.poll(&self.0);
-        }
+        RUX_IFACE.poll(&self.0)
     }
 
     pub fn remove(&self, handle: SocketHandle) {
@@ -149,8 +153,39 @@ impl<'a> SocketSetWrapper<'a> {
     }
 }
 
-impl InterfaceWrapper {
-    fn new(name: &'static str, dev: AxNetDevice, ether_addr: EthernetAddress) -> Self {
+impl InterfaceWrapper<DeviceWrapper> {
+    fn new(name: &'static str, mut dev: DeviceWrapper, ether_addr: EthernetAddress) -> Self {
+        let mut config = Config::new(HardwareAddress::Ethernet(ether_addr));
+        config.random_seed = RANDOM_SEED;
+
+        //let mut dev = DeviceWrapper::new(dev);
+        let iface = Mutex::new(Interface::new(config, &mut dev, Self::current_time()));
+        Self {
+            name,
+            ether_addr,
+            dev: Mutex::new(dev),
+            iface,
+        }
+    }
+}
+
+/*impl InterfaceWrapper<Loopback> {
+    fn new_loopback(name: &'static str, mut dev: Loopback, ether_addr: EthernetAddress) -> Self {
+        let mut config = Config::new(HardwareAddress::Ethernet(ether_addr));
+        config.random_seed = RANDOM_SEED;
+
+        let iface = Mutex::new(Interface::new(config, &mut dev, Self::current_time()));
+        Self {
+            name,
+            ether_addr,
+            dev: Mutex::new(dev),
+            iface,
+        }
+    }
+}*/
+
+impl<D: Device> InterfaceWrapper<D> {
+    /*fn new(name: &'static str, dev: AxNetDevice, ether_addr: EthernetAddress) -> Self {
         let mut config = Config::new(HardwareAddress::Ethernet(ether_addr));
         config.random_seed = RANDOM_SEED;
 
@@ -162,7 +197,7 @@ impl InterfaceWrapper {
             dev: Mutex::new(dev),
             iface,
         }
-    }
+    }*/
 
     fn current_time() -> Instant {
         Instant::from_micros_const((current_time_nanos() / NANOS_PER_MICROS) as i64)
@@ -180,6 +215,7 @@ impl InterfaceWrapper {
         let mut iface = self.iface.lock();
         iface.update_ip_addrs(|ip_addrs| {
             ip_addrs.push(IpCidr::new(ip, prefix_len)).unwrap();
+            info!("ipaddr push {} len: {}",ip, ip_addrs.len());
         });
     }
 
@@ -200,50 +236,122 @@ impl InterfaceWrapper {
 }
 
 impl DeviceWrapper {
-    fn new(inner: AxNetDevice) -> Self {
+    fn new() -> Self {
         Self {
-            inner: RefCell::new(inner),
+            inner: Mutex::new(NetDeviceList::new()),
+            route_table: RefCell::new(RouteTable::new()),
         }
     }
 }
+
+//lhw TODO use route based on rule
+pub fn get_route_dev(buf: &[u8]) -> &str {
+    use smoltcp::wire::{EthernetFrame, EthernetProtocol, Ipv4Packet, ArpPacket, UdpPacket};
+
+    match EthernetFrame::new_checked(buf) {
+        Ok(ether_frame) => {
+            match Ipv4Packet::new_checked(ether_frame.payload()) {
+                Ok(ipv4_packet) => {
+                    let dst_addr = ipv4_packet.dst_addr();
+                    let src_addr = ipv4_packet.src_addr();
+                    if dst_addr.is_loopback() || src_addr.is_loopback(){
+                        return "loopback";
+                        //return "virtio-net";
+                    }
+                }
+                _ => {
+                    match ArpPacket::new_checked(ether_frame.payload()) {
+                        Ok(arp_packet) => {
+                            let dst_addr = arp_packet.target_protocol_addr();
+                            let src_addr = arp_packet.source_protocol_addr();
+                            if arp_packet.protocol_type() ==  EthernetProtocol::Ipv4 && (dst_addr[0] == 127 || src_addr[0] == 127) {
+                                return "loopback";
+                                //return "virtio-net";
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        },
+        _ => {},
+    }
+    
+    "virtio-net"
+}
+
+static mut debug_id:u8 = 0;
 
 impl Device for DeviceWrapper {
     type RxToken<'a> = AxNetRxToken<'a> where Self: 'a;
     type TxToken<'a> = AxNetTxToken<'a> where Self: 'a;
 
-    fn receive(&mut self, _timestamp: Instant) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
-        let mut dev = self.inner.borrow_mut();
-        if let Err(e) = dev.recycle_tx_buffers() {
-            warn!("recycle_tx_buffers failed: {:?}", e);
-            return None;
-        }
-
-        if !dev.can_transmit() {
-            return None;
-        }
-        let rx_buf = match dev.receive() {
-            Ok(buf) => buf,
-            Err(err) => {
-                if !matches!(err, DevError::Again) {
-                    warn!("receive failed: {:?}", err);
-                }
-                return None;
+    fn receive<'a>(&mut self, _timestamp: Instant) -> Option<(Self::RxToken<'_>, Self::TxToken<'_>)> {
+        let mut rx_buf_option: Option<NetBufPtr> = None;
+        let mut dev_name_option: Option<String> = None;
+        //info!("lhw debug device wrapper lock in receive");
+        for dev in self.inner.lock().iter() {
+            //let mut dev = self.inner.borrow_mut();
+            if let Err(e) = dev.borrow_mut().recycle_tx_buffers() {
+                warn!("recycle_tx_buffers failed: {:?}", e);
+                //return None;
+                continue;
             }
+            let dev_name:String = dev.borrow().device_name().into();
+
+            if !dev.borrow().can_transmit() {
+                //return None;
+                continue;
+            }
+            let rx_buf = match dev.borrow_mut().receive() {
+                Ok(buf) => {
+                    debug!("lhw debug in {} receive {:X?}",dev_name,buf.packet());
+                    buf
+                },
+                Err(err) => {
+                    if !matches!(err, DevError::Again) {
+                        warn!("receive failed: {:?}", err);
+                    }
+                    //return None;
+                    continue;
+                }
+            };
+            info!("lhw debug device wrapper receive packet {:X?} in dev {}", rx_buf.packet(), dev.borrow().device_name());
+            dev_name_option = Some(String::from(dev.borrow().device_name()));
+            rx_buf_option = Some(rx_buf);
+            break;
+        }
+        if let Some(dev_name) = dev_name_option {
+            let tx_ret = AxNetTxToken(Rc::new(&self.inner), unsafe {debug_id += 1;debug_id});
+            {
+                info!("lhw debug before borrow mut receive {}", unsafe {debug_id});
+                let ax_net_device = (*(tx_ret.0.clone())).lock();
+            }
+            return Some((AxNetRxToken(&self.inner, rx_buf_option.unwrap(), dev_name), tx_ret))   
         };
-        Some((AxNetRxToken(&self.inner, rx_buf), AxNetTxToken(&self.inner)))
+        None
     }
 
     fn transmit(&mut self, _timestamp: Instant) -> Option<Self::TxToken<'_>> {
-        let mut dev = self.inner.borrow_mut();
-        if let Err(e) = dev.recycle_tx_buffers() {
-            warn!("recycle_tx_buffers failed: {:?}", e);
-            return None;
+        //lhw TODO transmit only if all dev ready, it's unreasonable
+        //let mut dev = self.inner.borrow_mut();
+        info!("lhw debug device wrapper lock in transmit");
+        for dev in self.inner.lock().iter() {
+            if let Err(e) = dev.borrow_mut().recycle_tx_buffers() {
+                warn!("recycle_tx_buffers failed: {:?}", e);
+                return None;
+            }
+            if !dev.borrow().can_transmit() {
+                debug!("{} can not transmit", dev.borrow().device_name());
+                return None;
+            }
         }
-        if dev.can_transmit() {
-            Some(AxNetTxToken(&self.inner))
-        } else {
-            None
+        let tx_ret = AxNetTxToken(Rc::new(&self.inner), unsafe {debug_id += 1;debug_id});
+        {
+            info!("lhw debug before borrow mut transmit {}", unsafe {debug_id});
+            let ax_net_device = (*(tx_ret.0.clone())).lock();
         }
+        Some(tx_ret)
     }
 
     fn capabilities(&self) -> DeviceCapabilities {
@@ -255,8 +363,12 @@ impl Device for DeviceWrapper {
     }
 }
 
-struct AxNetRxToken<'a>(&'a RefCell<AxNetDevice>, NetBufPtr);
-struct AxNetTxToken<'a>(&'a RefCell<AxNetDevice>);
+struct AxNetRxToken<'a>(&'a Mutex<NetDeviceList>, NetBufPtr, String);
+struct AxNetTxToken<'a>(Rc<&'a Mutex<NetDeviceList>>, u8);
+
+impl<'a> AxNetRxToken<'a> {
+    
+}
 
 impl<'a> RxToken for AxNetRxToken<'a> {
     fn preprocess(&self, sockets: &mut SocketSet<'_>) {
@@ -267,14 +379,18 @@ impl<'a> RxToken for AxNetRxToken<'a> {
     where
         F: FnOnce(&mut [u8]) -> R,
     {
+        info!("lhw debug device wrapper lock in rx consume");
         let mut rx_buf = self.1;
         trace!(
             "RECV {} bytes: {:02X?}",
             rx_buf.packet_len(),
             rx_buf.packet()
         );
+        //info!("lhw debug in rx consume dev {}, packet {:X?}", self.2, rx_buf.packet());
         let result = f(rx_buf.packet_mut());
-        self.0.borrow_mut().recycle_rx_buffer(rx_buf).unwrap();
+        let mut ax_net_device = self.0.lock();
+        let dev = ax_net_device.borrow_mut().get(self.2.as_str()).unwrap();
+        dev.borrow_mut().recycle_rx_buffer(rx_buf).unwrap();
         result
     }
 }
@@ -284,16 +400,37 @@ impl<'a> TxToken for AxNetTxToken<'a> {
     where
         F: FnOnce(&mut [u8]) -> R,
     {
-        let mut dev = self.0.borrow_mut();
-        let mut tx_buf = dev.alloc_tx_buffer(len).unwrap();
-        let ret = f(tx_buf.packet_mut());
-        trace!("SEND {} bytes: {:02X?}", len, tx_buf.packet());
-        dev.transmit(tx_buf).unwrap();
-        ret
+        {
+            info!("lhw debug before borrow mut should begin here {}", self.1);
+            (*(self.0.clone())).lock().debug_out();
+        }
+        let res = {
+            let mut buffer = vec![0u8; len];
+            let tx_buf_temp: &mut [u8] = &mut buffer[..];
+            let ret = f(tx_buf_temp);
+            let dev_name = get_route_dev(tx_buf_temp);
+            //debug!("lhw debug in tx consume temp {:X?}", tx_buf_temp);
+            let dev_lock = *self.0;
+            info!("lhw debug before borrow mut {}", self.1);
+            let ax_net_device = dev_lock.lock();
+            let dev = ax_net_device.get(&dev_name).unwrap();
+            let mut dev_borrowed = dev.borrow_mut();
+            let mut tx_buf = dev_borrowed.alloc_tx_buffer(len).unwrap();
+            tx_buf.packet_mut().copy_from_slice(&tx_buf_temp);
+            debug!("lhw debug in {} SEND {} bytes: {:02X?}",dev_name, len, tx_buf.packet());
+            //info!("lhw debug in tx consmue use dev {} trans {:X?}",dev_name, tx_buf.packet());
+            dev_borrowed.transmit(tx_buf).unwrap();
+            ret
+        };
+        let dev_lock = *self.0;
+        info!("lhw debug before borrow mut should end here {}", self.1);
+        let ax_net_device = dev_lock.lock();
+        res
     }
 }
 
 fn snoop_tcp_packet(buf: &[u8], sockets: &mut SocketSet<'_>) -> Result<(), smoltcp::wire::Error> {
+    info!("snoop tcp packet {:X?}", buf);
     use smoltcp::wire::{EthernetFrame, IpProtocol, Ipv4Packet, TcpPacket};
 
     let ether_frame = EthernetFrame::new_checked(buf)?;
@@ -305,9 +442,14 @@ fn snoop_tcp_packet(buf: &[u8], sockets: &mut SocketSet<'_>) -> Result<(), smolt
         let dst_addr = (ipv4_packet.dst_addr(), tcp_packet.dst_port()).into();
         let is_first = tcp_packet.syn() && !tcp_packet.ack();
         if is_first {
+            info!("lhw debug deal incoming tcp packet");
             // create a socket for the first incoming TCP packet, as the later accept() returns.
             LISTEN_TABLE.incoming_tcp_packet(src_addr, dst_addr, sockets);
         }
+        else {
+            info!("lhw debug not first");
+        }
+        //lhw TODO use a more common way , like table
     }
     Ok(())
 }
@@ -322,65 +464,42 @@ pub fn poll_interfaces() {
 
 /// Benchmark raw socket transmit bandwidth.
 pub fn bench_transmit() {
-    IFACE_LIST
-        .lock()
-        .iter()
-        .find(|iface| iface.name() == "eth0")
-        .unwrap()
-        .dev
-        .lock()
-        .bench_transmit_bandwidth();
+    RUX_IFACE.dev.lock().bench_transmit_bandwidth();
 }
 
 /// Benchmark raw socket receive bandwidth.
 pub fn bench_receive() {
-    IFACE_LIST
-        .lock()
-        .iter()
-        .find(|iface| iface.name() == "eth0")
-        .unwrap()
-        .dev
-        .lock()
-        .bench_receive_bandwidth();
-}
-
-pub(crate) fn init() {
-    let socketset = SocketSetWrapper::new();
-
-    IFACE_LIST.init_by(Mutex::new(vec::Vec::new()));
-    SOCKET_SET.init_by(socketset);
-    LISTEN_TABLE.init_by(ListenTable::new());
+    RUX_IFACE.dev.lock().bench_receive_bandwidth();
 }
 
 pub(crate) fn init_netdev(net_dev: AxNetDevice) {
-    match net_dev.device_name() {
-        "loopback" => {
-            let ether_addr = EthernetAddress(net_dev.mac_address().0);
-            let lo = InterfaceWrapper::new("loopback", net_dev, ether_addr);
+    let ether_addr = EthernetAddress(net_dev.mac_address().0);
+    if !RUX_IFACE.is_init() {
+        info!("lhw debug in rux_iface init ether_addr {}",ether_addr);
+        let dev_wrapper = DeviceWrapper::new();
+        let rux_iface = InterfaceWrapper::new("rux_iface", dev_wrapper, ether_addr);
 
-            let ip = "127.0.0.1".parse().expect("invalid IP address");
-            lo.setup_ip_addr(ip, IP_PREFIX);
+        let ip = IP.parse().expect("invalid IP address");
+        let gateway = GATEWAY.parse().expect("invalid gateway IP address");
+        //eth0.setup_ip_addr(ip, IP_PREFIX);
+        //eth0.setup_gateway(gateway);
+        rux_iface.setup_ip_addr(ip, IP_PREFIX);
+        rux_iface.setup_gateway(gateway);
 
-            info!("created net interface {:?}:", lo.name());
-            info!("  ether:    {}", lo.ethernet_address());
-            info!("  ip:       {}/{}", "127.0.0.1", IP_PREFIX);
-            IFACE_LIST.lock().push(lo);
-        }
-        _ => {
-            let ether_addr = EthernetAddress(net_dev.mac_address().0);
-            let eth0 = InterfaceWrapper::new("eth0", net_dev, ether_addr);
+        let local_ip = "127.0.0.1".parse().expect("invalid IP address");
+        //lo.setup_ip_addr(local_ip, 8);
+        rux_iface.setup_ip_addr(local_ip, 8);
 
-            let ip = IP.parse().expect("invalid IP address");
-            let gateway = GATEWAY.parse().expect("invalid gateway IP address");
-            eth0.setup_ip_addr(ip, IP_PREFIX);
-            eth0.setup_gateway(gateway);
 
-            info!("created net interface {:?}:", eth0.name());
-            info!("  ether:    {}", eth0.ethernet_address());
-            info!("  ip:       {}/{}", ip, IP_PREFIX);
-            info!("  gateway:  {}", gateway);
-
-            IFACE_LIST.lock().push(eth0);
-        }
+        //ETH0.init_by(eth0);
+        //LO.init_by(lo);
+        RUX_IFACE.init_by(rux_iface);
+        SOCKET_SET.init_by(SocketSetWrapper::new());
+        LISTEN_TABLE.init_by(ListenTable::new());
+        info!("created net interface {:?}:", RUX_IFACE.name());
+        info!("  ether:    {}", RUX_IFACE.ethernet_address());
+        info!("  ip:       {}/{}", ip, IP_PREFIX);
+        info!("  gateway:  {}", gateway);
     }
-}
+    RUX_IFACE.dev.lock().inner.lock().add_device(net_dev);
+ }

@@ -20,7 +20,7 @@ use smoltcp::socket::tcp::{self, ConnectError, State};
 use smoltcp::wire::{IpEndpoint, IpListenEndpoint};
 
 use super::addr::{from_core_sockaddr, into_core_sockaddr, is_unspecified, UNSPECIFIED_ENDPOINT};
-use super::{route_dev, SocketSetWrapper, IFACE_LIST, LISTEN_TABLE, SOCKET_SET};
+use super::{SocketSetWrapper, LISTEN_TABLE, RUX_IFACE, SOCKET_SET};
 
 // State transitions:
 // CLOSED -(connect)-> BUSY -> CONNECTING -> CONNECTED -(shutdown)-> BUSY -> CLOSED
@@ -145,16 +145,7 @@ impl TcpSocket {
             // TODO: check remote addr unreachable
             let remote_endpoint = from_core_sockaddr(remote_addr);
             let bound_endpoint = self.bound_endpoint()?;
-            let binding = IFACE_LIST.lock();
-            let iface_name = match remote_addr {
-                SocketAddr::V4(addr) => route_dev(addr.ip().octets()),
-                _ => panic!("IPv6 not supported"),
-            };
-            let iface = &binding
-                .iter()
-                .find(|iface| iface.name() == iface_name)
-                .unwrap()
-                .iface;
+            let iface = &RUX_IFACE.iface;
             let (local_endpoint, remote_endpoint) = SOCKET_SET
                 .with_socket_mut::<tcp::Socket, _, _>(handle, |socket| {
                     socket
@@ -164,13 +155,14 @@ impl TcpSocket {
                                 ax_err!(BadState, "socket connect() failed")
                             }
                             ConnectError::Unaddressable => {
+                                info!("socket connect() failed refused");
                                 ax_err!(ConnectionRefused, "socket connect() failed")
                             }
                         })?;
-                    Ok::<(IpEndpoint, IpEndpoint), AxError>((
-                        socket.local_endpoint().unwrap(),
-                        socket.remote_endpoint().unwrap(),
-                    ))
+                        Ok::<(IpEndpoint, IpEndpoint), AxError>((
+                            socket.local_endpoint().unwrap(),
+                            socket.remote_endpoint().unwrap(),
+                        ))
                 })?;
             unsafe {
                 // SAFETY: no other threads can read or write these fields as we
@@ -182,7 +174,6 @@ impl TcpSocket {
             Ok(())
         })
         .unwrap_or_else(|_| ax_err!(AlreadyExists, "socket connect() failed: already connected"))?; // EISCONN
-
         self.block_on(|| {
             let PollState { writable, .. } = self.poll_connect()?;
             if !writable {
@@ -198,6 +189,7 @@ impl TcpSocket {
                 if self.is_nonblocking() {
                     return Err(AxError::InProgress);
                 }
+                info!("socket connect() failed refused state {}", self.get_state());
                 ax_err!(ConnectionRefused, "socket connect() failed")
             }
         })

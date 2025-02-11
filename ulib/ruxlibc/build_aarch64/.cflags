@@ -1,0 +1,1 @@
+-DRUX_CONFIG_ALLOC -DRUX_CONFIG_PAGING -DRUX_CONFIG_NET -DRUX_CONFIG_MULTITASK -DRUX_CONFIG_FD -DRUX_LOG_DEBUG -nostdinc -fno-builtin -ffreestanding -Wall -isystem/home/lhw/unix/rukos/ulib/ruxlibc/include -O3 -mgeneral-regs-only

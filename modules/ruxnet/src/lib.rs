@@ -76,7 +76,7 @@ pub fn init_network(mut net_devs: AxDeviceContainer<AxNetDevice>) {
             compile_error!("No network stack is selected");
         }
     }
-    net_impl::init();
+    //net_impl::init();
     unix::init_unix();
     while !net_devs.is_empty() {
         let dev = net_devs.take_one().expect("No NIC device found!");

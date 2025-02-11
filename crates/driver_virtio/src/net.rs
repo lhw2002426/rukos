@@ -91,6 +91,7 @@ impl<H: Hal, T: Transport, const QS: usize> const BaseDriverOps for VirtIoNetDev
     }
 }
 
+use log::debug;
 impl<H: Hal, T: Transport, const QS: usize> NetDriverOps for VirtIoNetDev<H, T, QS> {
     #[inline]
     fn mac_address(&self) -> EthernetAddress {
@@ -180,6 +181,7 @@ impl<H: Hal, T: Transport, const QS: usize> NetDriverOps for VirtIoNetDev<H, T, 
     }
 
     fn transmit(&mut self, tx_buf: NetBufPtr) -> DevResult {
+        debug!("lhw debug in virtio net trans");
         // 0. prepare tx buffer.
         let tx_buf = unsafe { NetBuf::from_buf_ptr(tx_buf) };
         // 1. transmit packet.
