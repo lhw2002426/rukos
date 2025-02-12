@@ -24,7 +24,7 @@ use driver_net::{DevError, NetBufPtr};
 use lazy_init::LazyInit;
 use ruxdriver::prelude::*;
 use ruxhal::time::{current_time_nanos, NANOS_PER_MICROS};
-use smoltcp::iface::{Config, Interface, SocketHandle, SocketSet};
+use smoltcp::iface::{self, Config, Interface, SocketHandle, SocketSet};
 use smoltcp::phy::{Device, DeviceCapabilities, Medium, RxToken, TxToken};
 use smoltcp::socket::{self, AnySocket};
 use smoltcp::time::Instant;
@@ -137,9 +137,11 @@ impl<'a> SocketSetWrapper<'a> {
         f(socket)
     }
 
-    pub fn poll_interfaces(&self) {
+    pub fn poll_interfaces(&self, iface_name: Option<String>) {
         for iface in IFACE_LIST.lock().iter() {
-            iface.poll(&self.0);
+            if iface_name.is_none() || iface_name.clone().unwrap() == iface.name() {
+                iface.poll(&self.0);
+            }
         }
     }
 
@@ -287,7 +289,6 @@ impl<'a> TxToken for AxNetTxToken<'a> {
         let mut dev = self.0.borrow_mut();
         let mut tx_buf = dev.alloc_tx_buffer(len).unwrap();
         let ret = f(tx_buf.packet_mut());
-        trace!("SEND {} bytes: {:02X?}", len, tx_buf.packet());
         dev.transmit(tx_buf).unwrap();
         ret
     }
@@ -317,7 +318,7 @@ fn snoop_tcp_packet(buf: &[u8], sockets: &mut SocketSet<'_>) -> Result<(), smolt
 /// It may receive packets from the NIC and process them, and transmit queued
 /// packets to the NIC.
 pub fn poll_interfaces() {
-    SOCKET_SET.poll_interfaces();
+    SOCKET_SET.poll_interfaces(None);
 }
 
 /// Benchmark raw socket transmit bandwidth.
