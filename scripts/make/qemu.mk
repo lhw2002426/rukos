@@ -57,6 +57,9 @@ qemu_args-$(V9P) += \
   -fsdev local,id=myid,path=${V9P_PATH},security_model=none \
   -device virtio-9p-$(vdev-suffix),fsdev=myid,mount_tag=rootfs
 
+qemu_args-$(RNG) += \
+  -device virtio-rng-$(vdev-suffix)
+
 ifeq ($(NET_DEV), user)
   qemu_args-$(NET) += -netdev user,id=net0,$(PORTS_LIST)
 else ifeq ($(NET_DEV), tap)

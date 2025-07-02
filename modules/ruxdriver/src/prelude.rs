@@ -19,3 +19,5 @@ pub use {crate::structs::AxBlockDevice, driver_block::BlockDriverOps};
 pub use {crate::structs::AxDisplayDevice, driver_display::DisplayDriverOps};
 #[cfg(feature = "net")]
 pub use {crate::structs::AxNetDevice, driver_net::NetDriverOps};
+#[cfg(feature = "rng")]
+pub use {crate::structs::AxRngDevice, driver_rng::RngDriverOps};

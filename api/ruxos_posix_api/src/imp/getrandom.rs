@@ -118,6 +118,11 @@ pub unsafe extern "C" fn sys_srand(_seed: c_uint) {
 /// Returns a 32-bit unsigned random integer
 #[no_mangle]
 pub unsafe extern "C" fn sys_rand() -> c_int {
+    #[cfg(feature = "rng")]
+    {
+        use ruxrand::random;
+        return random::<c_int>();
+    }
     #[cfg(feature = "random-hw")]
     {
         match has_rdrand() {
@@ -125,7 +130,7 @@ pub unsafe extern "C" fn sys_rand() -> c_int {
             false => rand_lcg32() as c_int,
         }
     }
-    #[cfg(not(feature = "random-hw"))]
+    #[cfg(not(any(feature = "random-hw", feature = "rng")))]
     {
         rand_lcg32() as c_int
     }
@@ -134,6 +139,11 @@ pub unsafe extern "C" fn sys_rand() -> c_int {
 /// Returns a 64-bit unsigned random integer
 #[no_mangle]
 pub unsafe extern "C" fn sys_random() -> c_long {
+    #[cfg(feature = "rng")]
+    {
+        use ruxrand::random;
+        return random::<c_long>();
+    }
     #[cfg(feature = "random-hw")]
     {
         match has_rdrand() {
@@ -141,7 +151,7 @@ pub unsafe extern "C" fn sys_random() -> c_long {
             false => random_lcg64() as c_long,
         }
     }
-    #[cfg(not(feature = "random-hw"))]
+    #[cfg(not(any(feature = "random-hw", feature = "rng")))]
     {
         random_lcg64() as c_long
     }
@@ -159,15 +169,29 @@ pub unsafe extern "C" fn sys_getrandom(buf: *mut c_void, buflen: size_t, flags: 
         if flags != 0 {
             warn!("flags are not implemented yet, flags: {flags}, ignored");
         }
-        // fill the buffer 8 bytes at a time first, then fill the remaining bytes
-        let buflen_mod = buflen % (core::mem::size_of::<i64>() / core::mem::size_of::<u8>());
-        let buflen_div = buflen / (core::mem::size_of::<i64>() / core::mem::size_of::<u8>());
-        for i in 0..buflen_div {
-            *((buf as *mut u8 as *mut i64).add(i)) = sys_random() as i64;
+        #[cfg(feature = "rng")]
+        {
+            use ruxrand::request_entropy;
+            let slice: &mut [u8] =
+                unsafe { core::slice::from_raw_parts_mut(buf as *mut u8, buflen) };
+            request_entropy(slice).map_err(|e| {
+                warn!("Failed to get random bytes: {:?}", e);
+                LinuxError::EIO
+            })?;
+            Ok(buflen as ssize_t)
         }
-        for i in 0..buflen_mod {
-            *((buf as *mut u8).add(buflen - buflen_mod + i)) = sys_rand() as u8;
+        #[cfg(not(feature = "rng"))]
+        {
+            // fill the buffer 8 bytes at a time first, then fill the remaining bytes
+            let buflen_mod = buflen % (core::mem::size_of::<i64>() / core::mem::size_of::<u8>());
+            let buflen_div = buflen / (core::mem::size_of::<i64>() / core::mem::size_of::<u8>());
+            for i in 0..buflen_div {
+                *((buf as *mut u8 as *mut i64).add(i)) = sys_random() as i64;
+            }
+            for i in 0..buflen_mod {
+                *((buf as *mut u8).add(buflen - buflen_mod + i)) = sys_rand() as u8;
+            }
+            Ok(buflen as ssize_t)
         }
-        Ok(buflen as ssize_t)
     })
 }

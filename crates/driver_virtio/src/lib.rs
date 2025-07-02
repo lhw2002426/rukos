@@ -31,6 +31,8 @@ mod console;
 mod gpu;
 #[cfg(feature = "net")]
 mod net;
+#[cfg(feature = "rng")]
+mod rng;
 #[cfg(feature = "v9p")]
 mod v9p;
 
@@ -42,6 +44,8 @@ pub use self::console::VirtIoConsoleDev;
 pub use self::gpu::VirtIoGpuDev;
 #[cfg(feature = "net")]
 pub use self::net::VirtIoNetDev;
+#[cfg(feature = "rng")]
+pub use self::rng::VirtIoRngDev;
 #[cfg(feature = "v9p")]
 pub use self::v9p::VirtIo9pDev;
 
@@ -52,6 +56,7 @@ pub use virtio_drivers::{BufferDirection, Hal as VirtIoHal, PhysAddr};
 
 use self::pci::{DeviceFunction, DeviceFunctionInfo, PciRoot};
 use driver_common::{DevError, DeviceType};
+use log::{error, info, warn};
 use virtio_drivers::transport::DeviceType as VirtIoDevType;
 
 /// Try to probe a VirtIO MMIO device from the given memory region.
@@ -99,6 +104,7 @@ const fn as_dev_type(t: VirtIoDevType) -> Option<DeviceType> {
         GPU => Some(DeviceType::Display),
         _9P => Some(DeviceType::_9P),
         Console => Some(DeviceType::Char),
+        EntropySource => Some(DeviceType::Rng),
         _ => None,
     }
 }
