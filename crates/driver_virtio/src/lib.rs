@@ -56,7 +56,6 @@ pub use virtio_drivers::{BufferDirection, Hal as VirtIoHal, PhysAddr};
 
 use self::pci::{DeviceFunction, DeviceFunctionInfo, PciRoot};
 use driver_common::{DevError, DeviceType};
-use log::{error, info, warn};
 use virtio_drivers::transport::DeviceType as VirtIoDevType;
 
 /// Try to probe a VirtIO MMIO device from the given memory region.

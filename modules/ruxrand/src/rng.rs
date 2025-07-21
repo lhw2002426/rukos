@@ -1,7 +1,7 @@
 use lazy_init::LazyInit;
 use log::debug;
 use percpu::def_percpu;
-use rand::{distributions::Standard, prelude::*};
+use rand::distributions::Standard;
 use ruxdriver::prelude::*;
 
 #[def_percpu]
@@ -12,7 +12,7 @@ pub fn init(rng_dev: AxRngDevice, cpuid: usize) {
     // Initialize the per-CPU RNG for the given CPU ID.
     // This is a placeholder function and should be implemented
     // to initialize the RNG for the specific CPU.
-    debug!("Initializing per-CPU RNG for CPU ID: {}", cpuid);
+    debug!("Initializing per-CPU RNG for CPU ID: {cpuid}");
     PERCPU_RNG.with_current(|percpu_ref| {
         percpu_ref.init_by(rng_dev);
     });
@@ -38,8 +38,8 @@ where
 
     let dst = &mut buf[..size];
     let _len = PERCPU_RNG.with_current(|r| r.request_entropy(dst)).unwrap();
-    let value = unsafe { core::ptr::read_unaligned(dst.as_ptr() as *const T) };
-    value
+
+    unsafe { core::ptr::read_unaligned(dst.as_ptr() as *const T) }
 }
 
 /// Requests entropy from the RNG and fills the provided buffer.

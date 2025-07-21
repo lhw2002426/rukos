@@ -10,7 +10,6 @@
 extern crate alloc;
 use crate::as_dev_err;
 
-use core::ptr;
 use driver_common::{BaseDriverOps, DevResult, DeviceType};
 use driver_rng::{RngDriverOps, RngInfo};
 use virtio_drivers::{device::rng::VirtIORng as InnerDev, transport::Transport, Hal};
@@ -21,8 +20,6 @@ pub struct VirtIoRngDev<H: Hal, T: Transport> {
     info: RngInfo,
 }
 
-use log::info;
-
 unsafe impl<H: Hal, T: Transport> Send for VirtIoRngDev<H, T> {}
 unsafe impl<H: Hal, T: Transport> Sync for VirtIoRngDev<H, T> {}
 
@@ -30,7 +27,7 @@ impl<H: Hal, T: Transport> VirtIoRngDev<H, T> {
     /// Creates a new driver instance and initializes the device, or returns
     /// an error if any step fails.
     pub fn try_new(transport: T) -> DevResult<Self> {
-        let mut virtio = InnerDev::new(transport).unwrap();
+        let virtio = InnerDev::new(transport).unwrap();
         let info = RngInfo {};
         Ok(Self {
             inner: virtio,

@@ -13,7 +13,6 @@
 
 #[doc(no_inline)]
 pub use driver_common::{BaseDriverOps, DevError, DevResult, DeviceType};
-use rand::{distributions::Standard, prelude::*};
 
 // TODO: use xoshiro as a fake rng
 #[cfg(feature = "xoshiro")]
